@@ -39,6 +39,7 @@
             <span class="bold">{{::journal.nameEt}}:</span>&nbsp;
             <span ng-repeat="theme in getUniqueJournalThemes(journal.themes)">
               <span ng-if="!$first">,&nbsp;</span>{{::theme.nameEt}}&nbsp;{{::theme.credits}}&nbsp;{{'lessonplan.credits' | translate}}
+              &nbsp;({{currentLanguageNameField(theme.module)}})
               &nbsp;(<span ng-repeat="(hourCap, hourCount) in theme.hours">{{::getCapacityByCode(hourCap).value.toUpperCase()}}{{hourCount}}{{$last ? "" : "/"}}</span>)</span>
             <div ng-if="!auth.isAdmin()" style="float: right;">
               <md-checkbox disabled ng-model="journal.isFiller">{{'lessonplan.isFiller' | translate}}</md-checkbox>
@@ -110,7 +111,7 @@
       <!-- grand totals -->
       <tbody md-colors="{background: 'background-200'}">
         <tr ng-repeat="ct in getCapacityTypes(formState.grandTotals)" ng-if="formState.showCapacityTypes">
-          <td rowspan="{{keys(formState.grandTotals).length+1}}" ng-if="$first">
+          <td rowspan="{{keys(formState.grandTotals).length+2}}" ng-if="$first">
             {{currentLanguageNameField(module)}}&nbsp;{{'lessonplan.grandTotal' | translate}}
           </td>
           <td class="center">{{ct.value.toUpperCase()}}</td>
@@ -127,6 +128,22 @@
             ng-class="{dividerBorder: formState.weekNrs[$index].endOfPeriod}" class="center">{{h | hoisNumber:1}}</td>
           <td ng-if="!formState.showWeeks" ng-repeat="sp in formState.studyPeriods track by $index" colspan="{{::sp.weekNrs.length}}"
             class="center dividerBorder">{{formState.grandTotalsSp[$index] | hoisNumber:1}}</td>
+        </tr>
+        <tr>
+          <td colspan="{{formState.showCapacityTypes ? 1 : 2}}">{{'lessonplan.credits' | translate}}</td>
+          <td class="center dividerBorder">{{formState.grandCreditTotals.__}}</td>
+          <td ng-if="formState.showWeeks" ng-repeat="h in formState.grandCreditTotals._._ track by $index"
+              ng-class="{dividerBorder: formState.weekNrs[$index].endOfPeriod}" class="center">{{h | hoisNumber:2}}</td>
+          <td ng-if="!formState.showWeeks" ng-repeat="sp in formState.studyPeriods track by $index" colspan="{{::sp.weekNrs.length}}"
+              class="center dividerBorder">{{formState.grandCreditTotalsSp[$index] | hoisNumber:2}}</td>
+        </tr>
+        <tr>
+          <td colspan="{{formState.showCapacityTypes ? 1 : 2}}">{{'lessonplan.contractPlannedHoursTotal' | translate}}</td>
+          <td class="center dividerBorder">{{formState.grandContactTotals.__}}</td>
+          <td ng-if="formState.showWeeks" ng-repeat="h in formState.grandContactTotals._._ track by $index"
+              ng-class="{dividerBorder: formState.weekNrs[$index].endOfPeriod}" class="center">{{h | hoisNumber:1}}</td>
+          <td ng-if="!formState.showWeeks" ng-repeat="sp in formState.studyPeriods track by $index" colspan="{{::sp.weekNrs.length}}"
+              class="center dividerBorder">{{formState.grandContactTotalsSp[$index] | hoisNumber:1}}</td>
         </tr>
       </tbody>
     </table>
@@ -156,7 +173,7 @@
               </td>
               <td ng-repeat="sct in formState.subjectCapacityTypes track by $index" ng-class="{dividerBorder: sct.endOfPeriod}">{{(subject.hours[sct.studyPeriod] || {})[sct.code]}}</td>
             <td>{{sumSubjectHours(subject.hours)}}</td>
-            <td>{{toEap(sumSubjectHours(subject.hours), 2) | number: 2}}</td>
+            <td>{{hoursToCredits(sumSubjectHours(subject.hours), 2) | number: 2}}</td>
           </tr>
           <tr ng-repeat="studentGroup in subject.studentGroups">
               <td class="dividerBorder">
@@ -171,7 +188,7 @@
                   {{(studentGroup.hours[sct.studyPeriod] || {})[sct.code]}}
               </td>
               <td>{{sumSubjectHours(studentGroup.hours)}}</td>
-              <td>{{toEap(sumSubjectHours(studentGroup.hours), 2) | number: 2}}</td>
+              <td>{{hoursToCredits(sumSubjectHours(studentGroup.hours), 2) | number: 2}}</td>
           </tr>
           <!-- Total -->
           <tr class="bold">
@@ -182,9 +199,9 @@
           </tr>
           <tr class="bold">
             <td class="dividerBorder">{{'subjectStudyPeriod.eap' | translate}}</td>
-            <td ng-repeat="sct in formState.subjectCapacityTypes track by $index" ng-class="{dividerBorder: sct.endOfPeriod}">{{toEap((subject.capacityTotals[sct.studyPeriod] || {})[sct.code] || 0, 2) | number: 2}}</td>
+            <td ng-repeat="sct in formState.subjectCapacityTypes track by $index" ng-class="{dividerBorder: sct.endOfPeriod}">{{hoursToCredits((subject.capacityTotals[sct.studyPeriod] || {})[sct.code] || 0, 2) | number: 2}}</td>
             <td></td>
-            <td>{{toEap(sumSubjectHours(subject.capacityTotals), 2) | number: 2}}</td>
+            <td>{{hoursToCredits(sumSubjectHours(subject.capacityTotals), 2) | number: 2}}</td>
           </tr>
       </tbody>
       <!-- Grand Total -->
@@ -196,15 +213,15 @@
       </tr>
       <tr class="bold" md-colors="{background: 'background-200'}">
         <td class="dividerBorder">{{'subjectStudyPeriod.eap' | translate}}</td>
-        <td ng-repeat="sct in formState.subjectCapacityTypes track by $index" ng-class="{dividerBorder: sct.endOfPeriod}">{{toEap((record.subjectTotals[sct.studyPeriod] || {})[sct.code] || 0, 2) | number: 2}}</td>
+        <td ng-repeat="sct in formState.subjectCapacityTypes track by $index" ng-class="{dividerBorder: sct.endOfPeriod}">{{hoursToCredits((record.subjectTotals[sct.studyPeriod] || {})[sct.code] || 0, 2) | number: 2}}</td>
         <td></td>
-        <td>{{toEap(sumSubjectHours(record.subjectTotals), 2) | number: 2}}</td>
+        <td>{{hoursToCredits(sumSubjectHours(record.subjectTotals), 2) | number: 2}}</td>
       </tr>
       <tr class="bold" md-colors="{background: 'background-200'}">
         <td class="dividerBorder">{{'subjectStudyPeriod.overallContact' | translate}}</td>
         <td ng-repeat="sct in formState.subjectCapacityTypes track by $index" ng-class="{dividerBorder: sct.endOfPeriod}">{{(record.subjectContactTotals[sct.studyPeriod] || {})[sct.code] || 0}}</td>
         <td>{{sumSubjectHours(record.subjectContactTotals)}}</td>
-        <td>{{toEap(sumSubjectHours(record.subjectContactTotals), 2) | number: 2}}</td>
+        <td>{{hoursToCredits(sumSubjectHours(record.subjectContactTotals), 2) | number: 2}}</td>
       </tr>
     </table>
   </md-table-container>

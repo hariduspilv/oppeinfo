@@ -11,7 +11,7 @@
  *     c.clear();
  *   });
  * }
- * 
+ *
  * (HTML)
  * <hois-autocomplete ng-model="criteria.object" ha-attribute="id" ha-controller="directiveControllers" ...></hois-autocomplete>
  */
@@ -35,6 +35,7 @@ angular.module('hitsaOis')
         ngModel: '=',
         ngSearchText: '=?',
         label: '@',
+        ngLabel: '=?',
         method: '@',
         haAttribute: '@',
         haSearch: "=?",
@@ -52,6 +53,7 @@ angular.module('hitsaOis')
         warningParam: '@',
         noPaging: '@',
         url: '@',    // this allows to search from different controllers, not only AutocompleteController
+        ngUrl: '=?',
         haController: "=?" // Array. Holds functions of this directive to be used outside as an object in array.
       },
       link: {
@@ -60,6 +62,26 @@ angular.module('hitsaOis')
             var url =  scope.url ? scope.url : '/autocomplete/' + scope.method;
             var lookup = QueryUtils.endpoint(url);
           }
+          scope.$watch('ngUrl', function (newVal) {
+            if (!newVal) {
+              return;
+            }
+            url = newVal;
+            lookup = QueryUtils.endpoint(url);
+          });
+
+          // used only for multiple autocomplete right now
+          if (angular.isDefined(scope.multiple)) {
+            scope.$watch('ngLabel', function (newVal) {
+              if (!newVal) {
+                return;
+              }
+              scope.label = newVal;
+              var inp = element.find('input');
+              inp.attr('placeholder', $translate.instant(scope.ngLabel));
+            });
+          }
+
           var controller = {};
           if (angular.isUndefined(scope.haSearch)) {
             scope.haSearch = function (text) {
@@ -181,7 +203,7 @@ angular.module('hitsaOis')
           } else {
             scope.ngHolder = scope.ngModel;
           }
-          
+
           if (angular.isDefined(attrs.multiple) && !angular.isArray(scope.ngHolder)) {
             scope.ngHolder = [];
           }
@@ -215,7 +237,7 @@ angular.module('hitsaOis')
               }
             }
           }
-          
+
           if (angular.isDefined(scope.multiple)) {
             scope.$watchCollection('ngHolder', function (newValue, oldValue) {
               if (newValue !== oldValue && !equals(scope.ngModel, newValue)) {
@@ -273,6 +295,13 @@ angular.module('hitsaOis')
               if (angular.isDefined(DataUtils.get(scope, '$$childHead.$mdChipsCtrl.autocompleteCtrl.scope.searchText'))) {
                 scope.$$childHead.$mdChipsCtrl.autocompleteCtrl.scope.searchText = null;
               }
+            }
+            scope.ngSearchText = null;
+          };
+          controller.clearSearchText = function () {
+            if (!angular.isUndefined(scope.multiple) &&
+              angular.isDefined(DataUtils.get(scope, '$$childHead.$mdChipsCtrl.autocompleteCtrl.scope.searchText'))) {
+                scope.$$childHead.$mdChipsCtrl.autocompleteCtrl.scope.searchText = null;
             }
             scope.ngSearchText = null;
           };

@@ -21,6 +21,10 @@ public class StudyYearDto extends StudyYearForm {
         return dto;
     }
 
+    public static StudyYearDto ofMin(StudyYear studyYear) {
+        return EntityUtil.bindToDto(studyYear, new StudyYearDto(), "studyPeriods", "studyPeriodEvents");
+    }
+
     public Long getId() {
         return id;
     }

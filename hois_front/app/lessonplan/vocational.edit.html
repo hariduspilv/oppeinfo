@@ -1,62 +1,66 @@
-<form name="lessonPlanForm">
 <div ng-cloak class="ois-form-layout-padding">
-  <div layout="column">
-    <div flex="30" class="md-title">
-      <hois-classifier-value ng-model="record.studyYearCode" main-classifier-code="OPPEAASTA"></hois-classifier-value>
-      <span>{{'lessonplan.studentGroup' | translate}} {{record.studentGroupCode}} ({{record.courseNr}}. {{'lessonplan.course' | translate}}), </span>
-      <span>{{record.curriculumCode}}, {{currentLanguageNameField(record.curriculumVersion)}}, </span>
-      <span>{{'lessonplan.studyPeriod' | translate}} {{formState.studyPeriodYears}} {{'main.years' | translate}} {{formState.studyPeriodMonths}} {{'main.months' | translate}}</span>
-    </div>
-    <div>&nbsp;</div>
-    <div flex layout="row">
-      <div flex="50" layout="row" layout-align="start center">
-        <md-checkbox ng-model="record.isUsable" ng-disabled="isView || !canEdit">
-          {{'lessonplan.isUsable' | translate}}
-        </md-checkbox>
-        <md-checkbox ng-model="formState.showWeeks" ng-change="showWeeksChanged()">{{'lessonplan.showWeeks' | translate}}</md-checkbox>
-        <md-checkbox ng-model="formState.showTotals" ng-change="showTotalsChanged()">{{'lessonplan.showTotals' | translate}}</md-checkbox>
+  <form name="lessonPlanForm">
+    <div layout="column">
+      <hois-collapsable expanded="formState.showSettings" expand-collapse-action="showSettingsChanged()">
+        <hois-collapsable-header>
+          <span>{{currentLanguageNameField(record.studyYear.year)}}</span>
+          <span>{{'lessonplan.studentGroup' | translate}} {{record.studentGroupCode}} ({{record.courseNr}}. {{'lessonplan.course' | translate}}), </span>
+          <span>{{record.curriculumCode}}, {{currentLanguageNameField(record.curriculumVersion)}}, </span>
+          <span>{{'lessonplan.studyPeriod' | translate}} {{formState.studyPeriodYears}} {{'main.years' | translate}} {{formState.studyPeriodMonths}} {{'main.months' | translate}}</span>
+        </hois-collapsable-header>
+
+        <div layout="column">
+          <div>&nbsp;</div>
+          <div flex layout="row">
+            <div flex="50" layout="row" layout-align="start center">
+              <md-checkbox ng-model="record.isUsable" ng-disabled="isView || !canEdit">
+                {{'lessonplan.isUsable' | translate}}
+              </md-checkbox>
+              <md-checkbox ng-model="formState.showWeeks" ng-change="showWeeksChanged()">{{'lessonplan.showWeeks' | translate}}</md-checkbox>
+              <md-checkbox ng-model="formState.showTotals" ng-change="showTotalsChanged()">{{'lessonplan.showTotals' | translate}}</md-checkbox>
+              <md-checkbox ng-model="formState.showPlannedModules" ng-change="showPlannedModulesChanged()">{{'lessonplan.showPlannedModules' | translate}}</md-checkbox>
+            </div>
+            <div flex="50" layout="row" layout-align="end start" class="common-label" md-colors="{color: 'background-400'}">
+            <span ng-repeat="c in ::formState.capacityTypes track by $index">
+              <span ng-if="!$first">|</span>
+              {{::c.value.toUpperCase()}} - {{currentLanguageNameField(c)}}
+            </span>
+            </div>
+          </div>
+
+          <div flex layout="row">
+            <span class="common-label" flex="15" flex-xl="10">{{'lessonplan.coefficient' | translate}}:</span>
+            <hois-classifier-radio layout="row" ng-model="record.coefficient" model-value-attr="code"
+              main-classifier-code="KOEFITSIENT" ng-disabled="isView || !canEdit"></hois-classifier-radio>
+          </div>
+        </div>
+        <div>&nbsp;</div>
+
+        <fieldset tabindex="1">
+          <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'lessonplan.showPeriods' | translate}}</legend>
+          <div layout="column">
+            <md-grid-list ng-app="app" md-cols="6" md-cols-md="4" md-cols-sm="3" md-cols-xs="1" md-gutter="1em" md-row-height="35px">
+              <md-grid-tile ng-repeat="sp in ::formState.studyPeriods track by $index">
+                <md-checkbox aria-label="{{currentLanguageNameField(sp)}}" ng-model="sp._selected"
+                  ng-change="updateStudyPeriods()" style="position: absolute; left: 5px;">{{currentLanguageNameField(sp)}}</md-checkbox>
+              </md-grid-tile>
+            </md-grid-list>
+          </div>
+        </fieldset>
+      </hois-collapsable>
+
+      <div id="lessonplan-container" class="container" fixed-column-table fixed-columns="3"
+          resize-table search-criteria-height="{{formState.showSettings ? 425 : 250}}">
+        <table class="lessonplan" id="lessonplan-table"></table>
       </div>
-      <div flex="50" layout="row" layout-align="end start" class="common-label" md-colors="{color: 'background-400'}">
-        <span ng-repeat="c in ::formState.capacityTypes track by $index">
-          <span ng-if="!$first">|</span>
-          {{::c.value.toUpperCase()}} - {{currentLanguageNameField(c)}}
-        </span>
-      </div>
     </div>
-
-    <div flex layout="row">
-      <span class="common-label" flex="15" flex-xl="10">{{'lessonplan.coefficient' | translate}}:</span>
-      <hois-classifier-radio layout="row" ng-model="record.coefficient" model-value-attr="code"
-        main-classifier-code="KOEFITSIENT" ng-disabled="isView || !canEdit"></hois-classifier-radio>
+    <div>
+      <md-button ng-if="isView && canEdit" class="md-raised md-primary" ng-href="#/lessonplans/vocational/{{::lessonPlanId}}/edit">{{'main.button.edit' | translate}}</md-button>
+      <md-button ng-if="!isView && canEdit" class="md-raised md-primary" ng-click="update()">{{'main.button.save' | translate}}</md-button>
+      <a ng-href="{{excel(formState.xlsUrl, criteria)}}" target="_blank" class="md-button md-raised">{{'main.button.printXls' | translate}}</a>
+      <md-button ng-if="!isView && canEdit" class="md-raised" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
+      <md-button ng-if="!isView" ng-click="back()" class="md-raised">{{'main.button.back' | translate}}</md-button>
+      <md-button ng-if="isView" ng-href="#/lessonplans/vocational" class="md-raised">{{'main.button.back' | translate}}</md-button>
     </div>
-  </div>
-  <div>&nbsp;</div>
-
-    <fieldset tabindex="1">
-      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'lessonplan.showPeriods' | translate}}</legend>
-      <div layout="column">
-        <md-grid-list ng-app="app" md-cols="6" md-cols-md="4" md-cols-sm="3" md-cols-xs="1" md-gutter="1em"
-        md-row-height="35px">
-          <md-grid-tile ng-repeat="sp in ::formState.studyPeriods track by $index">
-            <md-checkbox aria-label="{{currentLanguageNameField(sp)}}" ng-model="sp._selected"
-              ng-change="updateStudyPeriods()" style="position: absolute; left: 5px;">{{currentLanguageNameField(sp)}}</md-checkbox>
-          </md-grid-tile>
-        </md-grid-list>
-      </div>
-    </fieldset>
-
-    <div>&nbsp;</div>
-
-    <div id="lessonplan-container" class="container" fixed-column-table fixed-columns="3">
-      <table class="lessonplan" id="lessonplan-table"></table>
-    </div>
+  </form>
 </div>
-<div>
-  <md-button ng-if="isView && canEdit" class="md-raised md-primary" ng-href="#/lessonplans/vocational/{{::lessonPlanId}}/edit">{{'main.button.edit' | translate}}</md-button>
-  <md-button ng-if="!isView && canEdit" class="md-raised md-primary" ng-click="update()">{{'main.button.save' | translate}}</md-button>
-  <a ng-href="{{excel(formState.xlsUrl, criteria)}}" target="_blank" class="md-button md-raised">{{'main.button.printXls' | translate}}</a>
-  <md-button ng-if="!isView && canEdit" class="md-raised" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
-  <md-button ng-if="!isView" ng-click="back()" class="md-raised">{{'main.button.back' | translate}}</md-button>
-  <md-button ng-if="isView" ng-href="#/lessonplans/vocational" class="md-raised">{{'main.button.back' | translate}}</md-button>
-</div>
-</form>

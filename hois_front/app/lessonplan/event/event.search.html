@@ -34,10 +34,9 @@
         </div>
 
         <div ng-if="eventsPerm" layout="row">
-          <md-input-container class="md-block" flex="45" flex-sm="100" flex-xs="100">
-            <label>{{auth.higher ? ('lessonplan.event.teachersHigher' | translate) : ('lessonplan.event.teachersVocational' | translate)}}</label>
-            <hois-select ng-model="criteria.teachers" type="teacher" flex multiple></hois-select>
-          </md-input-container>
+          <hois-autocomplete flex="45" flex-sm="100" flex-xs="100" ng-model="criteria.teachers"
+            ha-attribute="id" ha-controller="directiveControllers" method="teachers" name="teacher" multiple
+            label="{{auth.higher ? 'lessonplan.event.teachersHigher' : 'lessonplan.event.teachersVocational'}}"></hois-autocomplete>
           <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-sm="0" flex-offset-xs="0">
             <label class="textInput">{{auth.higher ? ('lessonplan.event.otherTeacherHigher' | translate) : ('lessonplan.event.otherTeacherVocational' | translate)}}</label>
             <input ng-model="criteria.otherTeacher" type="text" md-maxlength="255">
@@ -82,6 +81,7 @@
           <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
           <md-button class="md-raised" ng-click="clearEventCriteria()">{{'main.button.clear' | translate}}</md-button>
           <md-button class="md-raised" ng-if="canEdit" ng-href="#/timetable/timetableEvent/new">{{'main.button.create' | translate}}</md-button>
+          <md-button class="md-raised" ng-href="{{printUrl()}}" target="_blank">{{'main.button.print' | translate}}</md-button>
         </div>
         <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
       </form>
@@ -95,8 +95,8 @@
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
           <tr md-row>
             <th md-column md-order-by="{{currentLanguage()==='en' ? 3 : 2}}">{{'lessonplan.event.name' | translate}}</th>
-            <th md-column md-order-by="4">{{'lessonplan.event.date' | translate}}</th>
-            <th md-column md-order-by="cast(tet.start as time), cast(tet.end as time)">{{'lessonplan.event.time' | translate}}</th>
+            <th md-column md-order-by="4, cast(tet_start as time), cast(tet_end as time)">{{'lessonplan.event.date' | translate}}</th>
+            <th md-column md-order-by="cast(tet_start as time), cast(tet_end as time)">{{'lessonplan.event.time' | translate}}</th>
             <th ng-if="eventsPerm" md-column>{{auth.higher ? ('lessonplan.event.teachersHigher' | translate) : ('lessonplan.event.teachersVocational' | translate)}}</th>
             <th md-column>{{'lessonplan.event.rooms' | translate}}</th>
             <th ng-if="eventsPerm" md-column>{{'lessonplan.event.studentGroups' | translate}}</th>

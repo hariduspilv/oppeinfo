@@ -10,6 +10,7 @@ public class SaisApplicationImportedRowDto {
     private int rowNr;
     private String applicationNr;
     private String message;
+    private String warning;
     private String idCode;
     private String firstName;
     private String lastName;
@@ -23,6 +24,11 @@ public class SaisApplicationImportedRowDto {
     public SaisApplicationImportedRowDto(int rowNr, String message) {
         this.rowNr = rowNr;
         this.message = message;
+    }
+
+    public SaisApplicationImportedRowDto(int rowNr, String message, String warning) {
+        this(rowNr, message);
+        this.warning = warning;
     }
 
     public SaisApplicationImportedRowDto(String applicationNr, String message) {
@@ -45,6 +51,11 @@ public class SaisApplicationImportedRowDto {
         this.lastName = application.getLastname();
         this.admissionCode = application.getSaisAdmission().getCode();
         this.applicationStatus = EntityUtil.getCode(application.getStatus());
+    }
+
+    public SaisApplicationImportedRowDto(SaisApplication application, String message, String warning) {
+        this(application, message);
+        this.warning = warning;
     }
 
     @Override
@@ -85,6 +96,14 @@ public class SaisApplicationImportedRowDto {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public String getWarning() {
+        return warning;
+    }
+
+    public void setWarning(String warning) {
+        this.warning = warning;
     }
 
     public LocalDate getApplicationDate() {

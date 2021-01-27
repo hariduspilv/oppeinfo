@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.subject.SubjectConnect;
+import ee.hitsa.ois.domain.subject.subjectprogram.SubjectProgramTeacher;
 import ee.hitsa.ois.enums.CurriculumVersionStatus;
 import ee.hitsa.ois.enums.SubjectConnection;
 import ee.hitsa.ois.enums.SubjectProgramStatus;
@@ -98,7 +99,8 @@ public class SubjectDto extends SubjectForm {
         dto.setSubstituteSubjects(substituteSubjects);
         dto.setPrograms(StreamUtil.nullSafeSet(subject.getSubjectStudyPeriods()).stream()
                 .flatMap(peroid -> peroid.getTeachers().stream())
-                .flatMap(teacher -> teacher.getSubjectPrograms().stream())
+                .flatMap(teacher -> teacher.getSubjectProgramTeachers().stream())
+                .map(SubjectProgramTeacher::getSubjectProgram)
                 .filter(p -> !isPublic
                         // if public for all then completed and confirmed programs allowed
                         || (Boolean.TRUE.equals(p.getPublicAll()) && ClassifierUtil.oneOf(p.getStatus(), SubjectProgramStatus.AINEPROGRAMM_STAATUS_K, SubjectProgramStatus.AINEPROGRAMM_STAATUS_V))

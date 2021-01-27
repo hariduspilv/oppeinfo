@@ -94,6 +94,7 @@
               <th md-column >{{'reception.application.lastName' | translate}}</th>
               <th md-column >{{'reception.application.admissionCode' | translate}}</th>
               <th md-column >{{'reception.application.status' | translate}}</th>
+              <th md-column >{{'reception.application.warning' | translate}}</th>
             </tr>
           </thead>
           <tbody md-body>
@@ -104,6 +105,7 @@
               <td md-cell>{{::row.lastName}}</td>
               <td md-cell>{{::row.admissionCode}}</td>
               <td md-cell>{{currentLanguageNameField(row.applicationStatus)}}</td>
+              <td md-cell>{{::row.warning | translate}}</td>
             </tr>
           </tbody>
         </table>

@@ -78,6 +78,15 @@ angular.module('hitsaOis')
         }, []);
       },
       /**
+       * Flatten an n-dimensional array
+       * @param {*} arr 
+       */
+      flatten: function flatten(arr) {
+        return arr.reduce(function (flat, toFlatten) {
+          return flat.concat(Array.isArray(toFlatten) ? flatten(toFlatten) : toFlatten);
+        }, []);
+      },
+      /**
        * Finds common parts of two arrays!
        *
        * Note, that arrays with repeating elements are not considered here

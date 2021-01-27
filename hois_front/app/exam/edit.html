@@ -1,52 +1,50 @@
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
   <div flex>
-    <form name="examForm" class="nomargin">
-      <div layout="row" class="form-readonly">
+    <form name="examForm">
+      <div layout="row">
         <md-input-container flex="20" flex-sm="100" flex-xs="100" ng-if="!record.id">
           <label class="textInput">{{'exam.studyPeriod' | translate}}</label>
           <hois-select ng-model="formState.studyPeriod" ng-change="studyPeriodChanged()" values="formState.studyPeriods" required sorted-query="true"></hois-select>
         </md-input-container>
 
-        <md-input-container flex="20" flex-sm="100" flex-xs="100" ng-if="record.id">
+        <md-input-container flex="20" flex-sm="100" flex-xs="100" ng-if="record.id" class="readonly readonly-reverse-margin">
           <label class="textInput">{{'exam.studyPeriod' | translate}}</label>
           <hois-value value="currentLanguageNameField(formState.subjectStudyPeriod.studyPeriod)"></hois-value>
         </md-input-container>
 
-        <hois-autocomplete ng-model="formState.subjectStudyPeriodId" flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" 
-          name="subjectStudyPeriod" aria-label="{{'exam.subjectTeacher' | translate}}" ha-search="searchSubjectStudyPeriods" ha-controller="directiveControllers" 
-          ng-if="auth.isAdmin() && !record.id" ha-attribute="id" required label="exam.subjectTeacher" no-paging="true" display="display" 
+        <hois-autocomplete ng-model="formState.subjectStudyPeriodId" flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0"
+          name="subjectStudyPeriod" aria-label="{{'exam.subjectTeacher' | translate}}" ha-search="searchSubjectStudyPeriods" ha-controller="directiveControllers"
+          ng-if="auth.isAdmin() && !record.id" ha-attribute="id" required label="exam.subjectTeacher" no-paging="true" display="display"
           md-selected-item-change="subjectStudyPeriodChanged()">
         </hois-autocomplete>
         <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" ng-if="!record.id && !auth.isAdmin()">
           <label class="textInput">{{'exam.subjectTeacher' | translate}}</label>
-          <md-select ng-model="formState.subjectStudyPeriodId" ng-change="subjectStudyPeriodChanged()" aria-label="{{'exam.subjectTeacher' | translate}}" 
+          <md-select ng-model="formState.subjectStudyPeriodId" ng-change="subjectStudyPeriodChanged()" aria-label="{{'exam.subjectTeacher' | translate}}"
             required>
             <md-option ng-value="row.id" ng-repeat="row in formState.subjectStudyPeriods | orderBy: 'subject.' + currentLanguageNameField()">
-              {{currentLanguageNameField(row.subject)+ ' - ' + (row.teacherNames || []).join(', ')}}
+              {{currentLanguageNameField(row.subject)+ ' - ' + (row.teacherNames || []).join(', ') + ((row.groupNames || []).length > 0 ? ' (' + (row.groupNames || []).join(', ') + ')' : '')}}
             </md-option>
           </md-select>
         </md-input-container>
 
-        <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" ng-if="record.id">
+        <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" ng-if="record.id" class="readonly readonly-reverse-margin">
           <label class="textInput">{{'exam.subjectTeacher' | translate}}</label>
-          <hois-value value="currentLanguageNameField(formState.subjectStudyPeriod.subject)+ ' - ' + (formState.subjectStudyPeriod.teacherNames || []).join(', ')"></hois-value>
+          <hois-value value="currentLanguageNameField(formState.subjectStudyPeriod.subject)+ ' - ' + (formState.subjectStudyPeriod.teacherNames || []).join(', ') + ((formState.subjectStudyPeriod.groupNames || []).length > 0 ? ' (' + (formState.subjectStudyPeriod.groupNames || []).join(', ') + ')' : '')"></hois-value>
         </md-input-container>
 
-        <md-input-container flex="15" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+        <md-input-container flex="15" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" class="readonly readonly-reverse-margin">
           <label class="textInput">{{'exam.assessment' | translate}}</label>
           <hois-classifier-value ng-model="formState.subjectStudyPeriod.assessment" main-classifier-code="HINDAMISVIIS"></hois-classifier-value>
         </md-input-container>
       </div>
 
-      <br>
-
-      <div layout="row" class="form-readonly">
+      <div layout="row">
         <md-input-container flex="15" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0">
           <label class="textInput">{{'exam.type' | translate}}</label>
           <hois-classifier-select ng-model="record.type" ng-disabled="record.students && record.students.length" ng-change="examTypeChanged()" required main-classifier-code="SOORITUS" model-value-attr="code"></hois-classifier-select>
         </md-input-container>
 
-        <md-input-container flex="65" flex-sm="100" flex-xs="100" flex-offset="10" flex-offset-xs="0" flex-offset-sm="0">
+        <md-input-container flex="65" flex-sm="100" flex-xs="100" flex-offset="10" flex-offset-xs="0" flex-offset-sm="0" class="readonly readonly-reverse-margin">
           <label class="textInput">{{'exam.name' | translate}}</label>
           <hois-value value="record.name"></hois-value>
         </md-input-container>
@@ -85,7 +83,7 @@
 
         <hois-autocomplete label="exam.room" ng-model="record.room" method="rooms" warning-param="isOccupied"
           required flex="40" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0"
-          additional-query-params="{isStudy: true, occupied: true, date: record.startDate, 
+          additional-query-params="{isStudy: true, occupied: true, date: record.startDate,
             startTime: record.startTime ? getLocalDateTime(record.startTime) : null, endTime: record.startTime ? getLocalDateTime(record.endTime) : null}"></hois-autocomplete>
       </div>
 
@@ -107,10 +105,10 @@
 
         <md-input-container flex="40" flex-sm="100" flex-offset="15" flex-offset-xs="0" flex-offset-sm="0">
           <label class="textInput">{{'exam.places' | translate}}</label>
-          <input ng-model="record.places" name="places" type="number" min="0" max="9999">
+          <input ng-model="record.places" name="places" type="number" min="1" max="9999">
           <div ng-messages="examForm.places.$error">
             <div ng-message="min">
-              {{'main.messages.error.min' | translate: {min: 0} }}
+              {{'main.messages.error.min' | translate: {min: 1} }}
             </div>
             <div ng-message="max">
               {{'main.messages.error.max' | translate: {max: 9999} }}
@@ -132,7 +130,7 @@
       </div>
 
       <md-autocomplete ng-if="record.id" flex="20" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0"
-          ng-disabled="record.places >= 0 && record.students.length >= record.places"
+          ng-disabled="(!!record.places || record.places === 0) && record.places >= 0 && record.students.length >= record.places"
           md-floating-label="{{'exam.addStudent' | translate}}"
           md-min-length="2"
           md-items="item in lookupStudents(queryText)"

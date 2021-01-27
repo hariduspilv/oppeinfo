@@ -16,7 +16,6 @@ import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.DateRange;
-import ee.hitsa.ois.validation.DirectiveValidation.Duplikaat;
 import ee.hitsa.ois.validation.DirectiveValidation.Immat;
 import ee.hitsa.ois.validation.DirectiveValidation.Kylalis;
 import ee.hitsa.ois.validation.DirectiveValidation.Muu;
@@ -214,6 +213,8 @@ public class DirectiveForm extends VersionedCommand {
         private Long directiveStudent;
         @ClassifierRestriction(MainClassCode.YHISELAMU)
         private String dormitory;
+        @ClassifierRestriction(MainClassCode.RIIK)
+        private String secondarySchoolCountry;
         
         private Boolean diplomaChk;
         private Boolean diplomaSupplementChk;
@@ -611,6 +612,13 @@ public class DirectiveForm extends VersionedCommand {
             this.diplomaSupplementEnChk = diplomaSupplementEnChk;
         }
 
+        public String getSecondarySchoolCountry() {
+            return secondarySchoolCountry;
+        }
+
+        public void setSecondarySchoolCountry(String secondarySchoolCountry) {
+            this.secondarySchoolCountry = secondarySchoolCountry;
+        }
     }
 
     public static class DirectiveFormStudentModule {

@@ -1,0 +1,623 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fo:root xmlns:fo="http://www.w3.org/1999/XSL/Format" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" font-family="Times Roman" font-size="12pt">
+	<fo:layout-master-set>
+		<fo:simple-page-master master-name="A4"
+			page-width="210mm" page-height="297mm">
+			<fo:region-body   margin="2cm"/>
+			<fo:region-before extent="2cm"/>
+			<fo:region-after  extent="2cm"/>
+			<fo:region-start  extent="2cm"/>
+			<fo:region-end    extent="2cm"/>
+		</fo:simple-page-master>
+	</fo:layout-master-set>
+	<fo:page-sequence master-reference="A4">
+		<fo:flow flow-name="xsl-region-body" linefeed-treatment="preserve">
+			<fo:block-container text-align="center">
+				<fo:block-container>
+					<fo:block font-weight="bold">{{ content.general.school }}</fo:block>
+				</fo:block-container>
+				<fo:block-container>
+					<fo:block font-weight="bold">{{ content.general.nameEt }}</fo:block>
+				</fo:block-container>
+				<fo:block-container>
+					<fo:block font-weight="bold">{{ content.general.approvalDokNr }} {{ content.general.approval }}</fo:block>
+				</fo:block-container>
+			</fo:block-container>
+			
+			<fo:block space-after="13pt"><fo:leader/></fo:block>
+			
+			<fo:block-container text-align="center">
+				<fo:block-container>
+					<fo:block font-weight="bold">{{ "report.curriculum.curriculum" | translate }}</fo:block>
+				</fo:block-container>
+			</fo:block-container>
+			
+			<fo:block space-after="13pt"><fo:leader/></fo:block>
+			
+			<fo:table display-align="center" table-layout="fixed" width="100%" break-before="page">
+				<fo:table-column column-width="0.9in"/>
+				<fo:table-column column-width="0.9in"/>
+				<fo:table-column column-width="1.3in"/>
+				<fo:table-column column-width="0.9in"/>
+				<fo:table-column column-width="0.9in"/>
+				<fo:table-column column-width="0.9in"/>
+				<fo:table-column column-width="0.9in"/>
+				
+				<fo:table-body>
+					<fo:table-row>
+						<fo:table-cell border-style="solid" number-columns-spanned="2" margin="0 3px">
+							<fo:block font-weight="bold">{{ "report.curriculum.iscedclass" | translate }}</fo:block>
+						</fo:table-cell>
+						<fo:table-cell border-style="solid" number-columns-spanned="5" margin="0 3px">
+							<fo:block>{{ content.general.iscedClass }}</fo:block>
+						</fo:table-cell>
+					</fo:table-row>
+					
+					<fo:table-row>
+						<fo:table-cell border-style="solid" number-columns-spanned="2" number-rows-spanned="3" margin="0 3px">
+							<fo:block font-weight="bold">{{ "report.curriculum.name" | translate }}</fo:block>
+						</fo:table-cell>
+						<fo:table-cell border-style="solid" number-columns-spanned="5" margin="0 3px">
+							<fo:block>{{ content.general.nameEt }}</fo:block>
+						</fo:table-cell>
+					</fo:table-row>
+					
+					<fo:table-row>
+						<fo:table-cell border-style="solid" number-columns-spanned="5" margin="0 3px">
+							<fo:block>{{ content.general.nameEn }}</fo:block>
+						</fo:table-cell>
+					</fo:table-row>
+					
+					<fo:table-row>
+						<fo:table-cell border-style="solid" number-columns-spanned="5" margin="0 3px">
+							<fo:block>{{ content.general.nameRu }}</fo:block>
+						</fo:table-cell>
+					</fo:table-row>
+					
+					<fo:table-row>
+						<fo:table-cell border-style="solid" number-columns-spanned="2" margin="0 3px">
+							<fo:block font-weight="bold">{{ "report.curriculum.merCode" | translate }}</fo:block>
+						</fo:table-cell>
+						<fo:table-cell border-style="solid" number-columns-spanned="5" margin="0 3px">
+							<fo:block>{{ content.general.merCode }}</fo:block>
+						</fo:table-cell>
+					</fo:table-row>
+					
+					<fo:table-row text-align="center">
+						<fo:table-cell border-style="solid" number-columns-spanned="5" margin="0 3px">
+							<fo:block>{{ "report.curriculum.primary" | translate }}</fo:block>
+						</fo:table-cell>
+						<fo:table-cell border-style="solid" number-columns-spanned="2" margin="0 3px">
+							<fo:block>{{ "report.curriculum.secondary" | translate }}</fo:block>
+						</fo:table-cell>
+					</fo:table-row>
+					
+					<fo:table-row>
+						<fo:table-cell border-style="solid" margin="0 3px">
+							<fo:block font-weight="bold"> EKR 2 </fo:block>
+						</fo:table-cell>
+						<fo:table-cell border-style="solid" margin="0 3px">
+							<fo:block font-weight="bold"> EKR 3 </fo:block>
+						</fo:table-cell>
+						<fo:table-cell border-style="solid" margin="0 3px">
+							<fo:block font-weight="bold"> EKR 4 {{ "vocationalSecondaryEducation" | translate }}</fo:block>
+						</fo:table-cell>
+						<fo:table-cell border-style="solid" margin="0 3px">
+							<fo:block font-weight="bold"> EKR 4 </fo:block>
+						</fo:table-cell>
+						<fo:table-cell border-style="solid" margin="0 3px">
+							<fo:block font-weight="bold"> EKR 5 </fo:block>
+						</fo:table-cell>
+						<fo:table-cell border-style="solid" margin="0 3px">
+							<fo:block font-weight="bold"> EKR 4 </fo:block>
+						</fo:table-cell>
+						<fo:table-cell border-style="solid" margin="0 3px">
+							<fo:block font-weight="bold"> EKR 5 </fo:block>
+						</fo:table-cell>
+					</fo:table-row>
+					
+					<fo:table-row text-align="center">
+						<fo:table-cell border-style="solid" margin="0 3px">
+							<fo:block>{{ content.general.ekr21 }}</fo:block>
+						</fo:table-cell>
+						<fo:table-cell border-style="solid" margin="0 3px">
+							<fo:block>{{ content.general.ekr31 }}</fo:block>
+						</fo:table-cell>
+						<fo:table-cell border-style="solid" margin="0 3px">
+							<fo:block>{{ content.general.ekr41k }}</fo:block>
+						</fo:table-cell>
+						<fo:table-cell border-style="solid" margin="0 3px">
+							<fo:block>{{ content.general.ekr41 }}</fo:block>
+						</fo:table-cell>
+						<fo:table-cell border-style="solid" margin="0 3px">
+							<fo:block>{{ content.general.ekr51 }}</fo:block>
+						</fo:table-cell>
+						<fo:table-cell border-style="solid" margin="0 3px">
+							<fo:block>{{ content.general.ekr42 }}</fo:block>
+						</fo:table-cell>
+						<fo:table-cell border-style="solid" margin="0 3px">
+							<fo:block>{{ content.general.ekr52 }}</fo:block>
+						</fo:table-cell>
+					</fo:table-row>
+					
+					<fo:table-row>
+						<fo:table-cell border-style="solid" number-columns-spanned="2" margin="0 3px">
+							<fo:block font-weight="bold">{{ "report.curriculum.vocational.credits" | translate }}:</fo:block>
+						</fo:table-cell>
+						<fo:table-cell border-style="solid" number-columns-spanned="5" margin="0 3px">
+							<fo:block>{{ content.general.credits }}</fo:block>
+						</fo:table-cell>
+					</fo:table-row>
+					
+					<fo:table-row>
+						<fo:table-cell border-style="solid" number-columns-spanned="2" margin="0 3px">
+							<fo:block font-weight="bold">{{ "report.curriculum.draftText" | translate }}:</fo:block>
+						</fo:table-cell>
+						<fo:table-cell border-style="solid" number-columns-spanned="5" margin="0 3px">
+							<fo:block>{{ content.general.draftText }}</fo:block>
+						</fo:table-cell>
+					</fo:table-row>
+					
+					<fo:table-row>
+						<fo:table-cell border-style="solid" number-columns-spanned="2" margin="0 3px">
+							<fo:block font-weight="bold">{{ "report.curriculum.outcomes" | translate }}:</fo:block>
+						</fo:table-cell>
+						<fo:table-cell border-style="solid" number-columns-spanned="5" margin="0 3px">
+							<fo:block>{{ content.general.outcomes }}</fo:block>
+						</fo:table-cell>
+					</fo:table-row>
+					
+					<fo:table-row>
+						<fo:table-cell border-style="solid" number-columns-spanned="7" margin="0 3px">
+							<fo:block font-weight="bold">{{ "report.curriculum.implementation" | translate }}</fo:block>
+							<fo:block>{{ content.general.implementation }}</fo:block>
+						</fo:table-cell>
+					</fo:table-row>
+					
+					<fo:table-row>
+						<fo:table-cell border-style="solid" number-columns-spanned="7" margin="0 3px">
+							<fo:block font-weight="bold">{{ "report.curriculum.vocational.admissionRequirements" | translate }}</fo:block>
+							<fo:block>{{ content.general.admissionRequirements }}</fo:block>
+						</fo:table-cell>
+					</fo:table-row>
+					
+					<fo:table-row>
+						<fo:table-cell border-style="solid" number-columns-spanned="7" margin="0 3px">
+							<fo:block font-weight="bold">{{ "report.curriculum.vocational.graduationRequirements" | translate }}</fo:block>
+							<fo:block>{{ content.general.graduationRequirements }}</fo:block>
+						</fo:table-cell>
+					</fo:table-row>
+					
+					<fo:table-row>
+						<fo:table-cell border-style="solid" number-columns-spanned="7" margin="0 3px">
+							<fo:block font-weight="bold">{{ "report.curriculum.acquiring" | translate }}</fo:block>
+						</fo:table-cell>
+					</fo:table-row>
+					
+					<fo:table-row>
+						<fo:table-cell border-style="solid" number-columns-spanned="2" margin="0 3px">
+							<fo:block>{{ "report.curriculum.acquiring.qualifications" | translate }}:</fo:block>
+						</fo:table-cell>
+						<fo:table-cell border-style="solid" number-columns-spanned="5" margin="0 3px">
+							{% for qualification in content.general.qualifications %}
+							<fo:block>{{ qualification }}</fo:block>
+							{% else %}
+							<fo:block></fo:block>
+							{% endfor %}
+						</fo:table-cell>
+					</fo:table-row>
+					
+					<fo:table-row>
+						<fo:table-cell border-style="solid" number-columns-spanned="2" margin="0 3px">
+							<fo:block>{{ "report.curriculum.acquiring.partoccupations" | translate }}:</fo:block>
+						</fo:table-cell>
+						<fo:table-cell border-style="solid" number-columns-spanned="5" margin="0 3px">
+							<fo:block><fo:leader /></fo:block>
+							{% for partoccupation in content.general.partoccupations %}
+							<fo:block>{{ partoccupation }}</fo:block>
+							<fo:block><fo:leader /></fo:block>
+							{% endfor %}
+						</fo:table-cell>
+					</fo:table-row>
+					
+					
+					<fo:table-row>
+						<fo:table-cell border-style="solid" number-columns-spanned="7" margin="0 3px">
+							<fo:block font-weight="bold">{{ "report.curriculum.vocational.structure" | translate }}</fo:block>
+							<fo:block>{{ content.general.structure }}</fo:block>
+							{% if content.general.optionalStudyDescription != null %}
+							<fo:block font-weight="bold">{{ "report.curriculum.vocational.optionalStudyDescription" | translate }}:</fo:block>
+							<fo:block>{{ content.general.optionalStudyDescription }}</fo:block>
+							{% endif %}
+						</fo:table-cell>
+					</fo:table-row>
+					
+					<fo:table-row>
+						<fo:table-cell border-style="solid" number-columns-spanned="7" margin="0 3px">
+							<fo:block font-weight="bold">{{ "report.curriculum.specialization" | translate }}</fo:block>
+							<fo:block>{{ content.general.specialization }}</fo:block>
+						</fo:table-cell>
+					</fo:table-row>
+					
+					<fo:table-row>
+						<fo:table-cell border-style="solid" number-columns-spanned="2" margin="0 3px">
+							<fo:block font-weight="bold">{{ "report.curriculum.contactPerson" | translate }}</fo:block>
+						</fo:table-cell>
+						<fo:table-cell border-style="solid" number-columns-spanned="5" margin="0 3px">
+							<fo:block>{{ content.general.contactPerson }}</fo:block>
+						</fo:table-cell>
+					</fo:table-row>
+					
+					<fo:table-row>
+						<fo:table-cell border-style="solid" number-columns-spanned="7" margin="0 3px">
+							<fo:block>{{ "report.curriculum.description" | translate }}:</fo:block>
+							{% if content.general.versionUrl != null %}
+							<fo:block>{{ "report.curriculum.version.url" | translate }}: {{ content.general.versionUrl }}</fo:block>
+							{% endif %}
+							<fo:block>{{ content.general.description }}</fo:block>
+						</fo:table-cell>
+					</fo:table-row>
+				</fo:table-body>
+			</fo:table>
+			
+			<fo:block space-after="13pt"><fo:leader/></fo:block>
+			
+			<fo:block-container text-align="center">
+				<fo:block-container>
+					<fo:block font-weight="bold">{{ "report.curriculum.curriculumModules" | translate }}</fo:block>
+				</fo:block-container>
+			</fo:block-container>
+			
+			<fo:block space-after="13pt"><fo:leader/></fo:block>
+			
+			<fo:table display-align="center" table-layout="fixed" width="100%" break-before="page">
+				<fo:table-column column-width="1in"/>
+				<fo:table-column column-width="1in"/>
+				<fo:table-column column-width="4.7in"/>
+				
+				<fo:table-body>
+					{% for type in content.curriculumModules.moduleTypes %}
+						<fo:table-row>
+							<fo:table-cell border-style="solid" margin="0 3px">
+								<fo:block font-weight="bold">
+								{% if type.code == "KUTSEMOODUL_P" %}
+									{{ "report.curriculum.coreModules" | translate }}
+								{% elseif type.code == "KUTSEMOODUL_Y" %}
+									{{ "report.curriculum.generalModules" | translate }}
+								{% elseif type.code == "KUTSEMOODUL_V" %}
+									{{ "report.curriculum.optionalModules" | translate }}
+								{% elseif type.code == "KUTSEMOODUL_L" %}
+									{{ "report.curriculum.graduationModules" | translate }}
+								{% endif %}
+								</fo:block>
+							</fo:table-cell>
+							<fo:table-cell border-style="solid" number-columns-spanned="2" margin="0 3px">
+								<fo:block font-weight="bold">{{ type.totalCredits }} {{ "report.curriculum.vocationalCredits" | translate }}</fo:block>
+							</fo:table-cell>
+						</fo:table-row>
+						{% for module in type.modules %}
+						<fo:table-row>
+							<fo:table-cell border-style="solid" margin="0 3px">
+								<fo:block>{{ module.name }}</fo:block>
+							</fo:table-cell>
+							<fo:table-cell border-style="solid" white-space="nowrap">
+								<fo:block>{{ module.credits }} {{ "report.curriculum.vocationalCredits" | translate }}</fo:block>
+							</fo:table-cell>
+							<fo:table-cell border-style="solid" margin="0 3px">
+								{% for outcome in module.outcomes %}
+								<fo:block>&#8226;&#160;{{ outcome }}</fo:block>
+								{% else %}
+								<fo:block></fo:block>
+								{% endfor %}
+							</fo:table-cell>
+						</fo:table-row>
+						{% endfor %}
+					{% endfor %}
+				</fo:table-body>
+			</fo:table>
+			
+			<fo:block space-after="13pt"><fo:leader/></fo:block>
+			
+			<fo:block-container text-align="center">
+				<fo:block-container>
+					<fo:block font-weight="bold">{{ "report.curriculumVersion.vocational.label" | translate }}</fo:block>
+				</fo:block-container>
+			</fo:block-container>
+			
+			<fo:block space-after="13pt"><fo:leader/></fo:block>
+			
+			<fo:table display-align="center" table-layout="fixed" width="6.7in" break-before="page">
+				<fo:table-column/>
+				<fo:table-column/>
+				{% for studyYear in content.curriculumVersion.studyYears %}
+				<fo:table-column/>
+				{% endfor %}
+				
+				<fo:table-body>
+					<fo:table-row>
+						<fo:table-cell border-style="solid" margin="0 3px">
+							<fo:block font-weight="bold">{{ "report.curriculumVersion.namesAndCredits" | translate }}</fo:block>
+						</fo:table-cell>
+						<fo:table-cell border-style="solid" margin="0 3px">
+							<fo:block font-weight="bold">{{ "report.curriculumVersion.creditsSum" | translate }}</fo:block>
+						</fo:table-cell>
+						{% for studyYear in content.curriculumVersion.studyYears %}
+						<fo:table-cell border-style="solid" margin="0 3px">
+							<fo:block font-weight="bold">{{ studyYear }}. {{ "report.curriculumVersion.studyYear" | translate }}</fo:block>
+						</fo:table-cell>
+						{% endfor %}
+					</fo:table-row>
+					{% for type in content.curriculumVersion.moduleTypes %}
+						<fo:table-row>
+							<fo:table-cell border-style="solid" margin="0 3px">
+								<fo:block font-weight="bold">
+								{% if type.code == "KUTSEMOODUL_P" %}
+									{{ "report.curriculum.coreModules" | translate }}
+								{% elseif type.code == "KUTSEMOODUL_Y" %}
+									{{ "report.curriculum.generalModules" | translate }}
+								{% elseif type.code == "KUTSEMOODUL_V" %}
+									{{ "report.curriculum.optionalModules" | translate }}
+								{% elseif type.code == "KUTSEMOODUL_L" %}
+									{{ "report.curriculum.graduationModules" | translate }}
+								{% endif %}
+								</fo:block>
+							</fo:table-cell>
+							<fo:table-cell border-style="solid" margin="0 3px">
+								<fo:block font-weight="bold">{{ type.totalCredits }}</fo:block>
+							</fo:table-cell>
+							{% for year in type.studyYearCredits %}
+							<fo:table-cell border-style="solid" margin="0 3px">
+								<fo:block font-weight="bold">{{ year.value }}</fo:block>
+							</fo:table-cell>
+							{% endfor %}
+						</fo:table-row>
+						{% for module in type.modules %}
+						<fo:table-row>
+							<fo:table-cell border-style="solid" margin="0 3px">
+								<fo:block>{{ module.name }}</fo:block>
+							</fo:table-cell>
+							<fo:table-cell border-style="solid" margin="0 3px">
+								<fo:block>{{ module.totalCredits }}</fo:block>
+							</fo:table-cell>
+							{% for year in module.studyYearCredits %}
+							<fo:table-cell border-style="solid" margin="0 3px">
+								<fo:block>{{ year.value }}</fo:block>
+							</fo:table-cell>
+							{% endfor %}
+						</fo:table-row>
+						{% endfor %}
+					{% endfor %}
+				</fo:table-body>
+			</fo:table>
+			
+			<fo:block space-after="13pt"><fo:leader/></fo:block>
+			
+			<fo:block-container text-align="center">
+				<fo:block-container>
+					<fo:block font-weight="bold">{{ content.curriculumVersionModules.curriculumName }} {{ "report.curriculumVersion.modules.modulesImplementationPlan" | translate }}</fo:block>
+				</fo:block-container>
+			</fo:block-container>
+			
+			<fo:block space-after="13pt"><fo:leader/></fo:block>
+			
+			<fo:table display-align="center" table-layout="fixed" width="6.7in" break-before="page">
+				<fo:table-column/>
+				<fo:table-column/>
+				<fo:table-column/>
+				<fo:table-column/>
+				
+				<fo:table-body>
+					<fo:table-row>
+						<fo:table-cell border-style="solid" margin="0 3px">
+							<fo:block font-weight="bold">{{ "report.curriculumVersion.modules.targetGroup" | translate }}</fo:block>
+						</fo:table-cell>
+						<fo:table-cell border-style="solid" number-columns-spanned="3" margin="0 3px">
+							<fo:block>{{ content.curriculumVersionModules.targetGroup }}</fo:block>
+						</fo:table-cell>
+					</fo:table-row>
+					
+					<fo:table-row>
+						<fo:table-cell border-style="solid" margin="0 3px">
+							<fo:block font-weight="bold">{{ "report.curriculumVersion.modules.studyForm" | translate }}</fo:block>
+						</fo:table-cell>
+						<fo:table-cell border-style="solid" number-columns-spanned="3" margin="0 3px">
+							<fo:block>{{ content.curriculumVersionModules.studyForm }}</fo:block>
+						</fo:table-cell>
+					</fo:table-row>
+				</fo:table-body>
+			</fo:table>
+			{% for module in content.curriculumVersionModules.modules %} 
+			<fo:table display-align="center" table-layout="fixed" width="6.7in" break-before="page">
+				<fo:table-column/>
+				<fo:table-column/>
+				<fo:table-column/>
+				<fo:table-column/>
+				
+				<fo:table-body>
+					<fo:table-row text-align="center">
+						<fo:table-cell border-style="solid" margin="0 3px">
+							<fo:block font-weight="bold">{{ "report.curriculumVersion.modules.moduleNr" | translate }}</fo:block>
+						</fo:table-cell>
+						<fo:table-cell border-style="solid" margin="0 3px">
+							<fo:block font-weight="bold">{{ "report.curriculumVersion.modules.moduleName" | translate }}</fo:block>
+						</fo:table-cell>
+						<fo:table-cell border-style="solid" margin="0 3px">
+							<fo:block font-weight="bold">{{ "report.curriculumVersion.modules.moduleCredits" | translate }}</fo:block>
+						</fo:table-cell>
+						<fo:table-cell border-style="solid" margin="0 3px">
+							<fo:block font-weight="bold">
+							{% if content.curriculumVersionModules.isHigherSchool %} 
+								{{ "report.curriculumVersion.modules.teachersHigher" | translate }}
+							{% else %}
+								{{ "report.curriculumVersion.modules.teachersVocational" | translate }}
+							{% endif %}
+							</fo:block>
+						</fo:table-cell>
+					</fo:table-row>
+					
+					<fo:table-row>
+						<fo:table-cell border-style="solid" text-align="center">
+							<fo:block font-weight="bold">{{ loop.index + 1 }}.</fo:block>
+						</fo:table-cell>
+						<fo:table-cell border-style="solid" text-align="center">
+							<fo:block font-weight="bold">{{ module.name }}</fo:block>
+						</fo:table-cell>
+						<fo:table-cell border-style="solid" text-align="center">
+							<fo:block font-weight="bold">{{ module.credits }}</fo:block>
+						</fo:table-cell>
+						<fo:table-cell border-style="solid" margin="0 3px">
+							<fo:block>{{ module.teachers }}</fo:block>
+						</fo:table-cell>
+					</fo:table-row>
+					
+					<fo:table-row>
+						<fo:table-cell border-style="solid" margin="0 3px">
+							<fo:block font-weight="bold">{{ "report.curriculumVersion.modules.requirements" | translate }}</fo:block>
+						</fo:table-cell>
+						<fo:table-cell border-style="solid" number-columns-spanned="3" margin="0 3px">
+							<fo:block>{{ module.requirements }}</fo:block>
+						</fo:table-cell>
+					</fo:table-row>
+					
+					<fo:table-row>
+						<fo:table-cell border-style="solid" margin="0 3px">
+							<fo:block font-weight="bold">{{ "report.curriculumVersion.modules.objective" | translate }}</fo:block>
+						</fo:table-cell>
+						<fo:table-cell border-style="solid" number-columns-spanned="3" margin="0 3px">
+							<fo:block>{{ module.objective }}</fo:block>
+						</fo:table-cell>
+					</fo:table-row>
+					
+					<fo:table-row>
+						<fo:table-cell border-style="solid" number-columns-spanned="2" margin="0 3px">
+							<fo:block font-weight="bold">{{ "report.curriculumVersion.modules.outcomes" | translate }}</fo:block>
+						</fo:table-cell>
+						<fo:table-cell border-style="solid" number-columns-spanned="2" margin="0 3px">
+							<fo:block font-weight="bold">{{ "report.curriculumVersion.modules.criterias" | translate }}</fo:block>
+						</fo:table-cell>
+					</fo:table-row>
+					
+					<fo:table-row>
+						<fo:table-cell border-style="solid" number-columns-spanned="2" margin="0 3px">
+						{% for outcome in module.outcomes %}
+							<fo:block>{{ loop.index + 1 }}. {{ outcome }}</fo:block>
+						{% else %}
+							<fo:block></fo:block>
+						{% endfor %}
+						</fo:table-cell>
+						<fo:table-cell border-style="solid" number-columns-spanned="2" margin="0 3px">
+							<fo:block>{{ module.criterias }}</fo:block>
+						</fo:table-cell>
+					</fo:table-row>
+					
+					<fo:table-row>
+						<fo:table-cell border-style="solid" margin="0 3px">
+							<fo:block font-weight="bold">{{ "report.curriculumVersion.modules.themes" | translate }}</fo:block>
+						</fo:table-cell>
+						<fo:table-cell border-style="solid" number-columns-spanned="3" margin="0 3px">
+							{% for theme in module.themes %}
+								<fo:block>{{ loop.index + 1 }}. {{ theme.name }}</fo:block>
+
+								{% if theme.subThemes is not null %}
+								<fo:block>
+									&#160;&#160;&#160;&#160;<fo:inline font-style="italic">{{ "report.curriculumVersion.modules.subThemes" | translate }}</fo:inline>: {{ theme.subThemes }}
+								</fo:block>
+								{% endif %}
+							{% else %}
+							 <fo:block></fo:block>
+							{% endfor %}
+						</fo:table-cell>
+					</fo:table-row>
+					
+					<fo:table-row>
+						<fo:table-cell border-style="solid" text-align="right">
+							<fo:block font-weight="bold">{{ "report.curriculumVersion.modules.independentStudy" | translate }}</fo:block>
+						</fo:table-cell>
+						<fo:table-cell border-style="solid" number-columns-spanned="3" margin="0 3px">
+							<fo:block>{{ module.independentStudy }}</fo:block>
+						</fo:table-cell>
+					</fo:table-row>
+					
+					<fo:table-row>
+						<fo:table-cell border-style="solid" text-align="right">
+							<fo:block font-weight="bold">{{ "report.curriculumVersion.modules.practice" | translate }}</fo:block>
+						</fo:table-cell>
+						<fo:table-cell border-style="solid" number-columns-spanned="3" margin="0 3px">
+							<fo:block>{{ module.practice }}</fo:block>
+						</fo:table-cell>
+					</fo:table-row>
+					
+					<fo:table-row>
+						<fo:table-cell border-style="solid" margin="0 3px">
+							<fo:block font-weight="bold">{{ "report.curriculumVersion.modules.learningMethods" | translate }}</fo:block>
+						</fo:table-cell>
+						<fo:table-cell border-style="solid" number-columns-spanned="3" margin="0 3px">
+							<fo:block>{{ module.learningMethods }}</fo:block>
+						</fo:table-cell>
+					</fo:table-row>
+					
+					<fo:table-row>
+						<fo:table-cell border-style="solid" margin="0 3px">
+							<fo:block font-weight="bold">{{ "report.curriculumVersion.modules.assessment" | translate }}</fo:block>
+						</fo:table-cell>
+						<fo:table-cell border-style="solid" number-columns-spanned="3" margin="0 3px">
+							<fo:block>{{ module.assessment }}</fo:block>
+						</fo:table-cell>
+					</fo:table-row>
+					
+					<fo:table-row>
+						<fo:table-cell border-style="solid" text-align="right">
+							<fo:block font-weight="bold">{{ "report.curriculumVersion.modules.gradeCriterias" | translate }}</fo:block>
+						</fo:table-cell>
+						<fo:table-cell border-style="solid" number-columns-spanned="3" margin="0 3px">
+							{% if module.gradeCriteria3 is not null %}
+								<fo:block>{{ "report.curriculumVersion.modules.gradeCriteria3" | translate }}: {{ module.gradeCriteria3 }}</fo:block>
+							{% endif %}
+							{% if module.gradeCriteria4 is not null %}
+								<fo:block>{{ "report.curriculumVersion.modules.gradeCriteria4" | translate }}: {{ module.gradeCriteria4 }}</fo:block>
+							{% endif %}
+							{% if module.gradeCriteria5 is not null %}
+								<fo:block>{{ "report.curriculumVersion.modules.gradeCriteria5" | translate }}: {{ module.gradeCriteria5 }}</fo:block>
+							{% endif %}
+							{% if module.gradeCriteriaPass is not null %}
+								<fo:block>{{ "report.curriculumVersion.modules.gradeCriteriaPass" | translate }}: {{ module.gradeCriteriaPass }}</fo:block>
+							{% endif %}
+							{% if module.gradeCriteria3 is null and module.gradeCriteria4 is null and module.gradeCriteria5 is null and module.gradeCriteriaPass is null %}
+                                <fo:block></fo:block>
+                            {% endif %}
+						</fo:table-cell>
+					</fo:table-row>
+					
+					<fo:table-row>
+						<fo:table-cell border-style="solid" text-align="right">
+							<fo:block font-weight="bold">{{ "report.curriculumVersion.modules.totalGradeDescription" | translate }}</fo:block>
+						</fo:table-cell>
+						<fo:table-cell border-style="solid" number-columns-spanned="3" margin="0 3px">
+							<fo:block>{{ module.totalGradeDescription }}</fo:block>
+						</fo:table-cell>
+					</fo:table-row>
+					
+					<fo:table-row>
+						<fo:table-cell border-style="solid" text-align="right">
+							<fo:block font-weight="bold">{{ "report.curriculumVersion.modules.assessmentMethods" | translate }}</fo:block>
+						</fo:table-cell>
+						<fo:table-cell border-style="solid" number-columns-spanned="3" margin="0 3px">
+							<fo:block>{{ module.assessmentMethods }}</fo:block>
+						</fo:table-cell>
+					</fo:table-row>
+					
+					<fo:table-row>
+						<fo:table-cell border-style="solid" text-align="right">
+							<fo:block font-weight="bold">{{ "report.curriculumVersion.modules.studyMaterials" | translate }}</fo:block>
+						</fo:table-cell>
+						<fo:table-cell border-style="solid" number-columns-spanned="3" margin="0 3px">
+							<fo:block>{{ module.studyMaterials }}</fo:block>
+						</fo:table-cell>
+					</fo:table-row>
+				</fo:table-body>
+			</fo:table>
+			<fo:block><fo:leader /></fo:block>
+			{% endfor %}
+		</fo:flow>
+	</fo:page-sequence>
+</fo:root>

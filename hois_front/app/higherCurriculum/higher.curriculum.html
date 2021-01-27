@@ -124,7 +124,7 @@
 				<div layout="row" flex>
 					<md-input-container flex="45">
 						<label>{{'curriculum.group' | translate}}</label>
-						<hois-classifier-select ng-model="curriculum.iscedClass" required model-value-attr="code" main-classifier-code="ISCED_RYHM" criteria="{higher: true}" 
+						<hois-classifier-select ng-model="curriculum.iscedClass" required model-value-attr="code" main-classifier-code="ISCED_RYHM" criteria="{higher: true}"
 							watch-model="curriculum.group" filter-values search-from-connect connect-main-classifier-code="OPPEKAVAGRUPP"></hois-classifier-select>
 					</md-input-container>
 					<md-input-container flex="50" flex-offset="5">
@@ -135,7 +135,7 @@
 				<div layout="row" flex>
 					<md-input-container flex="45">
 						<label>{{'curriculum.areaOfStudy' | translate}}</label>
-						<hois-classifier-select ng-model="curriculum.areaOfStudy" main-classifier-code="ISCED_VALD" watch-model="curriculum.fieldOfStudy" 
+						<hois-classifier-select ng-model="curriculum.areaOfStudy" main-classifier-code="ISCED_VALD" watch-model="curriculum.fieldOfStudy"
 							model-value-attr="code" select-first-value connect-main-classifier-code="ISCED_VALD" criteria="{higher: true}" disabled></hois-classifier-select>
 					</md-input-container>
 
@@ -158,6 +158,8 @@
 				</div>
 			</fieldset>
 		</div>
+    <div>&nbsp;</div>
+    <ng-include src="'higherCurriculum/higher.curriculum.edit.action.buttons.html'"></ng-include>
 		<div>&nbsp;</div>
 		<fieldset tabindex="4">
 			<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.commonData' | translate}}</legend>
@@ -532,57 +534,7 @@
                 </table>
             </fieldset>
             <hois-created-modified object="curriculum" class="top-margin"></hois-created-modified>
-        <div layout="row">
-					<div flex layout-xs="column">
-						<span ng-show="curriculum.status === STATUS.ENTERING">
-							<span ng-show="!curriculum.id" layout-xs="column">
-								<md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
-							</span>
-							<span ng-show="curriculum.id && !formState.readOnly" layout-xs="column">
-								<md-button class="md-raised md-primary" ng-click="save()" ng-if="curriculum.canChange">{{'main.button.save' | translate}}</md-button>
-								<md-button class="md-raised" ng-click="saveAndProceed()" ng-if="curriculum.canChange && curriculum.canConfirm">{{'main.button.status.approving' | translate}}</md-button>
-								<md-button class="md-raised" ng-click="setStatusClosed()" ng-if="curriculum.canChange && curriculum.canClose">{{'main.button.status.close' | translate}}</md-button>
-								<md-button class="md-raised md-default" ng-click="delete()" ng-if="curriculum.canDelete">{{'main.button.delete' | translate}}</md-button>
-							</span>
-							<span ng-show="curriculum.id && formState.readOnly" layout-xs="column">
-								<md-button class="md-raised md-primary" ng-click="goToEditForm()" ng-if="curriculum.canChange">{{'main.button.change' | translate}}</md-button>
-							</span>
-						</span>
-						<span ng-show="curriculum.status === STATUS.PROCEEDING && !formState.sentToEhis">
-							<span ng-show="!formState.readOnly" layout-xs="column">
-								<md-button class="md-raised md-primary" ng-click="save()" ng-if="curriculum.canChange">{{'main.button.save' | translate}}</md-button>
-								<md-button class="md-raised md-default" ng-click="changeStatusUnderRevision()" ng-if="curriculum.canSetUnderRevision">{{'curriculum.button.changeStatusUnderRevision' | translate}}</md-button>
-								<md-button class="md-raised md-default" ng-click="delete()" ng-if="curriculum.canDelete">{{'main.button.delete' | translate}}</md-button>
-							</span>
-							<span ng-show="formState.readOnly" layout-xs="column">
-								<md-button class="md-raised md-primary" ng-click="goToEditForm()" ng-if="curriculum.canChange">{{'main.button.change' | translate}}</md-button>
-								<md-button class="md-raised md-default" ng-click="changeStatusUnderRevision()" ng-if="curriculum.canSetUnderRevision">{{'curriculum.button.changeStatusUnderRevision' | translate}}</md-button>
-								<md-button class="md-raised md-default" ng-click="sendToEhis(true)" ng-if="curriculum.canConfirm">{{'curriculum.button.sendToEhisTest' | translate}}</md-button>
-								<md-button class="md-raised md-default" ng-click="sendToEhis(false)" ng-if="curriculum.canConfirm">{{'curriculum.button.sendToEhis' | translate}}</md-button>
-								<md-button class="md-raised" ng-click="setStatusClosed()" ng-if="curriculum.canClose">{{'main.button.status.close' | translate}}</md-button>
-							</span>
-						</span>
-						<span ng-show="curriculum.status === STATUS.PROCEEDING && formState.sentToEhis" layout-xs="column">
-							<md-button class="md-raised md-default" ng-click="changeStatusUnderRevision()" ng-if="curriculum.canSetUnderRevision">{{'curriculum.button.changeStatusUnderRevision' | translate}}</md-button>
-							<md-button class="md-raised md-default" ng-click="updateFromEhis(true)" ng-if="curriculum.canConfirm">{{'curriculum.button.updateFromEhisTest' | translate}}</md-button>
-							<md-button class="md-raised md-default" ng-click="updateFromEhis(false)" ng-if="curriculum.canConfirm">{{'curriculum.button.updateFromEhis' | translate}}</md-button>
-						</span>
-						<span ng-show="curriculum.status === STATUS.VERIFIED">
-							<span ng-show="!formState.readOnly" layout-xs="column">
-								<md-button class="md-raised md-primary" ng-click="save()" ng-if="curriculum.canChange">{{'main.button.save' | translate}}</md-button>
-								<md-button class="md-raised md-default" ng-click="changeStatusUnderRevision()" ng-if="curriculum.canSetUnderRevision">{{'curriculum.button.changeStatusUnderRevision' | translate}}</md-button>
-							</span>
-							<span ng-show="formState.readOnly" layout-xs="column">
-								<md-button class="md-raised md-primary" ng-click="goToEditForm()" ng-if="curriculum.canChange">{{'main.button.change' | translate}}</md-button>
-								<md-button class="md-raised md-default" ng-click="changeStatusUnderRevision()" ng-if="curriculum.canSetUnderRevision">{{'curriculum.button.changeStatusUnderRevision' | translate}}</md-button>
-								<md-button class="md-raised" ng-click="setStatusClosed()" ng-if="curriculum.canClose">{{'main.button.status.close' | translate}}</md-button>
-							</span>
-						</span>
-						<a ng-show="curriculum.id && (auth.isAdmin() || auth.isLeadingTeacher() || curriculum.status === STATUS.VERIFIED)"
-							href="{{formState.curriculumXmlUrl}}" target="_blank" class="md-button md-raised" >XML</a>
-						<md-button class="md-raised md-default" ng-click="back('#/curriculum', higherCurriculumForm)">{{'main.button.back' | translate}}</md-button>
-					</div>
-        </div>
+      <ng-include src="'higherCurriculum/higher.curriculum.edit.action.buttons.html'"></ng-include>
     </form>
 </div>
 

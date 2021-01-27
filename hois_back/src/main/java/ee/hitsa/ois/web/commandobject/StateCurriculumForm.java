@@ -47,7 +47,7 @@ public class StateCurriculumForm extends VersionedCommand {
     @NotNull
     @Min(0)
     @Max(999)
-    private Long credits;
+    private BigDecimal credits;
     @Size(max=20000)
     private String practiceDescription;
     @NotNull(groups = {Confirmed.class})
@@ -159,11 +159,11 @@ public class StateCurriculumForm extends VersionedCommand {
         this.graduationRequirementsEn = graduationRequirementsEn;
     }
 
-    public Long getCredits() {
+    public BigDecimal getCredits() {
         return credits;
     }
 
-    public void setCredits(Long credits) {
+    public void setCredits(BigDecimal credits) {
         this.credits = credits;
     }
 

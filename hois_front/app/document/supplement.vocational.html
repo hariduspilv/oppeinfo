@@ -47,6 +47,13 @@
             ng-change="updatePdfUrl()" required></hois-select>
         </md-input-container>
       </div>
+
+      <div layout="row">
+        <md-input-container flex="20" flex-sm="100" flex-xs="100">
+          <label>{{'document.paddingChange' | translate}}</label>
+          <input type="number" ng-model="contentData.paddingChange" min="-10" max="10" ng-change="updatePdfUrl()">
+        </md-input-container>
+      </div>
     </form>
 
     <div layout="row">

@@ -59,6 +59,7 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
     private Boolean isPartialLoad = Boolean.FALSE;
     private Boolean isUndefinedLoad = Boolean.FALSE;
     private Boolean hasSpecialNeed;
+    private Boolean hasSecondarySchoolCountryFromSAIS;
     
     private List<AutocompleteResult> supportServices;
     private List<AutocompleteResult> supportModules;
@@ -273,6 +274,14 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
         this.diplomaDto = diplomaDto;
     }
 
+    public Boolean getHasSecondarySchoolCountryFromSAIS() {
+        return hasSecondarySchoolCountryFromSAIS;
+    }
+
+    public void setHasSecondarySchoolCountryFromSAIS(Boolean hasSecondarySchoolCountryFromSAIS) {
+        this.hasSecondarySchoolCountryFromSAIS = hasSecondarySchoolCountryFromSAIS;
+    }
+
     public static DirectiveStudentDto of(Application application, DirectiveType directiveType) {
         DirectiveStudentDto dto = of(application.getStudent(), directiveType);
         dto.setApplication(application.getId());
@@ -360,6 +369,10 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
             if (directiveStudent.getCurriculumVersion() != null) {
                 dto.setCurriculumVersionObject(new CurriculumVersionResult(directiveStudent.getCurriculumVersion()));
             }
+            if (directiveStudent.getSaisApplication() != null) {
+                dto.setHasSecondarySchoolCountryFromSAIS(
+                        Boolean.valueOf(directiveStudent.getSaisApplication().getSecondarySchoolCountry() != null));
+            }
         }
         CurriculumGrade grade = directiveStudent.getCurriculumGrade();
         if (grade != null) {
@@ -406,6 +419,7 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
         }
         dto.setFinSpecific(s.name());
         dto.setDormitory(CurriculumUtil.isVocational(cv.getCurriculum()) ? Dormitory.YHISELAMU_E.name() : null);
+        dto.setHasSecondarySchoolCountryFromSAIS(Boolean.valueOf(application.getSecondarySchoolCountry() != null));
         return dto;
     }
 

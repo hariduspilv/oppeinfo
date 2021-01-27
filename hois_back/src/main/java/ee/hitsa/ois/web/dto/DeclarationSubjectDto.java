@@ -10,14 +10,16 @@ import ee.hitsa.ois.domain.DeclarationSubject;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.subject.SubjectConnect;
 import ee.hitsa.ois.domain.subject.subjectprogram.SubjectProgram;
+import ee.hitsa.ois.domain.subject.subjectprogram.SubjectProgramTeacher;
 import ee.hitsa.ois.enums.SubjectConnection;
 import ee.hitsa.ois.enums.SubjectProgramStatus;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
-import ee.hitsa.ois.util.SubjectProgramUtil;
+import ee.hitsa.ois.util.SubjectProgramValidation;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
+import ee.hitsa.ois.web.dto.subject.subjectprogram.SubjectProgramResult;
 
 public class DeclarationSubjectDto extends VersionedCommand {
 
@@ -52,12 +54,14 @@ public class DeclarationSubjectDto extends VersionedCommand {
         dto.setTeachers(PersonUtil.sorted(declarationSubject.getSubjectStudyPeriod().getTeachers().stream().map(t -> t.getTeacher().getPerson())));
         // In case of having not available or not created subject program it should return ID '-1' which means that there is no program available.
         dto.setPrograms(declarationSubject.getSubjectStudyPeriod().getTeachers().stream().map(t -> {
-            Optional<SubjectProgram> optProgram = t.getSubjectPrograms().stream().findFirst(); // Only 1 study program for subjectStudyPeriodTeacher
+            // TODO: can be multiple teachers
+            Optional<SubjectProgram> optProgram = t.getSubjectProgramTeachers().stream()
+                    .map(SubjectProgramTeacher::getSubjectProgram).findFirst(); // Only 1 study program for subjectStudyPeriodTeacher
             SubjectProgramResult programDto = new SubjectProgramResult();
             programDto.setTeacherName(PersonUtil.fullname(t.getTeacher().getPerson()));
             if (optProgram.isPresent() && ClassifierUtil.equals(SubjectProgramStatus.AINEPROGRAMM_STAATUS_K, optProgram.get().getStatus())) {
                 programDto.setId(optProgram.get().getId());
-                programDto.setPublicStudent(Boolean.valueOf(SubjectProgramUtil.isPublicForStudent(optProgram.get())));
+                programDto.setPublicStudent(Boolean.valueOf(SubjectProgramValidation.isPublicForStudent(optProgram.get())));
             } else {
                 programDto.setId(Long.valueOf(-1));
             }

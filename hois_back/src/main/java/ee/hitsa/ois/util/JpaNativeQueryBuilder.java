@@ -40,6 +40,11 @@ public class JpaNativeQueryBuilder {
         this.from = Objects.requireNonNull(from);
     }
 
+    public JpaNativeQueryBuilder parameters(Map<String, Object> parametersMap) {
+        parametersMap.forEach(this::parameter);
+        return this;
+    }
+
     public JpaNativeQueryBuilder sort(Sort sortFields) {
         this.sort = sortFields;
         return this;

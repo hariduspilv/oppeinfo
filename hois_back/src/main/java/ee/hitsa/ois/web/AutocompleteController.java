@@ -25,7 +25,6 @@ import ee.hitsa.ois.web.commandobject.BuildingAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.ClassifierAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.CommitteeAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.DirectiveCoordinatorAutocompleteCommand;
-import ee.hitsa.ois.web.commandobject.JournalAndSubjectAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.JournalAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.PersonLookupCommand;
 import ee.hitsa.ois.web.commandobject.PracticeEvaluationAutocompleteCommand;
@@ -53,7 +52,6 @@ import ee.hitsa.ois.web.dto.ClassifierDto;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
 import ee.hitsa.ois.web.dto.JournalAutocompleteResult;
 import ee.hitsa.ois.web.dto.LiteralResult;
-import ee.hitsa.ois.web.dto.OccupiedAutocompleteResult;
 import ee.hitsa.ois.web.dto.PersonDto;
 import ee.hitsa.ois.web.dto.RoomAutocompleteResult;
 import ee.hitsa.ois.web.dto.SchoolDepartmentResult;
@@ -330,11 +328,6 @@ public class AutocompleteController {
         return autocompleteService.journals(user, lookup);
     }
 
-    @GetMapping("/journalsAndSubjects")
-    public Page<AutocompleteResult> journalsAndSubjects(HoisUserDetails user, JournalAndSubjectAutocompleteCommand lookup) {
-        return asPage(autocompleteService.journalsAndSubjects(user.getSchoolId(), lookup));
-    }
-    
     /**
      * Ignores study year, study year will be selected from current study year
      * @param user

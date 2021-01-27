@@ -5,12 +5,14 @@ public class LessonPlanTeacherLoadDto {
     private Short weekNr;
     private Long studyPeriod;
     private String capacity;
+    private Boolean isContact;
     private Long sum;
 
-    public LessonPlanTeacherLoadDto(Short weekNr, Long studyPeriod, String capacity, Long sum) {
+    public LessonPlanTeacherLoadDto(Short weekNr, Long studyPeriod, String capacity, Boolean isContact, Long sum) {
         this.weekNr = weekNr;
         this.studyPeriod = studyPeriod;
         this.capacity = capacity;
+        this.isContact = isContact;
         this.sum = sum;
     }
 
@@ -36,6 +38,14 @@ public class LessonPlanTeacherLoadDto {
 
     public void setCapacity(String capacity) {
         this.capacity = capacity;
+    }
+
+    public Boolean getIsContact() {
+        return isContact;
+    }
+
+    public void setIsContact(Boolean isContact) {
+        this.isContact = isContact;
     }
 
     public Long getSum() {

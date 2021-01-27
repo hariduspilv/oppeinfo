@@ -28,7 +28,8 @@
                 <th colspan="3" class="cross dividerBorder">&nbsp;</th>
                 <th ng-if="!atLeastOneShownPeriod" colspan="1" class="dividerBorder"></th>
                 <th ng-if="w.show" ng-repeat="w in ::formState.weekNrs track by $index" class="center" ng-class="{dividerBorder: w.endOfPeriod}"
-                  ng-style="{ background: true ? getLegendByWeek(w.nr) :  'white' }" title="{{formState.weekBeginningDates[$index] | hoisDate}}">{{w.nr}}</th>
+                  ng-style="{ background: getLegendByWeek(w.nr) ? getLegendByWeek(w.nr) : (w.hasVacation ? '#eee' : 'white') }"
+                  title="{{w.start | hoisDate}}">{{w.nr}}</th>
               </tr>
             </thead>
             <tbody class="teacher-capacity-tbody" ng-repeat="teacher in journal.teachers track by $index">
@@ -39,25 +40,28 @@
                 </td>
                 <td ng-if="!atLeastOneShownPeriod" colspan="1" class="dividerBorder"></td>
                 <td ng-if="formState.showWeeks && week.show" ng-repeat="week in ::formState.weekNrs track by $index"
-                  ng-class="{dividerBorder: week.endOfPeriod}" title="{{getStudyLoadTitle(teacher.teacher.id, $index)}}"
-                  class="center lessonplan-teacher-load">{{teacherLoad.studyLoadByWeek[$index]}}</td>
-                <td ng-if="!formState.showWeeks && sp._selected" colspan="{{::sp.weekNrs.length}}" ng-repeat="sp in ::formState.studyPeriods track by $index" 
+                  ng-class="{dividerBorder: week.endOfPeriod}" ng-style="{ background: formState.weekNrs[$index].hasVacation ? '#eee' : 'white'}"
+                  title="{{getStudyLoadTitle(teacher.teacher.id, $index)}}" class="center lessonplan-teacher-load">{{teacherLoad.studyLoadByWeek[$index]}}</td>
+                <td ng-if="!formState.showWeeks && sp._selected" colspan="{{::sp.weekNrs.length}}" ng-repeat="sp in ::formState.studyPeriods track by $index"
                   title="{{getStudyLoadSpTitle(teacher.teacher.id, $index)}}" class="center dividerBorder lessonplan-teacher-load">{{teacherLoad.studyLoadByPeriod[$index]}}</td>
               </tr>
               <tr ng-repeat="ct in journalCapacities" class="fix" ng-style="{'border-top': $first ? 'border-top: solid 2px #777 !important;' : 'inherit'}">
                 <td rowspan="{{::journalCapacities.length}}" ng-if="$first" class="fix"
-                  title="{{'lessonplan.teacherLoad' | translate : getTeacherLoad(teacher.teacher.id)}}">{{currentLanguageNameField(teacher.teacher)}}</td>
+                  title="{{'lessonplan.teacherLoad' | translate : (teacherLoad = getTeacherLoad(teacher.teacher.id))}}">
+                  <span ng-style="{color: teacherLoad.unplannedLessons < 0 ? 'red' : 'inherit'}">{{currentLanguageNameField(teacher.teacher)}}</span>
+                </td>
                 <td class="center fix">{{ct.value.toUpperCase()}}</td>
                 <td class="dividerBorder center fix">{{formState.teacherTotals[teacher.id][ct.code]}}</td>
                 <td ng-if="!atLeastOneShownPeriod" colspan="1" class="dividerBorder"></td>
                 <td ng-if="formState.showWeeks && formState.weekNrs[$index].show" ng-repeat="h in ::teacher.hours[ct.code] track by $index"
-                  ng-class="{dividerBorder: formState.weekNrs[$index].endOfPeriod}" class="center">
+                  ng-class="{dividerBorder: formState.weekNrs[$index].endOfPeriod}"
+                  ng-style="{ background: formState.weekNrs[$index].hasVacation ? '#eee' : 'white'}" class="center">
                   <input type="number" min="0" step="1" ng-model="teacher.hours[ct.code][$index]"
                     ng-change="updateTotals(teacher, ct.code, $index)" ng-disabled="isView || !journal.capacityDiff">
                 </td>
-                <td ng-if="!formState.showWeeks && sp._selected" colspan="{{::sp.weekNrs.length}}" ng-repeat="sp in ::formState.studyPeriods track by $index" 
+                <td ng-if="!formState.showWeeks && sp._selected" colspan="{{::sp.weekNrs.length}}" ng-repeat="sp in ::formState.studyPeriods track by $index"
                   class="center dividerBorder">
-                  <input type="number" min="0" step="1" ng-model="teacher.spHours[ct.code][$index]" 
+                  <input type="number" min="0" step="1" ng-model="teacher.spHours[ct.code][$index]"
                     ng-change="updateLessonCountByStudyPeriod(teacher, ct.code, $index)" ng-disabled="isView || !journal.capacityDiff">
                 </td>
               </tr>

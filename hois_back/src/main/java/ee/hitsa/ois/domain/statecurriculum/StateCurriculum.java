@@ -33,7 +33,7 @@ public class StateCurriculum extends BaseEntityWithId implements Translatable {
 	private String admissionRequirementsEn;
 	private String graduationRequirementsEt;
 	private String graduationRequirementsEn;
-	private Long credits;
+	private BigDecimal credits;
 	private String practiceDescription;
 	private BigDecimal optionalStudyCredits;
 	private LocalDate validFrom;
@@ -187,11 +187,11 @@ public class StateCurriculum extends BaseEntityWithId implements Translatable {
 		this.graduationRequirementsEn = graduationRequirementsEn;
 	}
 
-	public Long getCredits() {
+	public BigDecimal getCredits() {
 		return credits;
 	}
 
-	public void setCredits(Long credits) {
+	public void setCredits(BigDecimal credits) {
 		this.credits = credits;
 	}
 

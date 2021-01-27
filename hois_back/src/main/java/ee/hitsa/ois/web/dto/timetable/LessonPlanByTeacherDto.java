@@ -19,7 +19,6 @@ import ee.hitsa.ois.web.dto.ClassifierDto;
 import ee.hitsa.ois.web.dto.StudyPeriodWithWeeksDto;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanDto.LessonPlanModuleJournalDto;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanDto.LessonPlanModuleJournalForTeacherDto;
-import ee.hitsa.ois.web.dto.timetable.LessonPlanDto.LessonPlanTeacherDto;
 
 public class LessonPlanByTeacherDto {
 
@@ -32,8 +31,8 @@ public class LessonPlanByTeacherDto {
     private final Map<Long, Map<String, Long>> subjectTotals;
     private final Map<Long, Map<String, Long>> subjectContactTotals;
     private final List<LocalDate> weekBeginningDates;
-    private List<LessonPlanTeacherDto> teachers;
     private List<ClassifierDto> lessonPlanCapacities;
+    private List<String> vocationalContactCapacities;
 
     public LessonPlanByTeacherDto(StudyYear studyYear, List<Journal> journals, List<LessonPlanByTeacherSubjectDto> subjects,
                                   Map<Long, Map<String, Long>> subjectTotals, Map<Long, Map<String, Long>> subjectContactTotals,
@@ -86,14 +85,6 @@ public class LessonPlanByTeacherDto {
     public List<LocalDate> getWeekBeginningDates() {
         return weekBeginningDates;
     }
-    
-    public List<LessonPlanTeacherDto> getTeachers() {
-        return teachers;
-    }
-
-    public void setTeachers(List<LessonPlanTeacherDto> teachers) {
-        this.teachers = teachers;
-    }
 
     public List<ClassifierDto> getLessonPlanCapacities() {
         return lessonPlanCapacities;
@@ -101,6 +92,14 @@ public class LessonPlanByTeacherDto {
 
     public void setLessonPlanCapacities(List<ClassifierDto> lessonPlanCapacities) {
         this.lessonPlanCapacities = lessonPlanCapacities;
+    }
+
+    public List<String> getVocationalContactCapacities() {
+        return vocationalContactCapacities;
+    }
+
+    public void setVocationalContactCapacities(List<String> vocationalContactCapacities) {
+        this.vocationalContactCapacities = vocationalContactCapacities;
     }
 
     public Map<Long, Map<String, Long>> getSubjectContactTotals() {

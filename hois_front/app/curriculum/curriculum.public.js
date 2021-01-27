@@ -135,8 +135,8 @@ angular.module('hitsaOis')
       });
     }
 
-}).controller('CurriculumPublicVersionController', ['$scope', '$route', 'config', 'Curriculum', 'dialogService', 'QueryUtils', 'Classifier',
-function ($scope, $route, config, Curriculum, dialogService, QueryUtils, Classifier) {
+}).controller('CurriculumPublicVersionController', ['$scope', '$route', 'config', 'Curriculum', 'dialogService', 'QueryUtils', 'Classifier', 'ArrayUtils',
+function ($scope, $route, config, Curriculum, dialogService, QueryUtils, Classifier, ArrayUtils) {
 
   $scope.version = $route.current.locals.curriculumVersion;
   $scope.curriculum = $route.current.locals.curriculum;
@@ -146,6 +146,76 @@ function ($scope, $route, config, Curriculum, dialogService, QueryUtils, Classif
 
   $scope.years = [];
   $scope.mappedSubjects = {};
+
+  $scope.formState = {
+    nominalCapacity: false
+  };
+  function createList(start, end, specialityId) {
+    var list = [];
+    for (var i = start; i <= end; i++) {
+      if ($scope.version !== undefined && $scope.version.nominalCapacities !== undefined) {
+        // should find only one result max
+        var capacities = $scope.version.nominalCapacities.filter(function (capacity) {
+          return capacity.periodNr === i && capacity.specialityId === specialityId;
+        });
+        if (capacities.length !== 0) {
+          list.push(capacities[0]);
+        } else {
+          addNewCapacity(list, specialityId, i);
+        }
+      } else {
+        addNewCapacity(list, specialityId, i);
+      }
+    }
+    return list;
+  }
+
+  function addNewCapacity(list, specialityId, periodNr) {
+    var newCapacity = {periodNr: periodNr, credits: 30, specialityId: specialityId};
+    list.push(newCapacity);
+    if ($scope.version.nominalCapacities === undefined) {
+      $scope.version.nominalCapacities = [];
+    }
+    $scope.version.nominalCapacities.push(newCapacity);
+  }
+
+  function setNominalCapacities() {
+    $scope.curriculum = $route.current.locals.curriculum;
+    $scope.curriculumPeriods = Math.ceil($scope.curriculum.studyPeriod / 6);
+    if ($scope.version.specialities !== undefined) {
+      $scope.version.specialities.forEach(function (speciality) {
+        speciality.capacities = ArrayUtils.partSplit(createList(1, $scope.curriculumPeriods, speciality.id), 2);
+      });
+    }
+  }
+
+  $scope.sumOfPeriods = function(periods) {
+    if (periods === undefined) {return 0;}
+    var sum = ArrayUtils.flatten(periods).reduce(function (p1, p2) {
+      return p1 + (p2.credits !== undefined ? p2.credits : 0);
+    }, 0);
+    return Math.round(sum * 100) / 100;
+  };
+
+  $scope.sumOfAutumnPeriods = function(periods) {
+    if (periods === undefined) {return 0;}
+    var sum = ArrayUtils.flatten(periods).filter(function (value, index) {
+      return index % 2 === 0;
+    }).reduce(function (p1, p2) {
+      return p1 + (p2.credits !== undefined ? p2.credits : 0);
+    }, 0);
+    return Math.round(sum * 100) / 100;
+  };
+
+  $scope.sumOfSpringPeriods = function(periods) {
+    if (periods === undefined) {return 0;}
+    var sum = ArrayUtils.flatten(periods).filter(function (value, index) {
+      return index % 2 !== 0;
+    }).reduce(function (p1, p2) {
+      return p1 + (p2.credits !== undefined ? p2.credits : 0);
+    }, 0);
+    return Math.round(sum * 100) / 100;
+  };
 
   $scope.version.$promise.then(function(response) {
     $scope.publicUrl = config.apiUrl + '/public/curriculum/' + $scope.curriculum.id + '/' + $scope.version.id +'?format=json';
@@ -164,9 +234,10 @@ function ($scope, $route, config, Curriculum, dialogService, QueryUtils, Classif
         }
       }
     });
-
+    setNominalCapacities();
     $scope.curriculumVersionPdfUrl = config.apiUrl + '/public/print/curriculumVersion/' + $scope.version.id + '/general.pdf';
     $scope.curriculumVersionModulesPdfUrl = config.apiUrl + '/public/print/curriculumVersion/' + $scope.version.id + '/modules.pdf';
+    $scope.curriculumVersionSummaryRtfUrl = config.apiUrl + '/public/print/curriculumVersion/' + $scope.version.id + '/curriculumVersionSummary.rtf';
   });
 
   $scope.openViewThemeDialog = function (theme) {

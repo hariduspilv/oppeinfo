@@ -1556,4 +1556,48 @@ function ($httpParamSerializer, $q, $route, $scope, $sessionStorage, $timeout, $
     });
   };
 
+}]).controller("ReportStudentLunchSupportController", ['$route', '$scope', 'DataUtils', 'FormUtils', 'QueryUtils', 'Classifier', '$q', 'message',
+  function ($route, $scope, DataUtils, FormUtils, QueryUtils, Classifier, $q, message) {
+  $scope.auth = $route.current.locals.auth;
+  $scope.criteria = {};
+  var clMapper = Classifier.valuemapper({status: 'OPPURSTAATUS'});
+  var baseUrl = '/reports/students/lunchSupport';
+  QueryUtils.createQueryForm($scope, baseUrl, {order: 'lastname, firstname'});
+
+  $scope.afterLoadData = function(result) {
+    $scope.tabledata.content = result.content;
+    $scope.tabledata.totalElements = result.totalElements;
+    clMapper.objectmapper(result.content);
+  };
+  
+  var loadData = $scope.loadData;
+  $scope.loadData = function() {
+    FormUtils.withValidForm($scope.searchForm, loadData);
+  };
+
+  $scope.updateSchoolMeal = function(row) {
+    QueryUtils.loadingWheel($scope, true);
+    var SchoolMealEndpoint = QueryUtils.endpoint('/reports/students/lunchSupport/' + row.studentId);
+    var rowCopy = angular.copy(row);
+    rowCopy.status = row.status.code;
+    var record = new SchoolMealEndpoint(rowCopy);
+    record.$update().then(function () {
+      QueryUtils.loadingWheel($scope, false);
+      message.info('main.messages.create.success');
+      $scope.loadData();
+    }).catch(angular.noop);
+  };
+
+  $q.all(clMapper.promises).then(function() {
+    $scope.loadData();
+  });
+
+  $scope.directiveControllers = [];
+  var clearCriteria = $scope.clearCriteria;
+  $scope.clearCriteria = function () {
+    clearCriteria();
+    $scope.directiveControllers.forEach(function (c) {
+      c.clear();
+    });
+  };
 }]);

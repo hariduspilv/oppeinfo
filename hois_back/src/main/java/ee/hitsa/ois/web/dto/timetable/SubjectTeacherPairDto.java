@@ -14,7 +14,10 @@ public class SubjectTeacherPairDto {
     private String nameEn;
     private String teacherNames;
     private String teacherNamesShort;
+    private String studentGroups;
     private List<TimetableEventDto> lessons = new ArrayList<>();
+
+    public SubjectTeacherPairDto() {}
 
     public SubjectTeacherPairDto(Long id, String code, String teacherNames, String teacherNamesShort, String nameEt, String nameEn) {
         this.id = id;
@@ -73,6 +76,14 @@ public class SubjectTeacherPairDto {
         this.teacherNamesShort = teacherNamesShort;
     }
 
+    public String getStudentGroups() {
+        return studentGroups;
+    }
+
+    public void setStudentGroups(String studentGroups) {
+        this.studentGroups = studentGroups;
+    }
+
     public List<TimetableEventDto> getLessons() {
         return lessons;
     }
@@ -80,5 +91,4 @@ public class SubjectTeacherPairDto {
     public void setLessons(List<TimetableEventDto> lessons) {
         this.lessons = lessons;
     }
-
 }

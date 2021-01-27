@@ -1,0 +1,7 @@
+<div layout="row" layout-xs="column">
+  <md-button ng-if="student.userCanEditStudent" ng-href="#/students/{{student.id}}/edit"
+             class="md-primary md-raised">{{'main.button.change' | translate}}</md-button>
+  <md-button ng-if="student.userCanUpdateRR && student.person.idcode" ng-click="updatePersonData()"
+             class="md-raised">{{'rr.operations.updateStudentData.button' | translate}}</md-button>
+  <md-button ng-if="!auth.isStudent() && !auth.isParent()" ng-click="back('#/students')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+</div>

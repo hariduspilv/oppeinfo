@@ -1,0 +1,6 @@
+<div layout="row" layout-xs="column">
+  <md-button class="md-raised" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_UUDE_AASTASSE')"
+             ng-show="canTransfer" ng-class="{'md-primary': !calculated}" ng-click="calculate()">
+    {{'main.button.calculate' | translate}}
+  </md-button>
+</div>

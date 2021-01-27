@@ -81,8 +81,9 @@ public abstract class TimetableUserRights {
         }
 
         if (UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_SYNDMUS)) {
-            return UserUtil.isSchoolAdmin(user, school) || UserUtil.isLeadingTeacher(user, school)
-                    || canTeacherEditOrDeleteEvent(user, eventTime);
+            boolean isSingleEvent = EntityUtil.getNullableId(event.getTimetableObject()) == null;
+            return UserUtil.isSchoolAdmin(user, school) || (isSingleEvent &&
+                    (UserUtil.isLeadingTeacher(user, school) || canTeacherEditOrDeleteEvent(user, eventTime)));
         }
 
         return false;
@@ -91,13 +92,7 @@ public abstract class TimetableUserRights {
     private static boolean canTeacherEditOrDeleteEvent(HoisUserDetails user, TimetableEventTime eventTime) {
         TimetableEvent event = eventTime.getTimetableEvent();
         if (UserUtil.isTeacher(user, event.getSchool())) {
-            boolean isSingleEvent = EntityUtil.getNullableId(event.getTimetableObject()) == null;
-            if (isSingleEvent) {
-                return user.getTeacherId().equals(EntityUtil.getNullableId(event.getInsertedTeacher()));
-            } else {
-                return isTeachersEvent(user, StreamUtil.toMappedList(t -> EntityUtil.getId(t.getTeacher()),
-                        eventTime.getTimetableEventTeachers()));
-            }
+            return user.getTeacherId().equals(EntityUtil.getNullableId(event.getInsertedTeacher()));
         }
         return false;
     }

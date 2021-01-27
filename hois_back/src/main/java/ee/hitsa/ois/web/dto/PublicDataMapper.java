@@ -4,6 +4,7 @@ import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +12,11 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import ee.hitsa.ois.domain.school.School;
+import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
+import ee.hitsa.ois.domain.subject.subjectprogram.SubjectProgramStudyContentTeacher;
+import ee.hitsa.ois.domain.subject.subjectprogram.SubjectProgramTeacher;
+import ee.hitsa.ois.util.PersonUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +40,7 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionElectiveModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModuleSubject;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionNominalCapacity;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleCapacity;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
@@ -74,8 +81,10 @@ public class PublicDataMapper {
     private static final Map<String, Function<CurriculumVersionOccupationModuleTheme, ?>> CURRICULUM_VERSION_OCCUPATION_MODULE_THEME = new LinkedHashMap<>();
     private static final Map<String, Function<CurriculumVersionOccupationModuleThemeCapacity, ?>> CURRICULUM_VERSION_OCCUPATION_MODULE_THEME_CAPACITY = new LinkedHashMap<>();
     private static final Map<String, Function<CurriculumVersionOccupationModuleYearCapacity, ?>> CURRICULUM_VERSION_OCCUPATION_MODULE_YEAR_CAPACITY = new LinkedHashMap<>();
+    private static final Map<String, Function<CurriculumVersionNominalCapacity, ?>> CURRICULUM_VERSION_NOMINAL_CAPACITY = new LinkedHashMap<>();
     private static final Map<String, Function<Subject, ?>> SUBJECT = new LinkedHashMap<>();
     private static final Map<String, Function<SubjectProgram, ?>> SUBJECT_PROGRAM = new LinkedHashMap<>();
+    private static final Map<String, Function<SubjectProgramTeacher, ?>> SUBJECT_PROGRAM_TEACHER = new LinkedHashMap<>();
     private static final Map<String, Function<SubjectStudyPeriodTeacher, ?>> SUBJECT_STUDY_PERIOD_TEACHER = new LinkedHashMap<>();
     private static final Map<String, Function<SubjectProgramStudyContent, ?>> SUBJECT_PROGRAM_STUDY_CONTENT = new LinkedHashMap<>();
 
@@ -134,11 +143,17 @@ public class PublicDataMapper {
         if (o instanceof CurriculumVersionSpeciality) {
             return map(((CurriculumVersionSpeciality)o).getCurriculumSpeciality(), CURRICULUM_SPECIALITY);
         }
+        if (o instanceof CurriculumVersionNominalCapacity) {
+            return map((CurriculumVersionNominalCapacity)o, CURRICULUM_VERSION_NOMINAL_CAPACITY);
+        }
         if (o instanceof Subject) {
             return map((Subject)o, SUBJECT);
         }
         if (o instanceof SubjectProgram) {
             return map((SubjectProgram)o, SUBJECT_PROGRAM);
+        }
+        if (o instanceof SubjectProgramTeacher) {
+            return map((SubjectProgramTeacher)o, SUBJECT_PROGRAM_TEACHER);
         }
         if (o instanceof SubjectStudyPeriodTeacher) {
             return map((SubjectStudyPeriodTeacher)o, SUBJECT_STUDY_PERIOD_TEACHER);
@@ -300,6 +315,7 @@ public class PublicDataMapper {
         CURRICULUM_OCCUPATION.put("specialities", co -> StreamUtil.toMappedList(CurriculumOccupationSpeciality::getSpeciality, co.getSpecialities()));
         CURRICULUM_OCCUPATION.put("specialityCodes", co -> StreamUtil.toMappedList(s -> s.getSpeciality().getCode(), co.getSpecialities()));
 
+        CURRICULUM_SPECIALITY.put("id", CurriculumSpeciality::getId);
         CURRICULUM_SPECIALITY.put("nameEt", CurriculumSpeciality::getNameEt);
         CURRICULUM_SPECIALITY.put("nameEn", CurriculumSpeciality::getNameEn);
         CURRICULUM_SPECIALITY.put("credits", CurriculumSpeciality::getCredits);
@@ -329,12 +345,19 @@ public class PublicDataMapper {
                                 .thenComparing(Comparator.comparing(CurriculumVersionHigherModule::getNameEt, String.CASE_INSENSITIVE_ORDER)))
                         .collect(Collectors.toList()));
         CURRICULUM_VERSION.put("specialities", CurriculumVersion::getSpecialities);
+        CURRICULUM_VERSION.put("nominalCapacities", CurriculumVersion::getNominalCapacities);
         CURRICULUM_VERSION.put("occupationModules",
                 cv -> cv.getOccupationModules().stream()
                         .sorted(Comparator.comparing((CurriculumVersionOccupationModule om) -> om.getCurriculumModule().getOrderNr(),
                                 Comparator.nullsLast(Comparator.naturalOrder()))
                                 .thenComparing(Comparator.comparing(om -> om.getCurriculumModule().getNameEt(), String.CASE_INSENSITIVE_ORDER)))
                         .collect(Collectors.toList()));
+        
+        CURRICULUM_VERSION_NOMINAL_CAPACITY.put("id", CurriculumVersionNominalCapacity::getId);
+        CURRICULUM_VERSION_NOMINAL_CAPACITY.put("specialityId", p -> p.getCurriculumVersionSpeciality().getCurriculumSpeciality().getId());
+        CURRICULUM_VERSION_NOMINAL_CAPACITY.put("credits", CurriculumVersionNominalCapacity::getCredits);
+        CURRICULUM_VERSION_NOMINAL_CAPACITY.put("periodNr", CurriculumVersionNominalCapacity::getPeriodNr);
+
 
         CURRICULUM_VERSION_ELECTIVE_MODULE.put("nameEt", CurriculumVersionElectiveModule::getNameEt);
         CURRICULUM_VERSION_ELECTIVE_MODULE.put("nameEn", CurriculumVersionElectiveModule::getNameEn);
@@ -444,7 +467,7 @@ public class PublicDataMapper {
         SUBJECT.put("subjectLanguages", s -> StreamUtil.toMappedList(SubjectLanguage::getLanguage, s.getSubjectLanguages()));
 
         SUBJECT_PROGRAM.put("id", SubjectProgram::getId);
-        SUBJECT_PROGRAM.put("subjectId", p -> p.getSubjectStudyPeriodTeacher().getSubjectStudyPeriod().getSubject().getId());
+        SUBJECT_PROGRAM.put("subjectId", p -> EntityUtil.getId(p.getSubjectStudyPeriod().getSubject()));
         SUBJECT_PROGRAM.put("assessmentDescription", SubjectProgram::getAssessmentDescription);
         SUBJECT_PROGRAM.put("passDescription", SubjectProgram::getPassDescription);
         SUBJECT_PROGRAM.put("npassDescription", SubjectProgram::getNpassDescription);
@@ -473,9 +496,27 @@ public class PublicDataMapper {
         SUBJECT_PROGRAM.put("studyContentType", p -> p.getStudyContentType().getCode());
         SUBJECT_PROGRAM.put("studyDescription", SubjectProgram::getStudyDescription);
         SUBJECT_PROGRAM.put("studyLiterature", SubjectProgram::getStudyLiterature);
-        SUBJECT_PROGRAM.put("subjectStudyPeriodTeacher", p -> p.getSubjectStudyPeriodTeacher());
+        SUBJECT_PROGRAM.put("teachers", SubjectProgram::getTeachers);
         SUBJECT_PROGRAM.put("addInfo", SubjectProgram::getAddInfo);
-        SUBJECT_PROGRAM.put("isLetterGrade", p -> p.getSubjectStudyPeriodTeacher().getSubjectStudyPeriod().getSubject().getSchool().getIsLetterGrade());
+        SUBJECT_PROGRAM.put("isLetterGrade", p -> p.getSubjectStudyPeriod().getSubject().getSchool().getIsLetterGrade());
+        SUBJECT_PROGRAM.put("isJoint", SubjectProgram::getIsJoint);
+        SUBJECT_PROGRAM.put("period", p -> {
+            Map<String, Object> period = new HashMap<>();
+            AutocompleteResult result = AutocompleteResult.ofWithYear(p.getSubjectStudyPeriod().getStudyPeriod());
+            period.put("id", result.getId());
+            period.put("nameEt", result.getNameEt());
+            period.put("nameEn", result.getNameEn());
+            return period;
+        });
+
+        SUBJECT_PROGRAM_TEACHER.put("teacher", pt -> {
+            Map<String, Object> teacher = new HashMap<>();
+            teacher.put("id", pt.getSubjectStudyPeriodTeacher().getId());
+            String fullname = PersonUtil.fullname(pt.getSubjectStudyPeriodTeacher().getTeacher().getPerson());
+            teacher.put("nameEt", fullname);
+            teacher.put("nameEn", fullname);
+            return teacher;
+        });
 
         SUBJECT_STUDY_PERIOD_TEACHER.put("id", sspt -> sspt.getTeacher().getId());
         SUBJECT_STUDY_PERIOD_TEACHER.put("name", sspt -> sspt.getTeacher().getPerson().getFullname());
@@ -488,5 +529,8 @@ public class PublicDataMapper {
         SUBJECT_PROGRAM_STUDY_CONTENT.put("capacity", SubjectProgramStudyContent::getCapacity);
         SUBJECT_PROGRAM_STUDY_CONTENT.put("orderNr", SubjectProgramStudyContent::getOrderNr);
         SUBJECT_PROGRAM_STUDY_CONTENT.put("teacher", p -> p.getTeacher() != null ? AutocompleteResult.of(p.getTeacher()) : null);
+        SUBJECT_PROGRAM_STUDY_CONTENT.put("teachers", p -> p.getTeachers().stream()
+                .map(ct -> EntityUtil.getId(ct.getTeacher().getSubjectStudyPeriodTeacher()))
+                .collect(Collectors.toList()));
     }
 }

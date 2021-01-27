@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('hitsaOis').controller('TimetableManagementController', 
+angular.module('hitsaOis').controller('TimetableManagementController',
   function ($rootScope, $window, $scope, $location, $timeout, message, QueryUtils, DataUtils, Classifier, dialogService, USER_ROLES, AuthService, oisFileService) {
     $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIPLAAN);
     var baseUrl = '/timetables';
@@ -21,13 +21,15 @@ angular.module('hitsaOis').controller('TimetableManagementController',
     };
 
     $scope.openAddFileDialog = function (studyPeriod, params) {
-      dialogService.showDialog('timetable/dialog/file.import.dialog.html', function() {
+      dialogService.showDialog('timetable/dialog/file.import.dialog.html', function(dialogScope) {
+        dialogScope.timetableType = $scope.formState.timetableType;
       }, function (submitScope) {
         var data = submitScope.data;
         oisFileService.getFromLfFile(data.file[0], function(file) {
             data.oisFile = file;
             var ImportTimetableEndpoint = QueryUtils.endpoint('/timetables/importXml');
             var criteria = {};
+            criteria.isIndividual = data.isIndividual;
             criteria.oisFile = data.oisFile;
             criteria.studyPeriod = studyPeriod;
             criteria.code = params.isHigher ? 'TUNNIPLAAN_LIIK_H' : 'TUNNIPLAAN_LIIK_V';
@@ -114,7 +116,7 @@ angular.module('hitsaOis').controller('TimetableManagementController',
         }
       }
       return false;
-    } 
+    }
 
     $scope.copyTimetable = function (rowId) {
       QueryUtils.endpoint(baseUrl + '/getPossibleTargetsForCopy').query({id: rowId}).$promise.then(function (possibleTargets) {

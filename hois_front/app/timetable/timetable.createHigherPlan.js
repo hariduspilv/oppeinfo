@@ -1,7 +1,7 @@
 'use strict';
 
-angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$q', '$scope', 'message', 'QueryUtils', 'DataUtils', '$route', '$location', '$rootScope', 'dialogService', '$filter', '$translate',
-  function ($q, $scope, message, QueryUtils, DataUtils, $route, $location, $rootScope, dialogService, $filter, $translate) {
+angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$filter', '$location', '$q', '$rootScope', '$route', '$scope', '$translate', 'Classifier', 'DataUtils', 'QueryUtils', 'dialogService', 'message',
+  function ($filter, $location, $q, $rootScope, $route, $scope, $translate, Classifier, DataUtils, QueryUtils, dialogService, message) {
     $scope.auth = $route.current.locals.auth;
     var MS_PER_MINUTE = 60000;
     var MS_PER_FITEENMINUTES = MS_PER_MINUTE * 15;
@@ -22,6 +22,7 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$q', '$
     function initializeData(result) {
       DataUtils.convertStringToDates(result, ['startDate', 'endDate']);
       $scope.capacityTypes = result.timetableCapacities;
+      $scope.capacityTypeMap = Classifier.toMap(result.timetableCapacities);
 
       $scope.plan = result;
       $scope.plan.selectAll = true;
@@ -58,16 +59,57 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$q', '$
       setTeachersForStudentGroups($scope.plan.studentGroupCapacities, $scope.plan.studentGroups);
 
       updateSelectedTimetables();
-      if ($route.current.params.groupId) {
-        $scope.plan.selectedGroup = 'GROU-' + $route.current.params.groupId;
-      } else if ($route.current.params.pairId) {
-        $scope.plan.selectedGroup = 'PAIR-' + $route.current.params.pairId;
+      if ($route.current.params.typeId) {
+        if ($route.current.params.type === 'teacher') {
+          var selectedTeacherId = parseInt($route.current.params.typeId, 10);
+          $scope.plan.selectedTeacher = $scope.plan.teachers.find(function (t) {
+            return t.id === selectedTeacherId;
+          });
+        } else if ($route.current.params.type === 'group') {
+          $scope.plan.selectedGroup = 'GROU-' + $route.current.params.typeId;
+        } else if ($route.current.params.type === 'pair') {
+          $scope.plan.selectedGroup = 'PAIR-' + $route.current.params.typeId;
+        }
       }
     }
 
     QueryUtils.endpoint(baseUrl + '/:id/createHigherPlan').search({
       id: $scope.timetableId
     }, initializeData);
+
+    $scope.searchTimetableTeachers = function (text) {
+      return DataUtils.filterArrayByText($scope.plan.teachers, text, function (teacher, regex) {
+        return regex.test($scope.currentLanguageNameField(teacher).toUpperCase());
+      });
+    };
+
+    $scope.selectedTeacherChanged = function () {
+      if ($scope.plan.selectedTeacher) {
+        QueryUtils.endpoint(baseUrl + '/:id/teacherSubjectStudyPeriods').query(
+            {id: $scope.timetableId, teacherId: $scope.plan.selectedTeacher.id}, function (result) {
+          $scope.teacherSubjectStudyPeriods = result;
+          var subjectStudyPeriodIds = result.map(function (it) { return it.id; });
+
+          $scope.plan.studentGroups.forEach(function (it) {
+            var isTeachersStudentGroup = it.teacherIds.indexOf($scope.plan.selectedTeacher.id) !== -1;
+            it._selected = isTeachersStudentGroup;
+            it.disabled = !isTeachersStudentGroup;
+          });
+          $scope.plan.subjectTeacherPairs.forEach(function (it) {
+            var isTeachersSubject = subjectStudyPeriodIds.indexOf(it.id) !== -1;
+            it._selected = isTeachersSubject;
+            it.disabled = !isTeachersSubject;
+          });
+          updateSelectedTimetables();
+          $scope.$broadcast('refreshFixedColumns');
+        });
+      } else {
+        $scope.teacherSubjectStudyPeriods = null;
+        $scope.plan.studentGroups.concat($scope.plan.subjectTeacherPairs).forEach(function (it) {
+          it.disabled = false;
+        });
+      }
+    };
 
     $scope.$watch('plan.selectedGroup', function () {
       checkAndUpdateSelectedTimetable();
@@ -111,15 +153,27 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$q', '$
         });
         $scope.plan.currentCapacitiesGrouped = groupBy($scope.plan.currentCapacities, "subjectStudyPeriod");
         $scope.plan.currentCapacitiesGrouped.forEach(function (group) {
+          group.show = false;
+          group.teacherIds = [];
+
           group.forEach(function (capacity) {
             capacity.teachersString = (capacity.teachers || []).map(function (teacher) {
+              group.teacherIds.push(teacher.id);
               return teacher.nameEt;
             }).join(', ');
             var subgroups = $scope.plan.subjectStudyPeriodSubgroups[capacity.subjectStudyPeriod];
             capacity.subgroupsString = (subgroups || []).map(function (subgroup) {
               return subgroup.code;
             }).join(', ');
+            capacity.canAdd = $scope.capacityTypeMap[capacity.capacityType].valid;
+            capacity.show = capacity.canAdd || capacity.totalAllocatedLessons > 0;
+            if (!group.show) {
+              group.show = capacity.show;
+            }
           });
+        });
+        $scope.plan.currentCapacitiesGrouped = $scope.plan.currentCapacitiesGrouped.filter(function (group) {
+          return group.show && (!$scope.plan.selectedTeacher || group.teacherIds.indexOf($scope.plan.selectedTeacher.id) !== -1);
         });
       }
     }
@@ -890,7 +944,9 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$q', '$
 
     function setAllGroups(selected) {
       $scope.plan.studentGroups.concat($scope.plan.subjectTeacherPairs).forEach(function (it) {
-        it._selected = selected;
+        if (!it.disabled) {
+          it._selected = selected;
+        }
       });
     }
 

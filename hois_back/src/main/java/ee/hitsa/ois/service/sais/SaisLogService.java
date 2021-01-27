@@ -8,7 +8,10 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 import java.lang.invoke.MethodHandles;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -48,6 +51,13 @@ import ee.hois.soap.LogResult;
 public class SaisLogService {
 
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+    private static final Map<String, List<String>> WS_NAMES;
+
+    static {
+        WS_NAMES = new HashMap<>();
+        WS_NAMES.put("sais2.AllAdmissionsExport", Arrays.asList("sais2.AllAdmissionsExport"));
+        WS_NAMES.put("sais2.AllApplicationsExport", Arrays.asList("sais2.AllApplicationsExport", "sais2.AllApplicationsExportv2"));
+    }
 
     @Autowired
     private EntityManager em;
@@ -64,7 +74,7 @@ public class SaisLogService {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from ws_sais_log l").sort(pageable);
 
         qb.requiredCriteria("l.school_id = :schoolId", "schoolId", schoolId);
-        qb.optionalCriteria("l.ws_name = :messageType", "messageType", command.getMessageType());
+        qb.optionalCriteria("l.ws_name in :messageType", "messageType", WS_NAMES.get(command.getMessageType()));
         qb.optionalCriteria("l.inserted >= :startFrom", "startFrom", command.getFrom(), d -> LocalDateTime.of(d, LocalTime.MIN));
         qb.optionalCriteria("l.inserted <= :startThru", "startThru", command.getThru(), d -> LocalDateTime.of(d, LocalTime.MAX));
 

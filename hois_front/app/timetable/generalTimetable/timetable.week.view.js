@@ -274,21 +274,7 @@
         break;
       case 'room':
         criteria.room = scope.criteria.roomId;
-        break;
-      case 'search':
-        if (scope.criteria.teacherObject) {
-          criteria.teachers = [scope.criteria.teacherObject.id];
-        }
-        if (scope.criteria.studentGroupObject) {
-          criteria.studentGroups = [scope.criteria.studentGroupObject.id];
-        }
-        if (scope.criteria.roomObject) {
-          criteria.room = scope.criteria.roomObject.id;
-        }
-        if (scope.criteria.subjectObject) {
-          criteria.journalOrSubjectId = scope.criteria.subjectObject.id;
-        }
-        break;
+        break;j
     }
 
     if (weekTimetable) {
@@ -349,9 +335,8 @@
       }
 
       $scope.typeParam = $scope.timetableType + 'Id';
-      $scope.timetableSearch = $scope.timetableType === 'search';
-      var baseUrl = $scope.timetableSearch ? '/timetableevents/timetableSearch/' :
-        '/timetableevents/timetableBy' + $scope.timetableType.charAt(0).toUpperCase() + $scope.timetableType.slice(1) + '/';
+      var baseUrl = '/timetableevents/timetableBy' + $scope.timetableType.charAt(0).toUpperCase() +
+        $scope.timetableType.slice(1) + '/';
       var timetableEventsEndpoint = baseUrl + ($scope.encodedPerson ? $scope.encodedPerson : $scope.schoolId);
       var timetableEventsCalendarEndpoint = timetableEventsEndpoint + '/calendar';
 
@@ -460,7 +445,7 @@
 
       function showWeekTimetable() {
         $scope.timetableEvents = null;
-        if ($scope.shownWeek && ($scope.encodedPerson || $scope.timetableSearch || (!$scope.timetableSearch && $scope.criteria[$scope.typeParam]))) {
+        if ($scope.shownWeek && ($scope.encodedPerson || $scope.criteria[$scope.typeParam])) {
           timetableEventsRequest($scope, QueryUtils, timetableEventsEndpoint, fillTimetable);
         }
       }

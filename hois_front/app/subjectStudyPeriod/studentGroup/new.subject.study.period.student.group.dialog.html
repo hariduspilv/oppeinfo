@@ -16,7 +16,7 @@
           <hois-select values="formState.studyPeriods" ng-model="record.studyPeriod" md-autofocus required
                        sorted-query="true" show-property="display" ng-disabled="formState.previousPlans.$resolved === false"></hois-select>
         </md-input-container>
-        <hois-autocomplete class="md-block" ha-attribute="id" ng-model="record.studentGroup"
+        <hois-autocomplete class="md-block" ng-model="record.studentGroup"
                            label="subjectStudyPeriod.studentGroup" name="studentGroup" required
                            url="/subjectStudyPeriods/studentGroups/list/limited"
                            display="code" no-paging="true" ng-disabled="formState.previousPlans.$resolved === false"

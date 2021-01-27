@@ -49,6 +49,7 @@ public class LessonPlanJournalForm extends VersionedCommand {
     private List<AutocompleteResult> journalRooms;
     private Boolean addModuleOutcomes;
     private Boolean isIndividual;
+    private Boolean isFree;
     private Boolean addStudents;
     private Boolean divideIntoGroups;
 
@@ -155,6 +156,14 @@ public class LessonPlanJournalForm extends VersionedCommand {
 
     public void setIsIndividual(Boolean isIndividual) {
         this.isIndividual = isIndividual;
+    }
+
+    public Boolean getIsFree() {
+        return isFree;
+    }
+
+    public void setIsFree(Boolean isFree) {
+        this.isFree = isFree;
     }
 
     public Boolean getAddModuleOutcomes() {

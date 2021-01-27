@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true">
+    <property name="PATTERN" value="%m%n"/>
+    <springProperty scope="context" name="LOG_LOC" source="log.path"/>
+    <property name="MAX" value="1"/>
+    <property name="DEF_MODULE" value="application"/>
+    <timestamp key="current_date" datePattern="ddMMyyyyHHmm"/>
+    <!-- ############################## Appender configurations ############################## -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- roll over by minute -->
+            <fileNamePattern>${LOG_LOC}/log%d{ddMMyyyyHHmm}.txt</fileNamePattern>
+        </rollingPolicy>
+        
+        <encoder>
+	      <pattern>${PATTERN}</pattern>
+	    </encoder>
+    </appender> 
+    
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${PATTERN}</pattern>
+        </encoder>
+    </appender>
+    
+    <!-- ############################## Logger configurations ############################## -->
+    <logger name="com.example" level="debug"/>
+
+    <logger name="org.springframework.web" level="info" additivity="false"/>
+
+    <logger name="raw" level="debug" additivity="false">
+        <appender-ref ref="FILE"/>
+    </logger>
+
+    <root level="info">
+        <appender-ref ref="FILE"/>
+        <appender-ref ref="STDOUT"/>
+    </root>
+</configuration>

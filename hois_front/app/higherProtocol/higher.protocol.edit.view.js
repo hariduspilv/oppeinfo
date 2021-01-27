@@ -11,6 +11,11 @@ function ($route, $location, $scope, $q, GRADING_SCHEMA_TYPE, Classifier, Gradin
   var gradingSchema, gradeMapper, analogGetter;
   var deferredEntityToDto;
 
+  $scope.updateTable = function () {
+    $scope.$broadcast('refreshFixedColumns');
+    $scope.$broadcast('refreshFixedTableHeight');
+  };
+
   function setGradingSchema(entity) {
     gradingSchema = new GradingSchema(GRADING_SCHEMA_TYPE.HIGHER);
     $q.all(gradingSchema.promises).then(function () {
@@ -90,7 +95,7 @@ function ($route, $location, $scope, $q, GRADING_SCHEMA_TYPE, Classifier, Gradin
       $scope.formState.canChangeConfirmedProtocolGrade = ProtocolUtils.canChangeConfirmedProtocolGrade($scope.auth, $scope.record);
       $scope.formState.canDeleteStudents = ProtocolUtils.canAddDeleteStudents($scope.auth, $scope.record);
       $scope.formState.canConfirm = ProtocolUtils.canConfirm($scope.auth, $scope.record);
-      $scope.formState.canCalculate = $scope.record.protocolType === 'PROTOKOLLI_LIIK_P' && $scope.formState.canEditProtocol &&
+      $scope.formState.canCalculate = $scope.formState.canEditProtocol &&
         (($scope.record.subjectStudyPeriodMidtermTaskDto !== null && !$scope.record.subjectStudyPeriodMidtermTaskDto.subjectStudyPeriod.isPracticeSubject &&
           $scope.record.subjectStudyPeriodMidtermTaskDto.midtermTasks.length > 0) || $scope.record.moduleDto !== null);
       $scope.formState.isConfirmed = $scope.record.status === 'PROTOKOLL_STAATUS_K';
@@ -219,8 +224,8 @@ function ($route, $location, $scope, $q, GRADING_SCHEMA_TYPE, Classifier, Gradin
   $scope.confirm = function () {
     deferredEntityToDto = $q.defer();
     var validationFailed = !validationPassed();
-    if(validationFailed || (!$scope.record.finalDate && $scope.record.protocolType === 'PROTOKOLLI_LIIK_P')) {
-      if (!validationFailed && !$scope.record.finalDate && $scope.record.protocolType === 'PROTOKOLLI_LIIK_P') {
+    if(validationFailed || !$scope.record.finalDate) {
+      if (!validationFailed && !$scope.record.finalDate) {
         message.error('main.messages.form-has-errors');
         $scope.higherProtocolForm.finalDate.$setValidity('required', false);
       }

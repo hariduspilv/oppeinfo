@@ -1,0 +1,4 @@
+<div layout="row" layout-xs="column">
+  <md-button ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_KASUTAJA')" ng-href="#/persons/teacher-roles/{{role.id}}/edit?_noback" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
+  <md-button ng-click="back('#/persons/teacher-roles?_menu')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+</div>

@@ -76,6 +76,9 @@ public class CurriculumVersion extends BaseEntityWithId {
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "curriculum_version_id", nullable = false, updatable = false)
     private Set<CurriculumVersionOccupationModule> occupationModules = new HashSet<>();
+    
+    @OneToMany(mappedBy = "curriculumVersion", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<CurriculumVersionNominalCapacity> nominalCapacities = new HashSet<>();
 
     @Transient
     private Set<Long> specialitiesReferenceNumbers;
@@ -217,6 +220,14 @@ public class CurriculumVersion extends BaseEntityWithId {
     public void setOccupationModules(Set<CurriculumVersionOccupationModule> occupationModules) {
         getOccupationModules().clear();
         getOccupationModules().addAll(occupationModules);
+    }
+
+    public Set<CurriculumVersionNominalCapacity> getNominalCapacities() {
+        return nominalCapacities != null ? nominalCapacities : (nominalCapacities = new HashSet<>());
+    }
+
+    public void setNominalCapacities(Set<CurriculumVersionNominalCapacity> nominalCapacities) {
+        this.nominalCapacities = nominalCapacities;
     }
 
 }

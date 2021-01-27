@@ -5,6 +5,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlID;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 /**
  * Attr gender and color are ignored.
@@ -93,5 +94,10 @@ public class AscTeacher {
 
     public void setPartnerId(String partnerId) {
         this.partnerId = partnerId;
+    }
+
+    @XmlTransient
+    public String getFullname() {
+        return firstName + " " + lastName;
     }
 }

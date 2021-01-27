@@ -80,6 +80,8 @@ public class PublicDataService {
     @Autowired
     private CurriculumSearchService curriculumSearchService;
     @Autowired
+    private SchoolService schoolService;
+    @Autowired
     private StudyMaterialService studyMaterialService;
     @Autowired
     private SubjectService subjectService;
@@ -88,12 +90,14 @@ public class PublicDataService {
 
     public SchoolPublicDataSettingsDto schoolPublicSettings(Long schoolId) {
         School school = em.getReference(School.class, schoolId);
+        SchoolService.SchoolType schoolType = schoolService.schoolType(schoolId);
 
         SchoolPublicDataSettingsDto dto = new SchoolPublicDataSettingsDto();
         dto.setIsAcademicCalendarNotPublic(Boolean.TRUE.equals(school.getIsNotPublic()));
         dto.setIsTimetableNotPublic(Boolean.TRUE.equals(school.getIsNotPublicTimetable()));
         dto.setIsCurriculumNotPublic(Boolean.TRUE.equals(school.getIsNotPublicCurriculum()));
         dto.setIsSubjectNotPublic(Boolean.TRUE.equals(school.getIsNotPublicSubject()));
+        dto.setHigher(Boolean.valueOf(schoolType.isHigher()));
         return dto;
     }
 

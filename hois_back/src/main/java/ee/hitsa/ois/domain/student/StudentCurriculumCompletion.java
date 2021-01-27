@@ -114,6 +114,6 @@ public class StudentCurriculumCompletion extends BaseTask {
     }
 
     public Boolean isCurriculumFulfilled() {
-        return Boolean.valueOf(BigDecimal.ZERO.setScale(1).equals(studyBacklog) && Boolean.TRUE.equals(isModulesOk));
+        return Boolean.valueOf(BigDecimal.ZERO.compareTo(studyBacklog) == 0 && Boolean.TRUE.equals(isModulesOk));
     }
 }

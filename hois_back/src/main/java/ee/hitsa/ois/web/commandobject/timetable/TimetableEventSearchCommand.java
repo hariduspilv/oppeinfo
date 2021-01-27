@@ -4,10 +4,10 @@ import java.time.LocalDate;
 import java.util.List;
 
 import ee.hitsa.ois.service.TimetableService.TimetablePersonHolder;
+import ee.hitsa.ois.web.commandobject.SearchCommand;
 
-public class TimetableEventSearchCommand {
+public class TimetableEventSearchCommand extends SearchCommand {
 
-    private String name;
     private Boolean singleEvent;
     private List<Long> studentGroups;
     private Long studyPeriod;
@@ -17,26 +17,19 @@ public class TimetableEventSearchCommand {
     private LocalDate thru;
     private String otherTeacher;
     private String otherRoom;
-    private List<Long> timetables;
     private Long student;
     private String studentName;
     private Boolean higher;
     private Boolean vocational;
-    private Long journalOrSubjectId;
+    private Long journalId;
+    private Long subjectId;
     private Boolean showOnlySubstitutes;
     private Boolean personalEvent;
     private Boolean juhanEvent;
     private Long user;
     private TimetablePersonHolder person; // for personal timetables accessed by encoded url
     private Boolean schoolBoard;
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
+    private Boolean hideExams;
 
     public Boolean getSingleEvent() {
         return singleEvent;
@@ -110,14 +103,6 @@ public class TimetableEventSearchCommand {
         this.otherRoom = otherRoom;
     }
 
-    public List<Long> getTimetables() {
-        return timetables;
-    }
-
-    public void setTimetables(List<Long> timetables) {
-        this.timetables = timetables;
-    }
-
     public Long getStudent() {
         return student;
     }
@@ -150,12 +135,20 @@ public class TimetableEventSearchCommand {
         this.vocational = vocational;
     }
 
-    public Long getJournalOrSubjectId() {
-        return journalOrSubjectId;
+    public Long getJournalId() {
+        return journalId;
     }
 
-    public void setJournalOrSubjectId(Long journalOrSubjectId) {
-        this.journalOrSubjectId = journalOrSubjectId;
+    public void setJournalId(Long journalId) {
+        this.journalId = journalId;
+    }
+
+    public Long getSubjectId() {
+        return subjectId;
+    }
+
+    public void setSubjectId(Long subjectId) {
+        this.subjectId = subjectId;
     }
 
     public Boolean getShowOnlySubstitutes() {
@@ -204,5 +197,13 @@ public class TimetableEventSearchCommand {
 
     public void setSchoolBoard(Boolean schoolBoard) {
         this.schoolBoard = schoolBoard;
+    }
+
+    public Boolean getHideExams() {
+        return hideExams;
+    }
+
+    public void setHideExams(Boolean hideExams) {
+        this.hideExams = hideExams;
     }
 }

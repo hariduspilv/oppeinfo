@@ -13,18 +13,15 @@
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
       <form name="timetableSearchForm" ng-submit="loadData()" novalidate class="nomargin">
         <div layout="row" layout-sm="column" layout-xs="column">
-          <div layout="column" class="form-readonly" flex="45" flex-sm="100" flex-xs="100">
-            <div>&nbsp;</div>
-            <md-input-container>
-              <label class="textInput">{{'timetable.search.studyYear' | translate}}</label>
-              <div class="md-body-1 hois-value">
-                <span ng-repeat="sy in studyYears | orderBy: 'startDate'">
-                  <a ng-style="{'font-weight': criteria.studyYearId === sy.id ? 'bold' : 'normal'}" ng-click="changeStudyYear(sy)">{{currentLanguageNameField(sy)}}</a>
-                  <span>&nbsp;</span>
-                </span>
-              </div>
-            </md-input-container>
-          </div>
+          <md-input-container>
+            <label>{{'main.from' | translate}}</label>
+            <md-datepicker ng-model="criteria.from" md-max-date="criteria.thru" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
+          </md-input-container>
+
+          <md-input-container flex-offset="5" flex-offset-sm="0" flex-offset-xs="0">
+            <label>{{'main.thru' | translate}}</label>
+            <md-datepicker ng-model="criteria.thru" md-min-date="criteria.from" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
+          </md-input-container>
         </div>
 
         <div layout="row" layout-sm="column" layout-xs="column">
@@ -35,7 +32,7 @@
             md-item-text="currentLanguageNameField(item)"
             md-selected-item-change="selectedTeacherChanged(item)"
             md-min-length="1"
-            md-floating-label="{{auth.higher ? ('timetable.search.teacherHigher' | translate) : ('timetable.search.teacherVocational' | translate)}}"
+            md-floating-label="{{(isHigherSchool ? 'timetable.search.teacherHigher' :'timetable.search.teacherVocational') | translate}}"
             md-require-match
             md-no-cache>
             <md-item-template>
@@ -75,31 +72,65 @@
             </md-item-template>
           </md-autocomplete>
 
-          <md-autocomplete flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-sm="0" flex-offset-xs="0"
-            md-search-text="subjectSearchText"
-            md-selected-item="criteria.subjectObject"
-            md-items="item in parameterSearch(subjectSearchText, formState.subjects)"
-            md-item-text="currentLanguageNameField(item)"
-            md-selected-item-change="selectedSubjectChanged(item)"
-            md-min-length="1"
-            md-floating-label="{{'timetable.search.subject' | translate}}"
-            md-require-match
-            md-no-cache>
-            <md-item-template>
-              <span md-highlight-text="subjectSearchText">{{currentLanguageNameField(item)}}</span>
-            </md-item-template>
-          </md-autocomplete>
+          <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-sm="0" flex-offset-xs="0">
+            <label class="textInput">{{'timetable.timetableEvent.name' | translate}}</label>
+            <input ng-model="criteria.name" type="text" md-maxlength="255">
+          </md-input-container>
         </div>
 
         <div layout="row">
-          <md-button ng-click="search()" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+          <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
           <md-button class="md-raised" ng-click="clearSearchParameters()">{{'main.button.clear' | translate}}</md-button>
         </div>
       </form>
     </fieldset>
   </div>
 
-  <div ng-controller="TimetableWeekViewController">
-    <div ng-include="'timetable/generalTimetable/timetable.week.view.html'"></div>
+  <div layout-padding>
+    <div flex>
+      <md-table-container>
+        <table md-table md-progress="tabledata.$promise">
+          <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+            <tr md-row>
+              <th md-column md-order-by="4, cast(tet_start as time), cast(tet_end as time)">{{'timetable.timetableEvent.date' | translate}}</th>
+              <th md-column md-order-by="cast(tet_start as time), cast(tet_end as time)">{{'timetable.timetableEvent.time' | translate}}</th>
+              <th md-column md-order-by="{{currentLanguage()==='en' ? 3 : 2}}">{{'timetable.timetableEvent.name' | translate}}</th>
+              <th md-column>{{(isHigherSchool ? 'timetable.timetableEvent.teachersHigher' : 'timetable.timetableEvent.teachersVocational') | translate}}</th>
+              <th md-column>{{'timetable.timetableEvent.rooms' | translate}}</th>
+              <th md-column>{{'timetable.timetableEvent.studentGroups' | translate}}</th>
+              <th md-column>{{'timetable.timetableEvent.students' | translate}}</th>
+            </tr>
+          </thead>
+          <tbody md-body>
+            <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+              <td md-cell>{{::row.date | hoisDate}}</td>
+              <td md-cell>{{::row.timeStart | hoisTime}}-{{::row.timeEnd | hoisTime}}</td>
+              <td md-cell>{{currentLanguageNameField(row)}}</td>
+              <td md-cell>
+                <span ng-repeat="teacher in row.teachers | limitTo: 5">{{::teacher.name}}{{$last ? "" : ", "}}</span>
+                <span class="custom-tooltip" ng-if="row.teachers.length > 5" ng-click="openEventRelatedEntitiesDialog(row, 'teacher')">{{'main.button.showMore' | translate}}</span>
+              </td>
+              <td md-cell>
+                <span ng-repeat="room in row.rooms | orderBy: ['buildingCode', 'roomCode']">
+                  <span ng-if="room.id">{{::room.buildingCode}}-{{::room.roomCode}}</span><span ng-if="!room.id">{{::room.roomCode}}</span>{{$last ? "" : ", "}}
+                </span>
+              </td>
+              <td md-cell>
+                <span ng-repeat="group in row.studentGroups | orderBy: 'code' | limitTo: 5">{{::group.code}}{{$last ? "" : ", "}}</span>
+                <span class="custom-tooltip" ng-if="row.studentGroups.length > 5" ng-click="openEventRelatedEntitiesDialog(row, 'studentGroup')">{{'main.button.showMore' | translate}}</span>
+              </td>
+              <td md-cell>
+                <span ng-repeat="student in row.students | limitTo: 5">{{::student.name}}{{$last ? "" : ", "}}</span>
+                <span class="custom-tooltip" ng-if="row.students.length > 5" ng-click="openEventRelatedEntitiesDialog(row, 'student')">{{'main.button.showMore' | translate}}</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </md-table-container>
+      <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
+        md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+        md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
+        md-page-select></md-table-pagination>
+    </div>
   </div>
 </div>

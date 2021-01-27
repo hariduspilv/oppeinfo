@@ -13,6 +13,9 @@ import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.domain.BaseEntityWithId;
+import ee.hitsa.ois.domain.MidtermTaskStudentResultHistory;
+import ee.hitsa.ois.web.dto.MidtermTaskStudentResultHistoryDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -188,8 +191,9 @@ public class MidtermTaskService {
         while(iterator.hasNext()) {
             MidtermTaskStudentResult studentResult = iterator.next();
             if(!updatedStudentResultsIds.contains(studentResult.getId())) {
-                
+
                 MidtermTaskUtil.checkIfStudentResultCanBeChanged(studentResult.getDeclarationSubject());
+                MidtermTaskUtil.checkIfStudentResultCanBeDeleted(studentResult);
                 
                 deletedStudentResults.add(studentResult);
                 iterator.remove();
@@ -216,7 +220,8 @@ public class MidtermTaskService {
         if(!MidtermTaskUtil.studentResultCanBeChanged(studentResult.getDeclarationSubject())) {
             return;
         }
-        if(MidtermTaskUtil.resultIsText(studentResult.getMidtermTask())) {
+        boolean hasTextResult = MidtermTaskUtil.resultIsText(studentResult.getMidtermTask());
+        if(hasTextResult) {
             studentResult.setPoints(null);
             studentResult.setPointsTxt(dto.getPointsTxt());
         } else {
@@ -224,6 +229,21 @@ public class MidtermTaskService {
             studentResult.setPointsTxt(null);
             MidtermTaskUtil.checkStudentResultsPoints(studentResult);
         }
+        EntityUtil.bindEntityCollection(studentResult.getHistory(), BaseEntityWithId::getId,
+                dto.getHistory(), MidtermTaskStudentResultHistoryDto::getId,
+                historyDto -> {
+                    MidtermTaskStudentResultHistory history = new MidtermTaskStudentResultHistory();
+                    history.setMidtermTaskStudentResult(studentResult);
+                    if (hasTextResult) {
+                        history.setPoints(null);
+                        history.setPointsTxt(historyDto.getPointsTxt());
+                    } else {
+                        history.setPoints(historyDto.getPoints());
+                        history.setPointsTxt(null);
+                        MidtermTaskUtil.checkStudentResultsPoints(history);
+                    }
+                    return history;
+                });
     }
     
 }

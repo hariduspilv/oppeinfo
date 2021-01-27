@@ -32,6 +32,11 @@ import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModuleSubject;
+import ee.hitsa.ois.enums.DirectiveStatus;
+import ee.hitsa.ois.enums.DirectiveType;
+import ee.hitsa.ois.enums.HigherAssessment;
+import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.web.commandobject.StudentDeclarationCommand;
 import ee.hitsa.ois.web.dto.GradeDto;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -77,7 +82,6 @@ import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.DeclarationSearchCommand;
 import ee.hitsa.ois.web.commandobject.DeclarationSubjectForm;
 import ee.hitsa.ois.web.commandobject.SearchCommand;
-import ee.hitsa.ois.web.commandobject.UsersSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.DeclarationAutofillResponseDto;
 import ee.hitsa.ois.web.dto.DeclarationDto;
@@ -139,12 +143,16 @@ public class DeclarationService {
             + "cvhms.is_optional, array_to_string(teachers.teacher, ', ') as teachers, "
             + "cvhm.name_et as moduleEt, cvhm.name_en as moduleEn, "
             + "(select count(*) from declaration_subject ds3 where ds3.subject_study_period_id = ssp.id) < coalesce(ssp.places, 9999) as has_places";
-    
+
     private static final String SUBJECT_EXTRACURRICULUM_SELECT = " distinct ssp.id as ssp1Id, s.id as subjectId, "
             + "s.name_et, s.name_en, s.code, s.credits, c.value, null as moduleId, "
             + "false as isOptional, array_to_string(teachers.teacher, ', ') as teachers, null as moduleEt, null as moduleEn, "
             + "(select count(*) from declaration_subject ds3 where ds3.subject_study_period_id = ssp.id) < coalesce(ssp.places, 9999) as has_places";
-    
+
+    private static final String SUBJECT_NOT_IN_DECLARATION = "not exists (select 1 from declaration_subject ds "
+            + "join subject_study_period ssp2 on ssp2.id = ds.subject_study_period_id "
+            + "where ssp2.subject_id = ssp.subject_id and ds.declaration_id = :declarationId)";
+
     private static final String WITHOUT_DECLARATION_SELECT = " s.id, p.firstname, p.lastname, p.idcode, "
             + "cv.id as cv_id, cv.code as cv_code, sg.id as sg_id, sg.code as sg_code ";
     
@@ -379,20 +387,12 @@ public class DeclarationService {
         protocolStudentRepository.delete(list);
     }
 
-    /*
-     * TODO: it would be better to send CurriculumVersionHigherModuleSubject.id
-     * instead of isOptional and moduleId. Extra validation could be added to
-     * see if moduleSubject and subject match
-     */
     public DeclarationSubjectDto addSubject(HoisUserDetails user, DeclarationSubjectForm form) {
         Declaration declaration = em.getReference(Declaration.class, form.getDeclaration());
         DeclarationUtil.assertCanChangeDeclaration(user, declaration);
 
         SubjectStudyPeriod ssp = em.getReference(SubjectStudyPeriod.class, form.getSubjectStudyPeriod());
 
-        AssertionFailedException.throwIf(!EntityUtil.getId(declaration.getStudyPeriod()).equals(EntityUtil.getId(ssp.getStudyPeriod())),
-                "Declaration's and study period's ids does not match");
-        UserUtil.assertSameSchool(user, ssp.getStudyPeriod().getStudyYear().getSchool());
         ValidationFailedException.throwIf(declaration.getSubjects().stream()
                 .map(ds -> EntityUtil.getId(ds.getSubjectStudyPeriod().getSubject()))
                 .anyMatch(sId -> sId.equals(EntityUtil.getId(ssp.getSubject()))),
@@ -400,19 +400,67 @@ public class DeclarationService {
         ValidationFailedException.throwIf(ssp.getPlaces() != null &&
                 ssp.getDeclarationSubjects().size() >= ssp.getPlaces().intValue(),
                 "declaration.noPlaces");
+        ValidationFailedException.throwIf(hasPositiveResultsForSubjects(EntityUtil.getId(declaration.getStudent()),
+                EntityUtil.getId(ssp.getSubject())), "declaration.error.hasPositiveResult");
+
+        CurriculumVersionHigherModuleSubject moduleSubject = studentCvSubjectModule(declaration, form.getSubjectStudyPeriod());
+        CurriculumVersionHigherModule module = moduleSubject != null ? moduleSubject.getModule() : null;
+        ValidationFailedException.throwIf(module != null &&
+                EntityUtil.getCode(module.getType()).equals(HigherModuleType.KORGMOODUL_F.name()) &&
+                finalThesisExists(EntityUtil.getId(declaration.getStudent())), "declaration.error.finalThesisExists");
 
         DeclarationSubject declarationSubject = new DeclarationSubject();
         declarationSubject.setDeclaration(declaration);
         declarationSubject.setSubjectStudyPeriod(ssp);
-        Long higherModule = form.getCurriculumVersionHigherModule();
-        if(higherModule != null) {
-            declarationSubject.setModule(em.getReference(CurriculumVersionHigherModule.class, higherModule));
-        }
-        declarationSubject.setIsOptional(form.getIsOptional());
+        declarationSubject.setModule(module);
+        declarationSubject.setIsOptional(moduleSubject != null ? moduleSubject.getOptional() : Boolean.TRUE);
         declarationSubject.setSubgroup(EntityUtil.getOptionalOne(SubjectStudyPeriodSubgroup.class, form.getSubgroup(), em));
         DeclarationSubjectDto dto = DeclarationSubjectDto.of(EntityUtil.save(declarationSubject, em));
         setAreSubjectsDeclaredRepeatedy(Arrays.asList(dto), dto.getDeclaration());
         return dto;
+    }
+
+    public CurriculumVersionHigherModuleSubject studentCvSubjectModule(Declaration declaration, Long subjectStudyPeriodId) {
+        // is curriculum subject check
+        CurriculumVersionHigherModuleSubject subjectModule = curriculumSubjectModule(declaration, subjectStudyPeriodId);
+        if (subjectModule != null) {
+            return subjectModule;
+        }
+
+        // is extra curriculum subject check
+        if (isExtraCurriculumSubject(declaration, subjectStudyPeriodId)) {
+            return null;
+        }
+        throw new ValidationFailedException("declaration.error.subjectNotAllowed");
+    }
+
+    public CurriculumVersionHigherModuleSubject curriculumSubjectModule(Declaration declaration,
+            Long subjectStudyPeriodId) {
+        // guest and external students might not have connected curriculum
+        Long curriculumVersion = EntityUtil.getNullableId(declaration.getStudent().getCurriculumVersion());
+        if (curriculumVersion == null) {
+            return null;
+        }
+
+        JpaNativeQueryBuilder qb = curriculumSubjectOptionsQb(declaration);
+        qb.requiredCriteria("ssp.id = :subjectStudyPeriodId", "subjectStudyPeriodId", subjectStudyPeriodId);
+        List<?> data = qb.select("cvhms.id", em).setMaxResults(1).getResultList();
+        if (data.isEmpty()) {
+            return null;
+        }
+        return em.getReference(CurriculumVersionHigherModuleSubject.class, resultAsLong(data.get(0), 0));
+    }
+
+    private boolean isExtraCurriculumSubject(Declaration declaration, Long subjectStudyPeriodId) {
+        JpaNativeQueryBuilder qb = extraCurriculumSubjectsOptionsQb(declaration);
+        qb.requiredCriteria("ssp.id = :subjectStudyPeriodId", "subjectStudyPeriodId", subjectStudyPeriodId);
+        return !qb.select("ssp.id", em).setMaxResults(1).getResultList().isEmpty();
+    }
+
+    private boolean finalThesisExists(Long studentId) {
+        return !em.createNativeQuery("select ft.id from final_thesis ft where ft.student_id = :studentId")
+                .setParameter("studentId", studentId)
+                .setMaxResults(1).getResultList().isEmpty();
     }
 
     public Declaration create(HoisUserDetails user, Long studentId, boolean nextPeriod) {
@@ -526,23 +574,38 @@ public class DeclarationService {
         return EntityUtil.save(declaration, em);
     }
 
-    public Page<DeclarationSubjectDto> getCurriculumSubjectOptions(Declaration declaration, Pageable pageable) {
+    public JpaNativeQueryBuilder curriculumSubjectOptionsQb(Declaration declaration) {
         Long studyPeriod = EntityUtil.getId(declaration.getStudyPeriod());
         Student student = declaration.getStudent();
         Long curriculumVersion = EntityUtil.getId(student.getCurriculumVersion());
+        Long curriculumSpeciality = EntityUtil.getNullableId(student.getCurriculumSpeciality());
 
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(SUBJECT_FROM).sort(pageable);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(SUBJECT_FROM);
+        qb.requiredCriteria(SUBJECT_NOT_IN_DECLARATION, "declarationId", declaration.getId());
 
         qb.requiredCriteria("cvhm.curriculum_version_id = :curriculumVersionId", "curriculumVersionId",
                 curriculumVersion);
-        qb.requiredCriteria("cvhm.type_code != :moduleType", "moduleType", HigherModuleType.KORGMOODUL_L.name());
+        qb.optionalCriteria(isCurriculumSpecialitySubject(":curriculumSpecialityId", "cvhm.id"),
+                "curriculumSpecialityId", curriculumSpeciality);
+        qb.filter("cvhm.is_minor_speciality = false");
+
+        String examSubjectAllowed = finalExamModuleSubjectAllowedQuery(":studentId", ":curriculumVersionId",
+                curriculumSpeciality != null ? curriculumSpeciality.toString() : "null");
+        qb.requiredCriteria("(cvhm.type_code != :finalExam or " + examSubjectAllowed + ")", "finalExam",
+                HigherModuleType.KORGMOODUL_F);
+        qb.parameter("studentId", student.getId());
+
+        qb.requiredCriteria("cvhm.type_code != :finalThesis", "finalThesis", HigherModuleType.KORGMOODUL_L);
         qb.requiredCriteria("ssp.study_period_id = :studyPeriodId", "studyPeriodId", studyPeriod);
-        qb.requiredCriteria(
-                " not exists "
-                + "(select * from declaration_subject ds "
-                + "join subject_study_period ssp2 on ssp2.id = ds.subject_study_period_id  "
-                + "where ssp2.subject_id = ssp.subject_id and ds.declaration_id = :declarationId)", "declarationId",  
-                EntityUtil.getId(declaration));
+        qb.filter("not exists(" + hasPositiveResultQuery(":hprStudentId", "ssp.subject_id", ":hprGradeCode") + ")");
+        qb.parameter("hprStudentId", EntityUtil.getId(student));
+        qb.parameter("hprGradeCode", HigherAssessment.GRADE_POSITIVE);
+
+        return qb;
+    }
+
+    public Page<DeclarationSubjectDto> getCurriculumSubjectOptions(Declaration declaration, Pageable pageable) {
+        JpaNativeQueryBuilder qb = curriculumSubjectOptionsQb(declaration).sort(pageable);
 
         Page<Object[]> result = JpaQueryUtil.pagingResult(qb, SUBJECT_CURRICULUM_SELECT, em, pageable);
         Set<Long> sspIds = StreamUtil.toMappedSet(r -> resultAsLong(r, 0), result.getContent());
@@ -588,30 +651,46 @@ public class DeclarationService {
                 Collectors.mapping(r -> new AutocompleteResult(resultAsLong(r, 2), resultAsString(r, 1), resultAsString(r, 1)), Collectors.toList())));
     }
 
-    public List<DeclarationSubjectDto> getExtraCurriculumSubjectsOptions(Declaration declaration) {
+    public JpaNativeQueryBuilder extraCurriculumSubjectsOptionsQb(Declaration declaration) {
         Long studyPeriod = EntityUtil.getId(declaration.getStudyPeriod());
         Long curriculumVersion = EntityUtil.getNullableId(declaration.getStudent().getCurriculumVersion());
+        Long curriculumSpeciality = EntityUtil.getNullableId(declaration.getStudent().getCurriculumSpeciality());
 
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(SUBJECT_FROM);
-        
+        qb.requiredCriteria(SUBJECT_NOT_IN_DECLARATION, "declarationId", declaration.getId());
+
+        if (curriculumSpeciality != null) {
+            qb.optionalCriteria("(coalesce(cvhm.curriculum_version_id, 0) != :curriculumVersionId"
+                    + " or (cvhm.curriculum_version_id = :curriculumVersionId and :curriculumSpecialityId not in"
+                    + " (select cs.id from curriculum_version_hmodule_speciality cvhs"
+                    + " join curriculum_version_speciality cvs on cvs.id = cvhs.curriculum_version_speciality_id"
+                    + " join curriculum_speciality cs on cs.id = cvs.curriculum_speciality_id"
+                    + " where cvhs.curriculum_version_hmodule_id = cvhm.id)))", "curriculumVersionId", curriculumVersion);
+            qb.filter("s.id not in (select cvhs2.subject_id from curriculum_version_hmodule_subject cvhs2"
+                    + " join curriculum_version_hmodule cvh2 on cvh2.id = cvhs2.curriculum_version_hmodule_id"
+                    + " left join curriculum_version_hmodule_speciality cvhsp2 on cvhsp2.curriculum_version_hmodule_id = cvh2.id"
+                    + " left join curriculum_version_speciality cvs2 on cvs2.id = cvhsp2.curriculum_version_speciality_id"
+                    + " left join curriculum_speciality cs2 on cs2.id = cvs2.curriculum_speciality_id"
+                    + " where cvh2.curriculum_version_id = :curriculumVersionId and cs2.id = :curriculumSpecialityId)");
+            qb.parameter("curriculumSpecialityId", curriculumSpeciality);
+        } else {
+            qb.optionalCriteria("coalesce(cvhm.curriculum_version_id, 0) != :curriculumVersionId",
+                    "curriculumVersionId", curriculumVersion);
+            qb.optionalCriteria("s.id not in (select cvhs2.subject_id from curriculum_version_hmodule_subject cvhs2"
+                    + " join curriculum_version_hmodule cvh2 on cvh2.id = cvhs2.curriculum_version_hmodule_id"
+                    + " where cvh2.curriculum_version_id = :curriculumVersionId)", "curriculumVersionId", curriculumVersion);
+        }
+
         qb.requiredCriteria("ssp.study_period_id = :studyPeriodId", "studyPeriodId", studyPeriod);
+        qb.filter("not exists(" + hasPositiveResultQuery(":hprStudentId", "ssp.subject_id", ":hprGradeCode") + ")");
+        qb.parameter("hprStudentId", EntityUtil.getId(declaration.getStudent()));
+        qb.parameter("hprGradeCode", HigherAssessment.GRADE_POSITIVE);
 
-        // do not select student's curriculum version's subjects
-        qb.optionalCriteria(" ssp.subject_id not in "
-                + "(select cs.subject_id "
-                + "from curriculum_version_hmodule_subject cs "
-                + "join curriculum_version_hmodule m on m.id = cs.curriculum_version_hmodule_id "
-                + "where m.curriculum_version_id = :curriculumVersionId)", "curriculumVersionId",
-                curriculumVersion);
+        return qb;
+    }
 
-        // do not select subject which are already added
-        qb.requiredCriteria(
-                " not exists "
-                + "(select * from declaration_subject ds "
-                + "join subject_study_period ssp2 on ssp2.id = ds.subject_study_period_id  "
-                + "where ssp2.subject_id = ssp.subject_id and ds.declaration_id = :declarationId)", "declarationId",  
-                EntityUtil.getId(declaration));
-
+    public List<DeclarationSubjectDto> getExtraCurriculumSubjectsOptions(Declaration declaration) {
+        JpaNativeQueryBuilder qb = extraCurriculumSubjectsOptionsQb(declaration);
         List<?> result = qb.sort("s.name_et, s.name_en, teachers").select(SUBJECT_EXTRACURRICULUM_SELECT, em).getResultList();
         return StreamUtil.toMappedList(this::subjectQueryResultToDto, result);
     }
@@ -892,7 +971,12 @@ public class DeclarationService {
 
         qb.requiredCriteria("s.school_id = :schoolId ", "schoolId", user.getSchoolId());
         qb.requiredCriteria("s.status_code in :active ", "active", StudentStatus.STUDENT_STATUS_ACTIVE);
-        qb.filter("(case when c.id is not null then c.is_higher = true else true end)");
+        qb.requiredCriteria("(c.is_higher = true or exists (select 1 from directive d"
+                + " join directive_student ds on ds.directive_id = d.id and ds.canceled = false"
+                + " where ds.student_id = s.id and d.is_higher = true and d.type_code in (:directiveTypes)"
+                + " and d.status_code = :directiveStatus))",
+                "directiveTypes", EnumUtil.toNameList(DirectiveType.KASKKIRI_EKSTERN, DirectiveType.KASKKIRI_KYLALIS));
+        qb.parameter("directiveStatus", DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name());
 
         qb.requiredCriteria("not exists("
                 + "select d.id from declaration d where d.student_id = s.id and d.study_period_id = :currentStudyPeriod)", 
@@ -941,5 +1025,62 @@ public class DeclarationService {
         dto.setSubjectStudyPeriods(subjectStudyPeriodsResponse);
         dto.setChangedDeclarations(Long.valueOf(studentIdsTotal.size()));
         return dto;
+    }
+
+    public static String hasPositiveResultQuery() {
+        return hasPositiveResultQuery(":hprStudentId", ":hprSubjectId", ":hprGradeCode");
+    }
+
+    public static String hasPositiveResultQuery(String refStudent, String refSubject, String refGrade) {
+        return "select shr.id " +
+                "from student_higher_result shr " +
+                    "join student_higher_result_replaced_subject shrrs on shr.id = shrrs.student_higher_result_id " +
+                "where shr.is_active = true and shr.student_id = " + refStudent + " " +
+                    "and shrrs.subject_id = " + refSubject + " " +
+                    "and shr.grade_code in " + refGrade + " " +
+                "union all " +
+                "select shr.id " +
+                "from student_higher_result shr " +
+                    "join apel_application_record aar on shr.apel_application_record_id = aar.id " +
+                    "join apel_application aa on aa.id = aar.apel_application_id and (aa.is_new is null or aa.is_new = false) " +
+                    "join apel_application_formal_replaced_subject_or_module aafrs on aafrs.apel_application_record_id = aar.id " +
+                "where shr.is_active = true and shr.student_id = " + refStudent + " " +
+                    "and aafrs.subject_id = " + refSubject + " " +
+                    "and shr.grade_code in " + refGrade + " " +
+                "union all " +
+                "select shr.id " +
+                "from student_higher_result shr " +
+                "where shr.is_active = true " +
+                    "and shr.student_id = " + refStudent + " " +
+                    "and shr.subject_id = " + refSubject + " " +
+                    "and shr.grade_code in " + refGrade + " ";
+    }
+
+    private boolean hasPositiveResultsForSubjects(Long studentId, Long subjectId) {
+        if (studentId == null || subjectId == null) {
+            return false;
+        }
+        return !em.createNativeQuery(hasPositiveResultQuery() + " limit 1")
+                .setParameter("hprStudentId", studentId)
+                .setParameter("hprSubjectId", subjectId)
+                .setParameter("hprGradeCode", HigherAssessment.GRADE_POSITIVE)
+                .getResultList().isEmpty();
+    }
+
+    public static String isCurriculumSpecialitySubject(String refCurriculumSpeciality, String moduleRef) {
+        return refCurriculumSpeciality + " in (select cs.id from curriculum_version_hmodule_speciality cvhs "
+                + "join curriculum_version_speciality cvs on cvs.id = cvhs.curriculum_version_speciality_id "
+                + "join curriculum_speciality cs on cs.id = cvs.curriculum_speciality_id "
+                + "where cvhs.curriculum_version_hmodule_id = " + moduleRef + ")";
+    }
+
+    public static String finalExamModuleSubjectAllowedQuery(String refStudent, String refCurriculumVersion,
+            String refCurriculumSpeciality) {
+        // speciality must be set to declare final exam module subjects when curriculum has multiple specialities
+        return  "(case when (select count(spe_cvs.id) from curriculum_version spe_cv "
+                + "join curriculum_version_speciality spe_cvs on spe_cvs.curriculum_version_id = spe_cv.id "
+                + "where spe_cv.id = " + refCurriculumVersion + ") > 1 then " + refCurriculumSpeciality + " is not null else true end "
+                // final exam module subjects should not be declared when final thesis is already created
+                + "and not exists (select 1 from final_thesis ft where ft.student_id = " + refStudent + " limit 1))";
     }
 }

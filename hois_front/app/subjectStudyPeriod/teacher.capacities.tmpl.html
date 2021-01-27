@@ -33,7 +33,7 @@
                   ng-class="{'invalid': !capacitiesUtil.teachersLoadOk(ssp)}"
                   -->
                   <span ng-class="{'invalid': !capacitiesUtil.teacherLoadOk(teacher)}">{{teacher.name}}</span>
-                  <span style="float: right; font-style: italic;">{{'subjectStudyPeriod.all' | translate | lowercase}}</span>
+                  <span style="float: right; font-style: italic;" ng-if="subject.subgroups.length > 0">{{'subjectStudyPeriod.all' | translate | lowercase}}</span>
                 </td>
                 <td ng-repeat="type in capacityTypes">
                   <span ng-repeat="capacity in teacher.capacities | filter:{ capacityType: type.code, subgroup: null } : true">

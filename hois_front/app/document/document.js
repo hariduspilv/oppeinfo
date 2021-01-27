@@ -208,6 +208,7 @@ angular.module('hitsaOis').controller('DiplomaSearchController', ['$scope', '$ro
     $scope.isHigher = $route.current.locals.params.isHigher;
 
     $scope.contentData = {showSubjectCode: true, showTeacher: true};
+    $scope.contentData.paddingChange = 0;
     $scope.formData = {};
     $scope.formDataEn = {};
     $scope.formState = {

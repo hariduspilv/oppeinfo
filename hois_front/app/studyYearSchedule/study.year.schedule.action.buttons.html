@@ -1,0 +1,12 @@
+<div layout="row" layout-xs="column">
+  <md-button class="md-button md-raised" ng-if="criteria.schoolDepartments.length === 0"
+             ng-click="raiseError('studyYearSchedule.error.departments')">{{'main.button.printPdf' | translate}}</md-button>
+  <a ng-href="{{exportUrl(formState.pdfUrl)}}" ng-if="criteria.schoolDepartments.length !== 0"  target="_blank" class="md-button md-raised">
+    {{'main.button.printPdf' | translate}}
+  </a>
+  <md-button class="md-button md-raised" ng-if="criteria.schoolDepartments.length === 0"
+             ng-click="raiseError('studyYearSchedule.error.departments')">{{'main.button.printXls' | translate}}</md-button>
+  <a ng-href="{{exportUrl(formState.xlsUrl)}}" ng-if="criteria.schoolDepartments.length !== 0" target="_blank" class="md-button md-raised">
+    {{'main.button.printXls' | translate}}
+  </a>
+</div>

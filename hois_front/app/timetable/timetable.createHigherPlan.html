@@ -6,12 +6,30 @@
         <hois-value value="(plan.startDate | hoisDate) + '-'+(plan.endDate | hoisDate)" />
       </md-input-container>
       <div flex layout="row" layout-align="end start" class="common-label" md-colors="{color: 'background-400'}">
-        <span ng-repeat="c in capacityTypes | orderBy: currentLanguageNameField()">
+        <span ng-repeat="c in capacityTypes | filter: {valid: true} | orderBy: currentLanguageNameField()">
           <span ng-if="!$first">|</span>
           {{::c.value.toUpperCase()}} - {{currentLanguageNameField(c)}}
         </span>
       </div>
     </div>
+
+    <div>
+      <md-autocomplete
+        md-selected-item="plan.selectedTeacher"
+        md-search-text="queryText"
+        md-items="teacher in searchTimetableTeachers(queryText)"
+        md-item-text="currentLanguageNameField(teacher)"
+        md-selected-item-change="selectedTeacherChanged()"
+        md-min-length="1"
+        md-floating-label="{{'timetable.timetablePlan.teacherHigher' | translate}}"
+        md-require-match
+        md-no-cache>
+        <md-item-template>
+          <span md-highlight-text="queryText" md-highlight-flags="^i">{{currentLanguageNameField(teacher)}}</span>
+        </md-item-template>
+      </md-autocomplete>
+    </div>
+
     <hois-collapsable expanded="false" label="('timetable.timetablePlan.showGroups' | translate)">
       <fieldset tabindex="1">
         <div layout="column">
@@ -20,11 +38,11 @@
           </md-checkbox>
           <md-grid-list ng-app="app" md-cols="5" md-cols-md="3" md-cols-sm="2" md-cols-xs="1" md-row-height="5:1">
             <md-grid-tile ng-repeat="group in plan.studentGroups">
-              <md-checkbox ng-model="group._selected" ng-change="updateGroups()">
+              <md-checkbox ng-model="group._selected" ng-disabled="group.disabled" ng-change="updateGroups()">
                 {{group.code}} </md-checkbox>
             </md-grid-tile>
             <md-grid-tile ng-repeat="pair in plan.subjectTeacherPairs">
-              <md-checkbox ng-model="pair._selected" ng-change="updatePairs()">
+              <md-checkbox ng-model="pair._selected" ng-disabled="pair.disabled" ng-change="updatePairs()">
                 {{pair.code}}</md-checkbox>
             </md-grid-tile>
           </md-grid-list>
@@ -70,7 +88,7 @@
                 <th md-column ng-repeat="capacity in plan.currentCapacitiesGrouped track by $index">
                   <span title="{{currentLanguageNameField(capacity[0].subject)}}&#10;{{capacity[0].teachersString}}&#10;{{capacity[0].subgroupsString}}">{{capacity[0].subjectCode}}</span>
                   <span title="{{'timetable.timetablePlan.periodPlannedLessons' | translate}} / {{'timetable.timetablePlan.periodAllocatedLessons' | translate}}">
-                    (<span ng-repeat="current in capacity" ng-style="{'color': isUnderAllocatedLessons(current) ? 'rgba(0,0,0,0.87)' : 'red'}">
+                    (<span ng-repeat="current in capacity | filter: {show: true}" ng-style="{'color': isUnderAllocatedLessons(current) ? 'rgba(0,0,0,0.87)' : 'red'}">
                       {{getCapacityTypeValue(current.capacityType)}}: {{current.totalPlannedLessons}}/{{current.totalAllocatedLessons
                       ? current.totalAllocatedLessons : 0}}{{$last ? '' : ', '}}</span> )
                   </span>
@@ -80,7 +98,7 @@
             <tbody md-body>
               <tr md-row ng-class-odd="'odd'" ng-class-even="'even'" id="timetable-planned">
                 <td md-cell ng-repeat="capacity in plan.currentCapacitiesGrouped track by $index" id="timetable-planned-column">
-                  <div ng-repeat="current in capacity" style="background-color: {{getColorBySubjectStudyPeriod(current.subjectStudyPeriod)}}"
+                  <div ng-repeat="current in capacity | filter: {canAdd: true}" style="background-color: {{getColorBySubjectStudyPeriod(current.subjectStudyPeriod)}}"
                     id="{{current.subjectStudyPeriod}}-{{current.capacityType}}" journal-id="{{current.subjectStudyPeriod}}"
                     ois-drag="true" capacity-type="{{current.capacityType}}" class="timetable-drag timetable-planned-capacity"
                     title="{{current.subjectCode}}/{{currentLanguageNameField(getCapacityType(current.capacityType))}}&#10;{{current.teachersString}}&#10;{{capacity[0].subgroupsString}}">
@@ -180,6 +198,29 @@
         </tbody>
       </table>
     </md-table-container>
+
+    <div layout-padding ng-if="teacherSubjectStudyPeriods">
+      <hois-collapsable label="currentLanguageNameField(plan.selectedTeacher) + ' ' + ('timetable.timetablePlan.teacherSubjects.title' | translate | lowercase)" expanded="false">
+        <md-table-container>
+          <table md-table class="secondary-table">
+            <thead md-head>
+            <tr md-row>
+              <th md-column>{{'timetable.timetablePlan.teacherSubjects.subject' | translate}}</th>
+              <th md-column>{{'timetable.timetablePlan.teacherSubjects.teachers' | translate}}</th>
+              <th md-column>{{'timetable.timetablePlan.teacherSubjects.studentGroups' | translate}}</th>
+            </tr>
+            </thead>
+            <tbody md-body>
+            <tr md-row ng-repeat="subject in teacherSubjectStudyPeriods | orderBy: ['code', currentLanguageNameField()]" ng-class-odd="'odd'" ng-class-even="'even'">
+              <td md-cell>{{subject.code}} - {{currentLanguageNameField(subject)}}</td>
+              <td md-cell>{{subject.teacherNames}}</td>
+              <td md-cell>{{subject.studentGroups}}</td>
+            </tr>
+            </tbody>
+          </table>
+        </md-table-container>
+      </hois-collapsable>
+    </div>
 
     <md-button ng-href="#/timetable/{{timetableId}}/view" class="md-raised">{{'main.button.back' | translate}}</md-button>
 

@@ -1294,8 +1294,8 @@ angular.module('hitsaOis').controller('ApelApplicationEditController', function 
             var subject = dialogScope.formState.selectedSubject;
 
             var newSubject = { subject: angular.copy(subject), credits: subject.credits };
-            newSubject.subject.nameEt = subject.code + ' - ' + subject.subjectNameEt;
-            newSubject.subject.nameEn = subject.code + ' - ' + subject.subjectNameEn;
+            newSubject.subject.nameEt = subject.subjectNameEt;
+            newSubject.subject.nameEn = subject.subjectNameEn;
             dialogScope.record.formalReplacedSubjectsOrModules.push(newSubject);
           } else {
             message.error('apel.error.subjectHasAlreadyBeenAdded');

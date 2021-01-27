@@ -35,11 +35,14 @@ function compareSubgroups(a, b) {
   return b.id - a.id;
 }
 
-angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$scope', 'QueryUtils', 'DataUtils', '$route', 'ArrayUtils', 'Classifier', 'message',
-  function ($scope, QueryUtils, DataUtils, $route, ArrayUtils, Classifier, message) {
+angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController',
+  ['$scope', 'QueryUtils', 'DataUtils', '$route', 'ArrayUtils', 'Classifier', 'message', 'dialogService', '$location', '$translate', '$rootScope', '$filter',
+  function ($scope, QueryUtils, DataUtils, $route, ArrayUtils, Classifier, message, dialogService, $location, $translate, $rootScope, $filter) {
     QueryUtils.createQueryForm($scope, '/subjectStudyPeriods', {order: 's.' + $scope.currentLanguageNameField()});
 
     $scope.auth = $route.current.locals.auth;
+    $scope.addJointSubjectProgram = addJointSubjectProgram;
+    $scope.editSubjectProgram = editSubjectProgram;
 
     function setCurrentStudyPeriod() {
         if($scope.criteria && !ArrayUtils.isEmpty($scope.studyPeriods) && !$scope.criteria.studyPeriods) {
@@ -87,7 +90,47 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
         return name;
     };
 
-    $scope.testStatus = { code: "AINEPROGRAMM_STAATUS_L"};
+    function addJointSubjectProgram(row) {
+      $location.url("/subjectProgram/" + row.subject.id + "/" + row.id + "/periods/new?joint");
+    }
+
+    function editSubjectProgram(row) {
+      checkLock(row, function () {
+        $location.url("/subjectProgram/periods/" + row.id + "/edit");
+      });
+    }
+
+    function checkLock(row, fConfirmed) {
+      if (!row.id) {
+        return;
+      }
+      QueryUtils.endpoint('/subject/subjectProgram/checkLock').get({id: row.id}, function (response) {
+        if (!!response.locked) {
+          var msg = $translate.instant('subjectProgram.messages.lockedBy',
+            {teacher: response.lockedBy, time: $filter('hoisTime')(response.locked)});
+          dialogService.confirmDialog({prompt: msg}, function () {
+            var promise = lock(row);
+            if (angular.isFunction(fConfirmed) && !!promise && !!promise.$promise && angular.isFunction(promise.$promise.then)) {
+              promise.$promise.then(fConfirmed);
+            }
+          });
+        } else {
+          var promise = lock(row);
+          if (angular.isFunction(fConfirmed) && !!promise && !!promise.$promise && angular.isFunction(promise.$promise.then)) {
+            promise.$promise.then(fConfirmed);
+          }
+        }
+      });
+    }
+
+    function lock(row) {
+      QueryUtils.loadingWheel($rootScope, true);
+      return QueryUtils.endpoint("/subject/subjectProgram/lock").get({id: row.id}, function () {
+        QueryUtils.loadingWheel($rootScope, false);
+      }, function () {
+        QueryUtils.loadingWheel($rootScope, false);
+      });
+    }
   }
 ]).controller('SubjectStudyPeriodEditController', ['$location', '$route', '$rootScope', '$scope', '$q', 'ArrayUtils', 'DeclarationType', 'QueryUtils', 'dialogService', 'message', 'StudentUtil',
   function ($location, $route, $rootScope, $scope, $q, ArrayUtils, DeclarationType, QueryUtils, dialogService, message, StudentUtil) {
@@ -178,7 +221,12 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
         $scope.disableSubject = subjectId !== null;
         if(teacherId) {
             QueryUtils.endpoint('/subjectStudyPeriods/teacher').get({id: teacherId}).$promise.then(function(response){
-                $scope.record.teachers.push({teacherId: response.id, name: response.nameEt});
+                $scope.record.teachers.push({
+                  teacherId: response.id,
+                  name: response.nameEt,
+                  isSignatory: false,
+                  isDiplomaSupplement: true
+                });
             });
         }
     }
@@ -188,7 +236,8 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
             $scope.record.teachers.push({
                 teacherId: teacher.id,
                 name: teacher.nameEt,
-                isSignatory: false
+                isSignatory: false,
+                isDiplomaSupplement: true
             });
         } else if (teacher && isTeacherAdded(teacher)) {
             message.error('subjectStudyPeriodTeacher.teacherAlreadyAdded');
@@ -230,6 +279,13 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
           message.error('subjectStudyPeriod.error.teacherNotAdded');
           return false;
       }
+      var hasTeacherWithDiplomaSupplement = $scope.record.teachers.find(function (it) {
+        return !!it.isDiplomaSupplement;
+      }) !== undefined;
+      if(!hasTeacherWithDiplomaSupplement) {
+        message.error('subjectStudyPeriod.error.teacherNoDiplomaSupplement');
+        return false;
+      }
       return true;
     }
 
@@ -247,6 +303,7 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
       $scope.record.studentGroups = unique($scope.record.studentGroups);
       if($scope.record.teachers.length === 1) {
           $scope.record.teachers[0].isSignatory = true;
+          $scope.record.teachers[0].isDiplomaSupplement = true;
       }
     }
 
@@ -342,16 +399,17 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
           if (result.has) {
             dialogService.confirmDialog(
               {prompt: 'subjectStudyPeriod.subgroups.hasAnyCapacities'},
-              function () { removeSubgroupCore(subgroup)} );
+              function () { removeSubgroupCore(subgroup);} );
           } else {
             removeSubgroupCore(subgroup);
           }
-        })
+        });
       }
     }
 
     function removeSubgroupCore(subgroup) {
       ArrayUtils.remove($scope.record.subgroups, subgroup);
+      $scope.subjectStudyPeriodEditForm.$setDirty();
     }
 
     function createGroup(code, places) {

@@ -17,6 +17,8 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 
 @MappedSuperclass
 public class StudentBase extends BaseEntityWithId {
+    
+    /** Do not add student meal fields, student meal job batch update will take too long */
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private CurriculumVersion curriculumVersion;
@@ -60,6 +62,8 @@ public class StudentBase extends BaseEntityWithId {
     private LocalDate studentCardReturnedDt;
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier dormitory;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Classifier secondarySchoolCountry;
 
     public CurriculumVersion getCurriculumVersion() {
         return curriculumVersion;
@@ -285,4 +289,11 @@ public class StudentBase extends BaseEntityWithId {
         this.dormitory = dormitory;
     }
 
+    public Classifier getSecondarySchoolCountry() {
+        return secondarySchoolCountry;
+    }
+
+    public void setSecondarySchoolCountry(Classifier secondarySchoolCountry) {
+        this.secondarySchoolCountry = secondarySchoolCountry;
+    }
 }

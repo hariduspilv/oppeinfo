@@ -1,10 +1,4 @@
-<div id="scrolling_div" style="overflow: auto;">
-    <md-nav-bar md-selected-nav-item="currentNavItem">
-        <md-nav-item md-nav-href="#/messages/received?_menu" name="message.received">{{'message.received' | translate}}</md-nav-item>
-        <md-nav-item md-nav-href="#/messages/sent?_menu" name="message.sent">{{'message.sent' | translate}}</md-nav-item>
-        <md-nav-item md-nav-href="#/messages/automatic/sent?_menu" name="message.automaticSent" ng-if="canSeeAutomatic">{{'message.automaticSent' | translate}}</md-nav-item>
-    </md-nav-bar>
-</div>
+<div ng-cloak ng-include="'message/message.navbar.html'"></div>
 
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
     <form name="searchForm" ng-submit="searchForm.$valid && loadData()" layout="column" novalidate>
@@ -30,33 +24,65 @@
                 </md-input-container>
             </div>
         </div>
-        <div layout="row">
+        <div layout="row" ng-if="currentNavItem !== 'message.automaticReceived'">
             <md-input-container flex="50" flex-sm="100" flex-xs="100">
                 <label class="textInput">{{'message.sender' | translate}}</label>
                 <input ng-model="criteria.sender" type="text" md-maxlength="255">
             </md-input-container>
         </div>
         <div layout="row" layout-xs="column">
-            <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+            <md-button type="submit" class="md-raised md-primary" ng-if="state === STATES.SEARCH">{{'main.button.search' | translate}}</md-button>
+            <md-button class="md-raised md-primary" ng-if="state === STATES.DELETE" ng-click="deleteForm()">{{'main.button.search' | translate}}</md-button>
             <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-            <md-button class="md-raised" ng-if="formState.canSend" ng-href="/#/message/new">{{'message.send' | translate}}</md-button>
+            <md-button class="md-raised" ng-if="formState.canSend && state === STATES.SEARCH" ng-href="/#/message/new">{{'message.send' | translate}}</md-button>
+            <md-button class="md-raised" ng-if="formState.canDelete && state === STATES.SEARCH" ng-click="deleteForm()">{{'main.button.delete' | translate}}</md-button>
+            <md-button class="md-raised" ng-if="formState.canDelete && state === STATES.DELETE" ng-click="changeStateToSearch()">{{'main.button.back' | translate}}</md-button>
         </div>
     </form>
 </div>
 
 <div layout-padding>
-  <div flex>
+  <div flex ng-if="state === STATES.SEARCH">
     <md-table-container>
       <table md-table md-progress="tabledata.$promise">
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+        <tr md-row>
+          <th md-column md-order-by="subject">{{'message.subject' | translate}}</th>
+          <th md-column md-order-by="inserted">{{'message.dateSent' | translate}}</th>
+          <th md-column md-order-by="p.lastname,p.firstname">{{'message.sender' | translate}}</th>
+        </tr>
+        </thead>
+        <tbody md-body>
+        <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+          <td md-cell><a href="#/message/{{row.id}}/view?backUrl=received" ng-class="{bold: !row.isRead}">{{::row.subject}}</a></td>
+          <td md-cell>{{row.dateSent | hoisDateTime}}</td>
+          <td md-cell>{{::row.sender}}</td>
+        </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
+                         md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                         md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+  </div>
+  <div flex ng-if="state === STATES.DELETE">
+    <md-table-container>
+      <table md-table md-progress="deleteQueryForm.tabledata.$promise">
+        <thead md-head md-order="deleteQueryForm.criteria.order" md-on-reorder="deleteQueryForm.loadData">
           <tr md-row>
+            <th md-column style="width: 24px;">
+              <md-checkbox ng-model="selectAll" aria-label="select all" ng-change="updateAllCheckBoxes(selectAll)"></md-checkbox>
+            </th>
             <th md-column md-order-by="subject">{{'message.subject' | translate}}</th>
             <th md-column md-order-by="inserted">{{'message.dateSent' | translate}}</th>
             <th md-column md-order-by="p.lastname,p.firstname">{{'message.sender' | translate}}</th>
           </tr>
         </thead>
         <tbody md-body>
-          <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+          <tr md-row ng-repeat="row in deleteQueryForm.tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>
+              <md-checkbox ng-model="row.delete" aria-label="delete"></md-checkbox>
+            </td>
             <td md-cell><a href="#/message/{{row.id}}/view?backUrl=received" ng-class="{bold: !row.isRead}">{{::row.subject}}</a></td>
             <td md-cell>{{row.dateSent | hoisDateTime}}</td>
             <td md-cell>{{::row.sender}}</td>
@@ -64,8 +90,11 @@
         </tbody>
       </table>
     </md-table-container>
-    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
-                         md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+    <md-table-pagination md-limit="deleteQueryForm.criteria.size" md-limit-options="[50, 100]"
+                         md-page="deleteQueryForm.criteria.page" md-total="{{deleteQueryForm.tabledata.totalElements}}" md-on-paginate="deleteQueryForm.loadData"
                          md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+    <div layout="row">
+      <md-button class="md-raised md-primary" ng-if="formState.canDelete && state === STATES.DELETE" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
+    </div>
   </div>
 </div>

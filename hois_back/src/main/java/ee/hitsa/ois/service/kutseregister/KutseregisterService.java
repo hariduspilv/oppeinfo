@@ -377,16 +377,12 @@ public class KutseregisterService {
     private Classifier findLanguage(String languageName) {
         // currently there is no other info about language choices
         StudyLanguage studyLanguage = null;
-        switch (languageName) {
-            case "eesti keel":
-                studyLanguage = StudyLanguage.OPPEKEEL_E;
-                break;
-            case "inglise keel":
-                studyLanguage = StudyLanguage.OPPEKEEL_I;
-                break;
-            case "vene keel":
-                studyLanguage = StudyLanguage.OPPEKEEL_V;
-                break;
+        if (languageName == null || languageName.equals("eesti keel")) {
+            studyLanguage = StudyLanguage.OPPEKEEL_E;
+        } else if (languageName.equals("inglise keel")) {
+            studyLanguage = StudyLanguage.OPPEKEEL_I;
+        } else if (languageName.equals("vene keel")) {
+            studyLanguage = StudyLanguage.OPPEKEEL_V;
         }
         return studyLanguage != null ? em.getReference(Classifier.class, studyLanguage.name()) : null;
     }

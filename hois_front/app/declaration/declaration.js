@@ -147,8 +147,6 @@ function ($q, $location, $scope, $route, GRADING_SCHEMA_TYPE, ArrayUtils, DataUt
     var newSubject = new SubjectEndpoint({
       subjectStudyPeriod: subject.subjectStudyPeriod,
       declaration: $scope.declaration.id,
-      curriculumVersionHigherModule: subject.module.id,
-      isOptional: subject.isOptional,
       subgroup: subject.subgroup
     });
     newSubject.$save().then(function(response){

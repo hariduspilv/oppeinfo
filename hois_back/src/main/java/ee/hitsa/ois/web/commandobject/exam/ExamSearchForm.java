@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web.commandobject.exam;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public class ExamSearchForm {
 
@@ -9,6 +10,7 @@ public class ExamSearchForm {
     private LocalDate thru;
     private Long subject;
     private Long teacher;
+    private List<Long> studentGroups;
 
     public Long getStudyPeriod() {
         return studyPeriod;
@@ -48,5 +50,13 @@ public class ExamSearchForm {
 
     public void setTeacher(Long teacher) {
         this.teacher = teacher;
+    }
+
+    public List<Long> getStudentGroups() {
+        return studentGroups;
+    }
+
+    public void setStudentGroups(List<Long> studentGroups) {
+        this.studentGroups = studentGroups;
     }
 }

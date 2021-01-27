@@ -30,7 +30,7 @@
         <div layout="row">
           <md-input-container flex="45" flex-sm="100" flex-xs="100">
             <label class="textInput">{{'groupAbsence.studyWeek' | translate}}</label>
-            <md-select ng-model="criteria.studyWeek" ng-change="studyWeekChanged()" ng-disabled="criteria.todaysAbsences" 
+            <md-select ng-model="criteria.studyWeek" ng-change="studyWeekChanged()" ng-disabled="criteria.todaysAbsences"
               ng-required="!criteria.todaysAbsences">
               <md-option ng-value="week" ng-repeat="week in formState.studyWeeks | orderBy: 'nr' track by $index">
                 {{week.start | hoisDate}}-{{week.end | hoisDate}}
@@ -44,7 +44,7 @@
             </md-checkbox>
           </md-input-container>
         </div>
-        
+
         <div layout="row">
           <md-button class="md-raised md-primary" ng-click="search()">{{'main.button.search' | translate}}</md-button>
           <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
@@ -84,17 +84,21 @@
             <td>{{student.nameEt}}</td>
             <td ng-repeat="journal in journals">
               <div layout="row" layout-sm="column" layout-xs="column" layout-align="center center">
-                <div ng-repeat="absence in studentAbsences[student.id][journal.id][journal.date]" style="margin-right: 10px">
-                  <div ng-if="absence.length === 1 && !absence[0].lessonNr">
+                <div ng-repeat="journalEntry in studentAbsences[student.id][journal.id][journal.date]" style="margin-right: 10px">
+                  <div ng-if="journalEntry.absences.length === 1 && !journalEntry.absences[0].lessonNr">
                     <md-input-container>
-                      <hois-select ng-model="absence[0].absence" values="formState.absenceOptions" aria-label="absence"
-                        model-value-attr="code" show-property="value" value-property="code" ng-change="absenceChanged(absence[0])"
+                      <hois-select ng-model="journalEntry.absences[0].absence" values="formState.absenceOptions" aria-label="absence"
+                        model-value-attr="code" show-property="value" value-property="code" ng-change="absenceChanged(journalEntry.absences[0])"
                         ng-disabled="!(auth.isAdmin() || auth.isTeacher())" required></hois-select>
                     </md-input-container>
+                    <md-tooltip ng-if="journalEntry.startLessonNr">
+                      <span ng-if="!journalEntry.lessons || journalEntry.lessons <= 1">{{journalEntry.startLessonNr}}. {{'groupAbsence.lesson' | translate}}</span>
+                      <span ng-if="journalEntry.lessons && journalEntry.lessons > 1">{{journalEntry.startLessonNr}}. - {{journalEntry.startLessonNr + journalEntry.lessons-1}}. {{'groupAbsence.lesson' | translate}}</span>
+                    </md-tooltip>
                   </div>
 
-                  <div ng-if="absence.length > 1 || absence[0].lessonNr">
-                    <div layout="column" ng-repeat="lessonAbsence in absence | orderBy: 'lessonNr'">
+                  <div ng-if="journalEntry.absences.length > 1 || journalEntry.absences[0].lessonNr">
+                    <div layout="column" ng-repeat="lessonAbsence in journalEntry.absences | orderBy: 'lessonNr'">
                       <div layout="row">
                         <div style="line-height: 48px;">{{lessonAbsence.lessonNr}}</div>
                         <md-input-container>

@@ -69,7 +69,7 @@
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
             <td md-cell>
-              <a md-no-ink class="md-primary" ng-click="logentry(row)">{{::(messagePrefix + row.wsName) | translate}}</a>
+              <a md-no-ink class="md-primary" ng-click="logentry(row)">{{::(messagePrefix + (!!convertType[row.wsName] ? convertType[row.wsName] : row.wsName)) | translate}}</a>
             </td>
             <td md-cell>{{::row.inserted | hoisDateTime}}</td>
             <td md-cell ng-if="logType === 'ekis'">{{currentLanguageNameField(row.directive)}}</td>

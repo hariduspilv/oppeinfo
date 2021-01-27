@@ -190,7 +190,7 @@ function ($rootScope, $location, $route, $scope, ArrayUtils, Classifier, DataUti
     }
   };
   $scope.updateCredits = function (moduleSubject, index) {
-    moduleSubject.credits = DataUtils.hoursToCredits(moduleSubject.hours);
+    moduleSubject.credits = DataUtils.hoursToCredits(moduleSubject.hours, 2);
     $scope.practiceJournalForm['credits[' + index + ']'].$setDirty();
   };
 

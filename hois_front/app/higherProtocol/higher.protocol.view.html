@@ -35,8 +35,8 @@
       </md-input-container>
     </div>
 
-    <div layout="row" layout-sm="column" layout-xs="column" ng-if="record.subjectStudyPeriodMidtermTaskDto && record.protocolType === 'PROTOKOLLI_LIIK_P'">
-      <md-input-container flex="25" flex-sm="100" flex-xs="100">
+    <div layout="row" layout-sm="column" layout-xs="column" ng-if="record.subjectStudyPeriodMidtermTaskDto">
+      <md-input-container flex="25" flex-sm="100" flex-xs="100" ng-if="record.protocolType === 'PROTOKOLLI_LIIK_P'">
         <label>{{'higherProtocol.assessment' | translate}}</label>
         <hois-classifier-value ng-model="record.assessmentCode" main-classifier-code="HINDAMISVIIS"></hois-classifier-value>
       </md-input-container>
@@ -51,7 +51,7 @@
         <label>{{'higherProtocol.teacher' | translate}}</label>
         <hois-value value="record.moduleDto.teacher"></hois-value>
       </md-input-container>
-      <md-input-container ng-if="record.protocolType === 'PROTOKOLLI_LIIK_P'" flex="50" flex-sm="100" flex-xs="100">
+      <md-input-container flex="50" flex-sm="100" flex-xs="100">
         <label>{{'higherProtocol.protocolDate' | translate}}</label>
         <hois-value value="record.finalDate | hoisDate"></hois-value>
       </md-input-container>
@@ -125,8 +125,10 @@
                 </span>
               </td>
               <td md-cell ng-repeat="result in record.subjectStudyPeriodMidtermTaskDto.studentResults | filter: filterStudentResults(student)">
-                <span ng-if="!result.isText">{{result.points}}</span>
-                <span ng-if="result.isText">{{result.pointsTxt}}</span>
+                <span ng-repeat="history in result.history">
+                  {{history.isText ? history.pointsTxt : history.points}}
+                  <span>*<md-tooltip md-direction="top">{{history.changed | hoisDateTime}}</md-tooltip></span> / </span>
+                <span>{{result.isText ? result.pointsTxt : result.points}}</span>
               </td>
               <td md-cell ng-repeat="subject in record.moduleDto.subjects" style="min-width: 100px;">
                 <span ng-if="subject.id">

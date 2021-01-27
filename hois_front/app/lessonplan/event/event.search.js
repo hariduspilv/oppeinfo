@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hitsaOis').controller('LessonplanEventSearchController',
-  function ($route, $scope, USER_ROLES, AuthService, QueryUtils, dialogService) {
+  function ($httpParamSerializer, $route, $scope, USER_ROLES, AuthService, QueryUtils, config, dialogService) {
     $scope.currentNavItem = 'events';
     $scope.auth = $route.current.locals.auth;
     $scope.eventsPerm = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_SYNDMUS);
@@ -17,9 +17,7 @@ angular.module('hitsaOis').controller('LessonplanEventSearchController',
       });
     });
 
-    QueryUtils.createQueryForm($scope, baseUrl, {
-      order: 'tet.start, tet.end'
-    });
+    QueryUtils.createQueryForm($scope, baseUrl);
 
     if ($scope.eventsPerm) {
       if (!angular.isDefined($scope.criteria.singleEvent)) {
@@ -64,7 +62,11 @@ angular.module('hitsaOis').controller('LessonplanEventSearchController',
       $scope.directiveControllers.forEach(function (c) {
         c.clear();
       });
-      $scope.criteria.order = '4 desc';
+      $scope.criteria.order = null;
+    };
+
+    $scope.printUrl = function () {
+      return config.apiUrl + baseUrl + '/search.pdf?' + $httpParamSerializer($scope.criteria);
     };
 
     $scope.afterNow = function (date, time) {
@@ -80,26 +82,15 @@ angular.module('hitsaOis').controller('LessonplanEventSearchController',
       if (event.isJuhanEvent) {
         return false;
       }
-      if ($scope.auth.isAdmin() || $scope.auth.isLeadingTeacher()) {
+      if ($scope.auth.isAdmin()) {
         return !event.isPersonal || event.person.id === $scope.auth.person;
-      }
-
-      if ($scope.auth.isTeacher()) {
-        return (event.singleEvent && event.insertedTeacherId === $scope.auth.teacher) || (!event.singleEvent && isTeachersEvent(event));
+      } else if ($scope.auth.isLeadingTeacher()) {
+        return event.singleEvent && (!event.isPersonal || event.person.id === $scope.auth.person);
+      } else if ($scope.auth.isTeacher()) {
+        return event.singleEvent && event.insertedTeacherId === $scope.auth.teacher;
       }
       return false;
     };
-
-    function isTeachersEvent(event) {
-      if (event.teachers) {
-        for (var i = 0; i < event.teachers.length; i++) {
-          if (event.teachers[i].id === $scope.auth.teacher) {
-            return true;
-          }
-        }
-      }
-      return false;
-    }
 
     $scope.openEventRelatedEntitiesDialog = function (event, entityType) {
       dialogService.showDialog('lessonplan/event/event.related.entities.dialog.html', function (dialogScope) {

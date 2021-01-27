@@ -20,6 +20,7 @@ angular.module('hitsaOis').controller('StudentEhisController', ['$scope', '$rout
     {type: COURSE_CHANGE, translate: $translate.instant('ehis.student.COURSE_CHANGE')},
     {type: CURRICULA_FULFILMENT, translate: $translate.instant('ehis.student.CURRICULA_FULFILMENT')},
     {type: DORMITORY, translate: $translate.instant('ehis.student.DORMITORY')},
+    {type: FOREIGN_STUDY, translate: $translate.instant('ehis.student.FOREIGN_STUDY')},
     {type: GRADUATION, translate: $translate.instant('ehis.student.GRADUATION')},
     {type: DUPLICATE, translate: $translate.instant('ehis.student.DUPLICATE')},
     {type: VOTA, translate: $translate.instant('ehis.student.VOTA')},
@@ -28,7 +29,6 @@ angular.module('hitsaOis').controller('StudentEhisController', ['$scope', '$rout
 
   if ($scope.auth.higher) {
     $scope.dataTypes.push({type: GUEST_STUDENTS, translate: $translate.instant('ehis.student.GUEST_STUDENTS')});
-    $scope.dataTypes.push({type: FOREIGN_STUDY, translate: $translate.instant('ehis.student.FOREIGN_STUDY')});
   }
 
   $scope.displayDates = [COURSE_CHANGE, DORMITORY, FOREIGN_STUDY, GRADUATION, DUPLICATE, VOTA, SPECIAL_NEEDS, GUEST_STUDENTS];
@@ -38,7 +38,7 @@ angular.module('hitsaOis').controller('StudentEhisController', ['$scope', '$rout
     $scope.result = [];
     setMinDate();
   };
-  
+
   function setMinDate() {
     switch ($scope.criteria.dataType) {
       case GUEST_STUDENTS:

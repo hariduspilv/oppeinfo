@@ -31,6 +31,10 @@
         </md-input-container>
       </div>
     </div>
+
+    <ng-include src="'student/view.supportservice.action.buttons.html'"></ng-include>
+    <div>&nbsp;</div>
+
     <hois-collapsable label="('student.supportService.label' | translate)">
       <md-table-container>
         <table md-table md-progress="supportServices.$promise" class="secondary-table">
@@ -91,14 +95,12 @@
         md-limit-options="[5, 10, 20, 50]" md-page="supportServicesCriteria.page" md-total="{{supportServices.totalElements}}" md-on-paginate="loadSupportServices"
         md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
         md-page-select></md-table-pagination>
-      <md-button ng-if="auth.isAdmin() && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_TUGITEENUS') && student.id && ['OPPURSTAATUS_K', 'OPPURSTAATUS_L'].indexOf(student.status) === -1" ng-click="editService()" class="md-primary md-raised">{{'student.supportService.operation.addService.label' | translate}}</md-button>
-      <md-button ng-if="student.userCanViewPrivateStudentSupportServices && supportServices.totalElements > 0" ng-click="printServices()" class="md-raised">{{'student.supportService.operation.printServices.label' | translate}}</md-button>
-      <md-button ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_TUGITEENUS') && student.id && ['OPPURSTAATUS_K', 'OPPURSTAATUS_L'].indexOf(student.status) === -1" ng-click="innoveHistory()" class="md-raised">{{'student.supportService.operation.innoveHistory.label' | translate}}</md-button>
     </hois-collapsable>
     <hois-collapsable label="('student.supportService.ehis' | translate)" ng-if="false">
-      
+
     </hois-collapsable>
-    <md-button ng-if="!auth.isStudent() && !auth.isParent()" ng-click="back('#/students')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+
+    <ng-include src="'student/view.supportservice.action.buttons.html'"></ng-include>
   </div>
 </div>
 
@@ -106,7 +108,7 @@
   table.secondary-table th md-icon > svg {
     fill: grey !important;
   }
-  
+
   table.secondary-table th,
   table.secondary-table td {
     padding-right: 28px !important;

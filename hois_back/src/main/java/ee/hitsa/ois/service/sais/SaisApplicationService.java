@@ -31,10 +31,11 @@ import javax.transaction.Transactional;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 import javax.validation.groups.Default;
-import javax.xml.bind.JAXBElement;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 
+import ee.hois.xroad.sais2.generated.AppExportResponsev2;
+import ee.hois.xroad.sais2.generated.Applicationv2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -94,7 +95,6 @@ import ee.hitsa.ois.web.dto.sais.SaisApplicationSearchDto;
 import ee.hois.soap.LogContext;
 import ee.hois.xroad.helpers.XRoadHeaderV4;
 import ee.hois.xroad.sais2.generated.AllAppsExportRequest;
-import ee.hois.xroad.sais2.generated.AppExportResponse;
 import ee.hois.xroad.sais2.generated.Application;
 import ee.hois.xroad.sais2.generated.ApplicationFormData;
 import ee.hois.xroad.sais2.generated.ArrayOfCandidateAddress;
@@ -506,15 +506,21 @@ public class SaisApplicationService {
         }
         saisAdmission = EntityUtil.save(saisAdmission, em);
 
-        dto.getSuccessful().add(new SaisApplicationImportedRowDto(rowNr, saisApplication.getApplicationNr()));
+
+        if (SaisAdmissionUtil.isHigher(saisAdmission) && saisApplication.getSecondarySchoolCountry() == null) {
+            dto.getSuccessful().add(new SaisApplicationImportedRowDto(rowNr, saisApplication.getApplicationNr(),
+                    "reception.application.error.emptySecondarySchoolCountry"));
+        } else {
+            dto.getSuccessful().add(new SaisApplicationImportedRowDto(rowNr, saisApplication.getApplicationNr()));
+        }
     }
 
     public String sampleCsvFile() {
-        return "KonkursiKood;AvalduseNr;Eesnimi;Perekonnanimi;Isikukood;Kodakondsus;Elukohariik;Finantseerimisallikas;AvalduseMuutmiseKp;AvalduseStaatus;OppekavaVersioon/RakenduskavaKood;Oppekoormus;Oppevorm;Oppekeel;OppuriEelnevOppetase;KonkursiAlgusKp;KonkursiLõppKp\r\n"+
-               "FIL12/12;Nr123;Mari;Maasikas;49011112345;EST;EST;RE;1.01.2012;T;FIL12/12;TAIS;P;E;411;1.12.2011;1.02.2012\r\n"+
-               "MAT15/16;Nr456;Tõnu;Kuut;39311112312;FIN;EST;REV;3.03.2012;T;MAT15/16;OSA;P;I;411;1.01.2012;3.04.2012\r\n"+
-               "MAT15/16;Nr321;Tiiu;Kask;49302052312;EST;EST;RE;12.02.2012;T;MAT15/16;OSA;K;E;411;1.01.2012;3.04.2012\r\n"+
-               "MAT15/16;Nr321;El;Mariažši;48703083963;EST;EST;RE;22.02.2012;T;MAT15/16;OSA;K;E;411;1.01.2012;3.04.2012";
+        return "KonkursiKood;AvalduseNr;Eesnimi;Perekonnanimi;Isikukood;Kodakondsus;Elukohariik;Finantseerimisallikas;AvalduseMuutmiseKp;AvalduseStaatus;OppekavaVersioon/RakenduskavaKood;Oppekoormus;Oppevorm;Oppekeel;OppuriEelnevOppetase;KonkursiAlgusKp;KonkursiLõppKp;KeskhariduseOmandamiseRiik\r\n"+
+               "FIL12/12;Nr123;Mari;Maasikas;49011112345;EST;EST;RE;1.01.2012;T;FIL12/12;TAIS;P;E;411;1.12.2011;1.02.2012;EST\r\n"+
+               "MAT15/16;Nr456;Tõnu;Kuut;39311112312;FIN;EST;REV;3.03.2012;T;MAT15/16;OSA;P;I;411;1.01.2012;3.04.2012;EST\r\n"+
+               "MAT15/16;Nr321;Tiiu;Kask;49302052312;EST;EST;RE;12.02.2012;T;MAT15/16;OSA;K;E;411;1.01.2012;3.04.2012;FIN\r\n"+
+               "MAT15/16;Nr321;El;Mariažši;48703083963;EST;EST;RE;22.02.2012;T;MAT15/16;OSA;K;E;411;1.01.2012;3.04.2012;LVA";
     }
 
     public String classifiersFile() {
@@ -564,7 +570,7 @@ public class SaisApplicationService {
             saisLogService.withResponse(response, schoolId, (result, logContext) -> {
 
                 //look for all the application numbers to find previously imported applications with one query
-                List<Application> applications = result.getApplications() != null ? result.getApplications().getApplication() : null;
+                List<Applicationv2> applications = result.getApplications() != null ? result.getApplications().getApplicationv2() : null;
                 List<String> previousApplicationNrs = StreamUtil.toMappedList(Application::getApplicationNumber, applications);
                 Map<String, SaisApplication> previousApplications = previousApplicationNrs.isEmpty() ?
                         Collections.emptyMap() : StreamUtil.toMap(SaisApplication::getApplicationNr,
@@ -575,7 +581,7 @@ public class SaisApplicationService {
                 List<SaisApplicationImportedRowDto> failed = new ArrayList<>();
                 List<SaisApplicationImportedRowDto> successful = new ArrayList<>();
 
-                for(Application application : StreamUtil.nullSafeList(applications)) {
+                for(Applicationv2 application : StreamUtil.nullSafeList(applications)) {
                     SaisApplication prevApp = previousApplications.get(application.getApplicationNumber());
                     if(prevApp != null && prevDirectives != null && prevDirectives.containsKey(prevApp.getId())) {
                         String error = String.format("Avaldusega nr %s on seotud käskkiri - seda ei uuendata.", application.getApplicationNumber());
@@ -613,21 +619,23 @@ public class SaisApplicationService {
      * @param fetchedCount
      * @return number of application fetched including this result
      */
-    private long applyPaging(AllAppsExportRequest request, AppExportResponse response, long fetchedCount) {
-        List<Application> applications = response.getApplications() != null ? response.getApplications().getApplication() : null;
-        JAXBElement<Integer> page = null;
+    private long applyPaging(AllAppsExportRequest request, AppExportResponsev2 response, long fetchedCount) {
+        List<Applicationv2> applications = response.getApplications() != null ? response.getApplications().getApplicationv2() : null;
+        Integer page = null;
         if(applications != null && !applications.isEmpty()) {
             fetchedCount += applications.size();
             if(response.getTotalCount() != null && fetchedCount < response.getTotalCount().longValue()) {
                 // read less than totalCount number of applications, try next page
-                page = objectFactory.createAllAppsExportRequestPage(Integer.valueOf(request.getPage().getValue().intValue() + 1));
+                page = Integer.valueOf(request.getPage().intValue() + 1);
             }
         }
         request.setPage(page);
         return fetchedCount;
     }
 
-    private SaisApplicationImportedRowDto processApplication(Long schoolId, Application application, SaisApplication prevApp, ClassifierCache classifiers,
+    private SaisApplicationImportedRowDto processApplication(
+            Long schoolId, Applicationv2 application,
+            SaisApplication prevApp, ClassifierCache classifiers,
             Map<String, SaisAdmission> admissionMap,
             EstonianIdCodeValidator idCodeValidator) {
         SaisApplication saisApplication;
@@ -749,6 +757,10 @@ public class SaisApplicationService {
         saisApplication.setResidenceCountry(classifiers.getByCode(ClassifierUtil.COUNTRY_ESTONIA, MainClassCode.RIIK));
         saisApplication.setStudyForm(classifiers.getByValue(classifierValue(application.getStudyForm()), MainClassCode.OPPEVORM));
         saisApplication.setLanguage(saisAdmission.getLanguage());
+        if (application.getSecondaryEducationAcquirementCountry() != null) {
+            saisApplication.setSecondarySchoolCountry(classifiers.getByValue(
+                    classifierValue(application.getSecondaryEducationAcquirementCountry()), MainClassCode.RIIK));
+        }
 
         saisApplication.getGrades().clear();
         saisApplication.getGraduatedSchools().clear();
@@ -770,6 +782,10 @@ public class SaisApplicationService {
 
         saisAdmission.getApplications().add(saisApplication);
 
+        if (SaisAdmissionUtil.isHigher(saisAdmission) && saisApplication.getSecondarySchoolCountry() == null) {
+            return new SaisApplicationImportedRowDto(EntityUtil.save(saisApplication, em), null,
+                    "reception.application.error.emptySecondarySchoolCountry");
+        }
         return new SaisApplicationImportedRowDto(EntityUtil.save(saisApplication, em), null);
     }
 
@@ -893,7 +909,7 @@ public class SaisApplicationService {
     }
 
     private XRoadHeaderV4 getXroadHeader(HoisUserDetails user) {
-        return sp.xroadHeader("AllApplicationsExport", em.getReference(Person.class, user.getPersonId()).getIdcode());
+        return sp.xroadHeader("AllApplicationsExportv2", em.getReference(Person.class, user.getPersonId()).getIdcode());
     }
 
     private AllAppsExportRequest getRequest(SaisApplicationImportForm form, Long schoolId, ClassifierCache classifiers) {
@@ -930,7 +946,7 @@ public class SaisApplicationService {
         Integer koolRegNr = Integer.valueOf(ehisSchool.getValue2());
         aoi.getInt().add(koolRegNr);
         request.setInstitutionRegCodes(aoi);
-        request.setPage(objectFactory.createAllAppsExportRequestPage(Integer.valueOf(0)));
+        request.setPage(Integer.valueOf(0));
         return request;
     }
 

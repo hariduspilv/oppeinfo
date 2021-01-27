@@ -215,8 +215,8 @@
     }
   }
 
-  angular.module('hitsaOis').controller('ReportTeacherDetailLoadVocationalController', ['$scope', '$route', 'Classifier', 'DataUtils', 'FormUtils', 'QueryUtils', 'dialogService', 'MONTH',
-    function ($scope, $route, Classifier, DataUtils, FormUtils, QueryUtils, dialogService, MONTH) {
+  angular.module('hitsaOis').controller('ReportTeacherDetailLoadVocationalController', ['$scope', '$route', 'Classifier', 'DataUtils', 'FormUtils', 'QueryUtils', 'dialogService', 'MONTH', 'ExcelUtils',
+    function ($scope, $route, Classifier, DataUtils, FormUtils, QueryUtils, dialogService, MONTH, ExcelUtils) {
       $scope.auth = $route.current.locals.auth;
       var baseUrl = '/reports/teachers/detailload/vocational';
 
@@ -335,9 +335,19 @@
         return $scope.excel($scope.formState.xlsUrl, $scope.criteria);
       };
 
-      $scope.excelUrlDetail = function () {
-        $scope.criteria.isHigher = false;
-        return $scope.excel($scope.formState.xlsUrlDetail, $scope.criteria);
+      $scope.toExcel = function () {
+        FormUtils.withValidForm($scope.searchForm, function () {
+          if ($scope.reportData === undefined) {
+            $scope.reportData = {};
+          }
+          if ($scope.reportData.criteria === undefined) {
+            $scope.reportData.criteria = {};
+          }
+          $scope.criteria.isHigher = false;
+          var criteria = angular.copy($scope.reportData.criteria);
+          criteria.showSingleEvents = false;
+          ExcelUtils.get($scope.excel($scope.formState.xlsUrlDetail, criteria), 'teachersdetailloadsubjectjournal.xlsx', $scope);
+        });
       };
 
       var loadData = $scope.loadData;
@@ -371,8 +381,8 @@
         });
       };
     }
-  ]).controller('ReportTeacherDetailLoadHigherController', ['$scope', '$route', 'Classifier', 'DataUtils', 'FormUtils', 'QueryUtils', 'dialogService', 'MONTH',
-    function ($scope, $route, Classifier, DataUtils, FormUtils, QueryUtils, dialogService, MONTH) {
+  ]).controller('ReportTeacherDetailLoadHigherController', ['$scope', '$route', 'Classifier', 'DataUtils', 'FormUtils', 'QueryUtils', 'dialogService', 'MONTH', 'ExcelUtils',
+    function ($scope, $route, Classifier, DataUtils, FormUtils, QueryUtils, dialogService, MONTH, ExcelUtils) {
       $scope.auth = $route.current.locals.auth;
       var baseUrl = '/reports/teachers/detailload/higher';
 
@@ -478,9 +488,19 @@
         return $scope.excel($scope.formState.xlsUrl, $scope.criteria);
       };
 
-      $scope.excelUrlDetail = function () {
-        $scope.criteria.isHigher = true;
-        return $scope.excel($scope.formState.xlsUrlDetail, $scope.criteria);
+      $scope.toExcel = function () {
+        FormUtils.withValidForm($scope.searchForm, function () {
+          if ($scope.reportData === undefined) {
+            $scope.reportData = {};
+          }
+          if ($scope.reportData.criteria === undefined) {
+            $scope.reportData.criteria = {};
+          }
+          $scope.criteria.isHigher = true;
+          var criteria = angular.copy($scope.reportData.criteria);
+          criteria.showSingleEvents = false;
+          ExcelUtils.get($scope.excel($scope.formState.xlsUrlDetail, criteria), 'teachersdetailloadsubjectjournal.xlsx', $scope);
+        });
       };
 
       var loadData = $scope.loadData;

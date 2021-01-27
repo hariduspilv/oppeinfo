@@ -6,6 +6,10 @@ import java.util.Map;
 
 import javax.validation.Valid;
 
+import ee.hitsa.ois.web.commandobject.SearchCommand;
+import ee.hitsa.ois.web.commandobject.message.MessageDeleteCommand;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.message.MessageFormDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,6 +18,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.Message;
@@ -25,14 +30,14 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
-import ee.hitsa.ois.web.commandobject.MessageForm;
-import ee.hitsa.ois.web.commandobject.MessageSearchCommand;
+import ee.hitsa.ois.web.commandobject.message.MessageForm;
+import ee.hitsa.ois.web.commandobject.message.MessageSearchCommand;
 import ee.hitsa.ois.web.commandobject.UsersSearchCommand;
 import ee.hitsa.ois.web.commandobject.student.StudentGroupSearchCommand;
 import ee.hitsa.ois.web.commandobject.student.StudentSearchCommand;
-import ee.hitsa.ois.web.dto.MessageDto;
-import ee.hitsa.ois.web.dto.MessageReceiverDto;
-import ee.hitsa.ois.web.dto.MessageSearchDto;
+import ee.hitsa.ois.web.dto.message.MessageDto;
+import ee.hitsa.ois.web.dto.message.MessageReceiverDto;
+import ee.hitsa.ois.web.dto.message.MessageSearchDto;
 import ee.hitsa.ois.web.dto.SubjectDto;
 import ee.hitsa.ois.web.dto.student.StudentGroupSearchDto;
 import ee.hitsa.ois.web.dto.studymaterial.JournalDto;
@@ -70,6 +75,16 @@ public class MessageController {
         return messageService.searchReceived(user, criteria, pageable);
     }
 
+    @GetMapping("/received/automatic")
+    public Page<MessageSearchDto> searchReceivedAutomatic(HoisUserDetails user, @Valid MessageSearchCommand criteria, Pageable pageable) {
+        return messageService.searchReceivedAutomatic(user, criteria, pageable);
+    }
+
+    @GetMapping("/new")
+    public MessageFormDto getNewFormData(HoisUserDetails user) {
+        return messageService.newFormData(user);
+    }
+
     @GetMapping("/{id:\\d+}")
     public MessageDto get(HoisUserDetails user, @WithEntity Message message) {
         assertCanView(user, message);
@@ -95,6 +110,14 @@ public class MessageController {
         return messageService.getStudentRepresentatives(criteria);
     }
 
+    @GetMapping("/teachers")
+    public List<MessageReceiverDto> getTeachers(
+            HoisUserDetails user,
+            @RequestParam(name = "journalId", required = false) List<Long> journalIds,
+            @RequestParam(name = "subjectId", required = false) List<Long> sspIds) {
+        return messageService.getTeachers(user, journalIds, sspIds);
+    }
+
     /**
      * UsersController.search() is not used as school should not always be set as parameter
      */
@@ -109,21 +132,21 @@ public class MessageController {
     }
 
     @GetMapping("/studentgroups")
-    public List<StudentGroupSearchDto> studentGroups(HoisUserDetails user, @Valid StudentGroupSearchCommand criteria) {
+    public List<AutocompleteResult> studentGroups(HoisUserDetails user, @Valid StudentGroupSearchCommand criteria) {
         UserUtil.assertIsSchoolAdminOrLeadingTeacherOrTeacher(user);
         return messageService.searchStudentGroups(user, criteria);
     }
 
-    @GetMapping("/teacherjournals")
-    public List<JournalDto> getTeacherJournals(HoisUserDetails user) {
-        UserUtil.assertIsTeacher(user);
-        return messageService.searchTeacherJournals(user);
+    @GetMapping("/journals")
+    public List<JournalDto> getJournals(HoisUserDetails user, SearchCommand cmd) {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacherOrTeacher(user);
+        return messageService.searchJournals(user, cmd);
     }
 
-    @GetMapping("/teachersubjects")
-    public List<SubjectDto> getTeacherSubjects(HoisUserDetails user) {
-        UserUtil.assertIsTeacher(user);
-        return messageService.searchTeacherSubjects(user);
+    @GetMapping("/subjects")
+    public List<SubjectDto> getSubjects(HoisUserDetails user, SearchCommand cmd) {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacherOrTeacher(user);
+        return messageService.searchSubjects(user, cmd);
     }
 
     @GetMapping("/{studentId:\\d+}/parents")
@@ -137,6 +160,28 @@ public class MessageController {
         Map<String, Object> map = new HashMap<>();
         map.put("hasEmail", Boolean.valueOf(messageService.userHasEmail(user)));
         return map;
+    }
+
+    @GetMapping("/messagesForDelete")
+    public Page<MessageSearchDto> searchForDelete(
+            HoisUserDetails user, @Valid MessageSearchCommand cmd, Pageable pageable,
+            @RequestParam(name = "sent") boolean sent, @RequestParam(name = "automatic") boolean automatic) {
+        cmd.setDelete(Boolean.TRUE);
+        if (sent) {
+            if (automatic) {
+                return searchSentAutomatic(user, cmd, pageable);
+            }
+            return searchSent(user, cmd, pageable);
+        }
+        if (automatic) {
+            return searchReceivedAutomatic(user, cmd, pageable);
+        }
+        return searchReceived(user, cmd, pageable);
+    }
+
+    @PostMapping("/messages")
+    public void deleteMessage(HoisUserDetails user, @Valid @RequestBody MessageDeleteCommand cmd) {
+        messageService.delete(user, cmd);
     }
 
     private static void assertIsReceiver(HoisUserDetails user, Message message) {

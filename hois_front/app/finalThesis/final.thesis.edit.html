@@ -1,9 +1,10 @@
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div ng-include="'finalThesis/final.thesis.warnings.tmpl.html'"></div>
   <div flex>
-    <form name="finalThesisForm" ng-submit="save()" novalidate>
-      <div ng-hide="thesis.student" layout="row" layout-sm="column" layout-xs="column">
+    <form name="formState.finalThesisForm" ng-submit="save()" novalidate>
+      <div ng-if="!auth.isStudent() && !thesis.student" layout="row" layout-sm="column" layout-xs="column">
         <div flex="45" flex-sm="100" flex-xs="100">
-          <hois-autocomplete flex ng-model="thesis.student" name="student" label="finalThesis.student" url="/finalThesis/students"></hois-autocomplete>
+          <hois-autocomplete flex ng-model="formState.student" name="student" label="finalThesis.student" url="/finalThesis/students"></hois-autocomplete>
         </div>
       </div>
 
@@ -46,7 +47,7 @@
           <div layout="row">
             <md-input-container flex-gt-sm="45" flex="100">
               <label>{{'finalThesis.language' | translate}}</label>
-              <hois-classifier-select ng-model="thesis.language" model-value-attr="code" 
+              <hois-classifier-select ng-model="thesis.language" model-value-attr="code"
                 main-classifier-code="LOPUTOO_KEEL" required></hois-classifier-select>
             </md-input-container>
           </div>
@@ -83,7 +84,7 @@
             </md-table-container>
           </fieldset>
           <div>&nbsp;</div>
-  
+
           <div layout="row">
             <md-input-container flex="100">
               <label>{{'finalThesis.curriculumGrade' | translate}}</label>
@@ -114,7 +115,7 @@
         <br>
 
         <fieldset>
-          <legend md-colors="{color: 'primary-800'}" ng-class="{invalid: finalThesisForm.$submitted && thesis.supervisors.length === 0}" class="md-title-small">{{'finalThesis.supervisors' | translate}}&nbsp;*</legend>
+          <legend md-colors="{color: 'primary-800'}" ng-class="{invalid: formState.finalThesisForm.$submitted && thesis.supervisors.length === 0}" class="md-title-small">{{'finalThesis.supervisors' | translate}}&nbsp;*</legend>
           <md-button class="md-raised" ng-click="openAddSupervisorDialog()">{{'main.button.add' | translate}}</md-button>
           <md-table-container>
             <table md-table class="secondary-table">
@@ -149,6 +150,7 @@
       <div ng-if="thesis.student" layout="row">
         <md-button ng-if="!thesis.id || thesis.canBeEdited" class="md-raised md-primary" type="submit">{{'main.button.save' | translate}}</md-button>
         <md-button ng-if="thesis.canBeConfirmed" class="md-raised" ng-click="confirm()">{{'main.button.confirm' | translate}}</md-button>
+        <md-button ng-if="thesis.canBeDeleted" class="md-raised" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
         <a ng-if="thesis.id" href="{{finalThesisPdfUrl}}" target="_blank" class="md-button md-raised">{{'main.button.print' | translate}}</a>
         <md-button ng-if="!auth.isStudent()" class="md-raised md-default" ng-click="back('#/finalThesis/')">{{'main.button.back' | translate}}</md-button>
       </div>

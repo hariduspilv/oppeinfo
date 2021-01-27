@@ -21,7 +21,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         },
         data: {
           authorizedRoles: authorizedView
-        }
+        },
+        reloadOnSearch: false
       }).when('/messages/automatic/sent', {
         templateUrl: 'message/message.sent.html',
         controller: 'messageAutomaticSentController',
@@ -32,7 +33,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         },
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_AUTOTEADE]
-        }
+        },
+        reloadOnSearch: false
       }).when('/messages/received', {
         templateUrl: 'message/message.received.html',
         controller: 'messageReceivedController',
@@ -43,7 +45,20 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         },
         data: {
           authorizedRoles: authorizedView
-        }
+        },
+        reloadOnSearch: false
+      }).when('/messages/automatic/received', {
+        templateUrl: 'message/message.received.html',
+        controller: 'messageAutomaticReceivedController',
+        controllerAs: 'controller',
+        resolve: {
+          translationLoaded: function($translate) { return $translate.onReady(); },
+          auth: function (AuthResolver) { return AuthResolver.resolve(); }
+        },
+        data: {
+          authorizedRoles: authorizedView
+        },
+        reloadOnSearch: false
       }).when('/message/:id/view', {
         templateUrl: 'message/message.view.html',
         controller: 'messageViewController',

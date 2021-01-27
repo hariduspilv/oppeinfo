@@ -134,9 +134,9 @@ angular.module('hitsaOis')
     };
 
     authService.isValidRolePermission = function (roleCode, objectCode, permCode) {
-      return ['OIGUS_K', 'OIGUS_T'].indexOf(permCode) === -1
-        || (permCode === 'OIGUS_K' && USER_CONFIRM_RIGHTS.indexOf(objectCode) !== -1)
-        || (permCode === 'OIGUS_T' && USER_MESSAGE_RIGHTS.indexOf(objectCode) !== -1);
+      return ['OIGUS_K', 'OIGUS_T'].indexOf(permCode) === -1 ||
+        (permCode === 'OIGUS_K' && USER_CONFIRM_RIGHTS.indexOf(objectCode) !== -1) ||
+        (permCode === 'OIGUS_T' && USER_MESSAGE_RIGHTS.indexOf(objectCode) !== -1);
     };
 
     return authService;
@@ -364,6 +364,7 @@ angular.module('hitsaOis')
     ROLE_OIGUS_V_TEEMAOIGUS_OPPUR: 'ROLE_OIGUS_V_TEEMAOIGUS_OPPUR',	//Õppurid
     ROLE_OIGUS_V_TEEMAOIGUS_PAEVIK: 'ROLE_OIGUS_V_TEEMAOIGUS_PAEVIK',	//Päevikud
     ROLE_OIGUS_V_TEEMAOIGUS_PARING: 'ROLE_OIGUS_V_TEEMAOIGUS_PARING',	//Päringud
+    ROLE_OIGUS_V_TEEMAOIGUS_LOUNATOETUS: 'ROLE_OIGUS_V_TEEMAOIGUS_LOUNATOETUS',	//Lõunatoetus
     ROLE_OIGUS_V_TEEMAOIGUS_PERSYNDMUS: 'ROLE_OIGUS_V_TEEMAOIGUS_PERSYNDMUS', //Personaalsed sündmused
     ROLE_OIGUS_V_TEEMAOIGUS_PILET: 'ROLE_OIGUS_V_TEEMAOIGUS_PILET', //Õpilaspiletid
     ROLE_OIGUS_V_TEEMAOIGUS_PRAKTIKAAVALDUS: 'ROLE_OIGUS_V_TEEMAOIGUS_PRAKTIKAAVALDUS',
@@ -444,6 +445,7 @@ angular.module('hitsaOis')
     ROLE_OIGUS_M_TEEMAOIGUS_OPPUR: 'ROLE_OIGUS_M_TEEMAOIGUS_OPPUR',	//Õppurid
     ROLE_OIGUS_M_TEEMAOIGUS_PAEVIK: 'ROLE_OIGUS_M_TEEMAOIGUS_PAEVIK',	//Päevikud
     ROLE_OIGUS_M_TEEMAOIGUS_PARING: 'ROLE_OIGUS_M_TEEMAOIGUS_PARING',	//Päringud
+    ROLE_OIGUS_M_TEEMAOIGUS_LOUNATOETUS: 'ROLE_OIGUS_M_TEEMAOIGUS_LOUNATOETUS',	//Lõunatoetus
     ROLE_OIGUS_M_TEEMAOIGUS_PERSYNDMUS: 'ROLE_OIGUS_M_TEEMAOIGUS_PERSYNDMUS', //Personaalsed sündmused
     ROLE_OIGUS_M_TEEMAOIGUS_PILET: 'ROLE_OIGUS_M_TEEMAOIGUS_PILET', //Õpilaspiletid
     ROLE_OIGUS_M_TEEMAOIGUS_PRAKTIKAAVALDUS: 'ROLE_OIGUS_M_TEEMAOIGUS_PRAKTIKAAVALDUS',

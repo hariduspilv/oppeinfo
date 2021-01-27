@@ -44,7 +44,7 @@
           </md-input-container>
         </div>
       </div>
-      <div flex="30">
+      <div flex="30" flex-xs="100">
         <img ng-if="student.photo" flex="60" style="display: block; margin-left: auto; margin-right: auto; padding-bottom: 13px;"
         ng-src="{{student.imageUrl}}">
         <div layout="row" layout-align="center center">
@@ -53,6 +53,9 @@
         </div>
       </div>
     </div>
+
+    <ng-include src="'student/view.main.action.buttons.html'"></ng-include>
+    <div>&nbsp;</div>
 
     <div layout="column">
       <hois-collapsable label="('student.study' | translate) + ' (' + currentLanguageNameField(student.school) + ')'
@@ -228,6 +231,10 @@
           <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label>{{'student.job' | translate}}</label>
             <hois-value value="student.job"></hois-value>
+          </md-input-container>
+          <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'student.secondarySchoolCountry' | translate}}</label>
+            <hois-classifier-value ng-model="student.secondarySchoolCountry" main-classifier-code="RIIK"></hois-classifier-value>
           </md-input-container>
         </div>
       </hois-collapsable>
@@ -405,7 +412,7 @@
 
     <div>
       <hois-collapsable label="('student.foreignLanguages.label' | translate)">
-        <div style="font-style: italic; font-size: 13px;" ng-if="student.foreignLanguageTypes === null || student.foreignLanguageTypes === undefined 
+        <div style="font-style: italic; font-size: 13px;" ng-if="student.foreignLanguageTypes === null || student.foreignLanguageTypes === undefined
           || student.foreignLanguageTypes.length === 0">
           {{'student.error.foreignLanguageMissing' | translate}}
         </div>
@@ -511,10 +518,6 @@
       </hois-collapsable>
     </div>
 
-    <md-button ng-if="student.userCanEditStudent" ng-href="#/students/{{student.id}}/edit"
-      class="md-primary md-raised">{{'main.button.change' | translate}}</md-button>
-    <md-button ng-if="student.userCanUpdateRR && student.person.idcode" ng-click="updatePersonData()"
-      class="md-raised">{{'rr.operations.updateStudentData.button' | translate}}</md-button>
-    <md-button ng-if="!auth.isStudent() && !auth.isParent()" ng-click="back('#/students')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+    <ng-include src="'student/view.main.action.buttons.html'"></ng-include>
   </div>
 </div>

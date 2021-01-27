@@ -45,7 +45,6 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
 
     if(!$scope.formState.school.higher) {
       $scope.formState.excludedTypes.push('KASKKIRI_OKOORM');
-      $scope.formState.excludedTypes.push('KASKKIRI_OVORM');
     }
     if(!$scope.formState.school.vocational) {
       $scope.formState.excludedTypes.push('KASKKIRI_INDOK');
@@ -109,6 +108,12 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
 
     function typeSpecificConverts(student) {
       switch ($scope.record.type) {
+        case 'KASKKIRI_AKADK':
+          if (student.existingDirectiveStudents && student.existingDirectiveStudents.length > 0) {
+            student.directiveStudent = student.existingDirectiveStudents[0].id;
+            student.directiveStudentObject = student.existingDirectiveStudents[0];
+          }
+          break;
         case 'KASKKIRI_OKAVA' :
           // force studyForm E for external student
           if (student.type === 'OPPUR_E') {

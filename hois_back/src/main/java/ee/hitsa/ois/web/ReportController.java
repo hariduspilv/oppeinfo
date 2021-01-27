@@ -2,6 +2,7 @@ package ee.hitsa.ois.web;
 
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -15,11 +16,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.report.SchoolQuery;
+import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.enums.Permission;
@@ -35,6 +38,7 @@ import ee.hitsa.ois.service.StudentGroupTeacherReportService;
 import ee.hitsa.ois.service.TeacherDetailLoadService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil.ClassifierCache;
+import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
@@ -51,6 +55,7 @@ import ee.hitsa.ois.web.commandobject.report.SchoolQueryCommand;
 import ee.hitsa.ois.web.commandobject.report.StudentCountCommand;
 import ee.hitsa.ois.web.commandobject.report.StudentDataCommand;
 import ee.hitsa.ois.web.commandobject.report.StudentGroupTeacherCommand;
+import ee.hitsa.ois.web.commandobject.report.StudentLunchSupportCommand;
 import ee.hitsa.ois.web.commandobject.report.StudentMovementCommand;
 import ee.hitsa.ois.web.commandobject.report.StudentSearchCommand;
 import ee.hitsa.ois.web.commandobject.report.StudentStatisticsByPeriodCommand;
@@ -69,6 +74,7 @@ import ee.hitsa.ois.web.dto.report.GuestStudentStatisticsDto;
 import ee.hitsa.ois.web.dto.report.IndividualCurriculumSatisticsDto;
 import ee.hitsa.ois.web.dto.report.ReportStudentDataDto;
 import ee.hitsa.ois.web.dto.report.StudentCountDto;
+import ee.hitsa.ois.web.dto.report.StudentLunchSupportDto;
 import ee.hitsa.ois.web.dto.report.StudentQueryDto;
 import ee.hitsa.ois.web.dto.report.StudentMovementDto;
 import ee.hitsa.ois.web.dto.report.StudentSearchDto;
@@ -105,6 +111,20 @@ public class ReportController {
             Pageable pageable) {
         UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PARING);
         return reportService.students(user, criteria, pageable);
+    }
+    
+    @GetMapping("/students/lunchSupport")
+    public Page<StudentLunchSupportDto> studentsLunchSupport(HoisUserDetails user, @Valid StudentLunchSupportCommand criteria,
+            Pageable pageable) {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PARING);
+        return reportService.studentsLunchSupport(user, criteria, pageable);
+    }
+    
+    @PutMapping("/students/lunchSupport/{id:\\d+}")
+    public void updateSchoolMeal(HoisUserDetails user, @Valid @RequestBody StudentLunchSupportDto form,
+            @WithEntity Student student) {
+        UserUtil.throwAccessDeniedIf(!UserUtil.canEditStudent(user, student), "User cannot edit student data");
+        reportService.updateSchoolMeal(user, student, form);
     }
 
     @GetMapping("/students/students.xls")
@@ -402,7 +422,8 @@ public class ReportController {
     public TeacherDetailLoadDto teacherDetailLoadJournals(HoisUserDetails user,
             @Valid TeacherDetailLoadCommand criteria, @WithEntity Teacher teacher) {
         UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PARING);
-        return teacherDetailLoadService.teacherDetailLoadJournals(user.getSchoolId(), criteria, teacher);
+        Long teacherId = EntityUtil.getId(teacher);
+        return teacherDetailLoadService.teacherDetailLoadJournals(user.getSchoolId(), criteria, Collections.singleton(teacherId)).get(teacherId);
     }
 
     @GetMapping("/teachers/detailload/higher")
@@ -416,7 +437,8 @@ public class ReportController {
     public TeacherDetailLoadDto teacherDetailLoadSubjects(HoisUserDetails user,
             @Valid TeacherDetailLoadCommand criteria, @WithEntity Teacher teacher) {
         UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PARING);
-        return teacherDetailLoadService.teacherDetailLoadSubjects(user.getSchoolId(), criteria, teacher);
+        Long teacherId = EntityUtil.getId(teacher);
+        return teacherDetailLoadService.teacherDetailLoadSubjects(user.getSchoolId(), criteria, Collections.singleton(teacherId)).get(teacherId);
     }
 
     @GetMapping("/teachers/detailload/teachersdetailloadsubjectjournal.xlsx")

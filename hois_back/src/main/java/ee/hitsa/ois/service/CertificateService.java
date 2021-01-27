@@ -100,6 +100,7 @@ public class CertificateService {
         qb.optionalCriteria("c.inserted >= :insertedFrom", "insertedFrom", criteria.getInsertedFrom(), DateUtils::firstMomentOfDay);
         qb.optionalCriteria("c.inserted <= :insertedThru", "insertedThru", criteria.getInsertedThru(), DateUtils::lastMomentOfDay);
         qb.optionalCriteria("c.status_code in (:status)", "status", criteria.getStatus());
+        qb.optionalCriteria("sg.id in (:studentGroups)", "studentGroups", criteria.getStudentGroups());
 
         if (user.isLeadingTeacher()) {
             qb.requiredCriteria(

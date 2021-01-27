@@ -253,17 +253,24 @@ public class HigherProtocolService extends AbstractProtocolService {
                         } else {
                             gradeDate = protocolStudentExamDates.containsKey(psId)
                                     ? protocolStudentExamDates.get(psId)
-                                    : LocalDate.now();
+                                    : protocol.getFinalDate() != null ? protocol.getFinalDate() : LocalDate.now();
                         }
                         gradeStudent(ps, grade, mark, isLetterGrade, gradingSchemaRow, gradeDate);
                     } else if (gradeRemoved(dto, ps)) {
                         assertHasAddInfoIfProtocolConfirmed(dto, protocol);
                         addHistory(ps);
                         removeGrade(ps);
-                    } else if (isMainProtocol && ps.getGrade() != null) {
+                    } else if (ps.getGrade() != null) {
                         // If protocol date (saved in final_date field) changes then protocol student grades need to
                         // be updated. History protocol student history won't be updated.
-                        ps.setGradeDate(protocol.getFinalDate() != null ? protocol.getFinalDate() : LocalDate.now());
+                        if (isMainProtocol) {
+                            ps.setGradeDate(protocol.getFinalDate() != null ? protocol.getFinalDate() : LocalDate.now());
+                        } else {
+                            Long psId = EntityUtil.getId(ps);
+                            ps.setGradeDate(protocolStudentExamDates.containsKey(psId)
+                                    ? protocolStudentExamDates.get(psId)
+                                    : protocol.getFinalDate() != null ? protocol.getFinalDate() : LocalDate.now());
+                        }
                     }
                     ps.setAddInfo(dto.getAddInfo());
                 });
@@ -370,12 +377,20 @@ public class HigherProtocolService extends AbstractProtocolService {
                     + "where ph.type_code = '" + ProtocolType.PROTOKOLLI_LIIK_P.name() + "' "
                     + "and ph.subject_study_period_id = ds.subject_study_period_id and ps.student_id = s.id "
                     + "and ps.grade_code is not null)");
-            
-            // student has registration for exam and no other protocol is pointing to same exam
-            qb.filter("exists (select sspes.id from subject_study_period_exam_student sspes "
-                    + "join subject_study_period_exam sspe on sspes.subject_study_period_exam_id = sspe.id "
-                    + "left join protocol_student ps on ps.subject_study_period_exam_student_id = sspes.id "
-                    + "where sspes.declaration_subject_id = ds.id and sspe.type_code = '"+ExamType.SOORITUS_K.name()+"' and ps.id is null)");
+
+            // and no registration for repeating exam without result
+            String sql = "select 1 from subject_study_period_exam_student s2 " +
+                    "join subject_study_period_exam e2 on s2.subject_study_period_exam_id = e2.id " +
+                    "join protocol_student ps on ps.subject_study_period_exam_student_id = s2.id " +
+                    "where s2.declaration_subject_id = ds.id and ps.grade is null and e2.type_code = '"+ExamType.SOORITUS_K.name()+"'";
+            qb.filter("not exists(" + sql +")");
+
+            qb.filter("not exists (select p.id from protocol p "
+                    + "join protocol_hdata ph on p.id = ph.protocol_id "
+                    + "left join protocol_student ps on p.id = ps.protocol_id "
+                    + "where ph.type_code = '" + ProtocolType.PROTOKOLLI_LIIK_K.name() + "' "
+                    + "and ph.subject_study_period_id = ds.subject_study_period_id and ps.student_id = s.id "
+                    + "and ps.grade_code is null)");
         } else {
             qb.filter("not exists (select p.id from protocol p " 
                     + "join protocol_hdata ph on p.id = ph.protocol_id "

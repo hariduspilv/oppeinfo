@@ -59,7 +59,7 @@
           </md-input-container>
         </div>
         <div layout="row" flex="50" flex-sm="100" flex-xs="100" style="margin-top: -21px;">
-          <md-input-container ng-if="record.protocolType === 'PROTOKOLLI_LIIK_P'">
+          <md-input-container>
             <label class="required">{{'higherProtocol.protocolDate' | translate}}</label>
             <md-datepicker ng-model="record.finalDate" name="finalDate"></md-datepicker>
           </md-input-container>
@@ -70,7 +70,7 @@
         <div>
           <md-input-container ng-if="record.subjectStudyPeriodMidtermTaskDto.subgroups.length > 0" style="width: 200px;margin-bottom: 5px; margin-top: -2px;">
             <label>{{'higherProtocol.subgroupSelect' | translate}}</label>
-            <md-select ng-model="record.subgroup">
+            <md-select ng-model="record.subgroup" ng-change="updateTable()">
               <md-option md-option-empty></md-option>
               <md-option ng-value="val" ng-repeat="val in record.subjectStudyPeriodMidtermTaskDto.subgroups">{{currentLanguageNameField(val)}}</md-option>
             </md-select>
@@ -138,8 +138,10 @@
                   </span>
                 </td>
                 <td md-cell ng-repeat="result in record.subjectStudyPeriodMidtermTaskDto.studentResults | filter: filterStudentResults(student)">
-                  <span ng-if="!result.isText">{{result.points}}</span>
-                  <span ng-if="result.isText">{{result.pointsTxt}}</span>
+                  <span ng-repeat="history in result.history">
+                    {{history.isText ? history.pointsTxt : history.points}}
+                    <span>*<md-tooltip md-direction="top">{{history.changed | hoisDateTime}}</md-tooltip></span> / </span>
+                  <span>{{result.isText ? result.pointsTxt : result.points}}</span>
                 </td>
                 <td md-cell ng-repeat="subject in record.moduleDto.subjects" style="min-width: 75px;">
                   <span ng-if="subject.id">

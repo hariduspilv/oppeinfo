@@ -31,6 +31,7 @@ public class FinalThesisDto extends VersionedCommand {
     private LocalDateTime confirmed;
     
     private Boolean canBeEdited;
+    private Boolean canBeDeleted;
     private Boolean canBeConfirmed;
     
     public static FinalThesisDto of(FinalThesis finalThesis) {
@@ -131,6 +132,14 @@ public class FinalThesisDto extends VersionedCommand {
 
     public void setCanBeEdited(Boolean canBeEdited) {
         this.canBeEdited = canBeEdited;
+    }
+
+    public Boolean getCanBeDeleted() {
+        return canBeDeleted;
+    }
+
+    public void setCanBeDeleted(Boolean canBeDeleted) {
+        this.canBeDeleted = canBeDeleted;
     }
 
     public Boolean getCanBeConfirmed() {

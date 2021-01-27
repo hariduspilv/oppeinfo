@@ -475,7 +475,7 @@ $scope.shouldLeftBeOpen = $mdMedia('gt-sm');
         }
       }
       return true;
-    }
+    };
   })
   .filter('nospace', function () {
     return function (value) {

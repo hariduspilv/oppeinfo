@@ -3,6 +3,7 @@ package ee.hitsa.ois.web.dto.timetable;
 import java.time.LocalDate;
 import java.util.List;
 
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.StudyPeriodWithYearIdDto;
 import ee.hitsa.ois.web.dto.StudyYearSearchDto;
 
@@ -15,6 +16,7 @@ public class TimetableDto {
     private LocalDate startDate;
     private LocalDate endDate;
     private List<TimetableCurriculumDto> curriculums;
+    private List<AutocompleteResult> teachers;
     private List<SubjectTeacherPairDto> pairs;
     private String status;
     private List<String> roomCodes;
@@ -83,6 +85,14 @@ public class TimetableDto {
 
     public void setCurriculums(List<TimetableCurriculumDto> curriculums) {
         this.curriculums = curriculums;
+    }
+
+    public List<AutocompleteResult> getTeachers() {
+        return teachers;
+    }
+
+    public void setTeachers(List<AutocompleteResult> teachers) {
+        this.teachers = teachers;
     }
 
     public List<SubjectTeacherPairDto> getPairs() {

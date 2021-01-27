@@ -3,7 +3,7 @@
 <div class="ois-form-layout-padding" layout="column" ng-cloak>
   <form name="roleForm">
     <div layout="column" flex>
-      <md-input-container class="readonly">
+      <md-input-container class="readonly readonly-reverse-margin">
         <label>{{'userRole.nameEt' | translate}}</label>
         <hois-value value="occupation.nameEt" name="nameEt"></hois-value>
         <input type="text" ng-show="false" ng-model="role.nameEt" name="nameEt" />
@@ -12,7 +12,7 @@
           <p ng-message="serverside">{{'userRole.roleExists' | translate}}</p>
         </span>
       </md-input-container>
-      <md-input-container class="readonly">
+      <md-input-container class="readonly readonly-reverse-margin">
         <label>{{'userRole.nameEn' | translate}}</label>
         <hois-value value="occupation.nameEn"></hois-value>
         <input type="text" ng-show="false" ng-model="role.nameEn" name="nameEn" />
@@ -45,6 +45,7 @@
                               md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
       </md-table-container>
     </hois-collapsable>
+    <ng-include src="'persons/teacherRoles/teacher.roles.edit.action.buttons.html'"></ng-include>
     <div flex>
       <md-table-container>
         <table md-table>
@@ -69,17 +70,11 @@
         </table>
       </md-table-container>
     </div>
-    <md-button ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
-    <md-button ng-if="role.id" ng-click="delete()" class="md-raised">{{'main.button.delete' | translate}}</md-button>
-    <md-button ng-click="back('#/persons/teacher-roles?_menu')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+    <ng-include src="'persons/teacherRoles/teacher.roles.edit.action.buttons.html'"></ng-include>
   </form>
 </div>
 
 <style>
-  .readonly {
-    margin-bottom: 0px !important;
-    margin-top: 18px !important;
-  }
   .hois-collapse2 .hois-collapse-header {
     font-size: 14px;
   }

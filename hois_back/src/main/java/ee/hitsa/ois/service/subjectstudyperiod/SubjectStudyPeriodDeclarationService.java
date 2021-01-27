@@ -12,6 +12,8 @@ import java.util.stream.Stream;
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.enums.HigherModuleType;
+import ee.hitsa.ois.service.DeclarationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -20,8 +22,6 @@ import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Declaration;
 import ee.hitsa.ois.domain.DeclarationSubject;
 import ee.hitsa.ois.domain.StudyPeriod;
-import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
-import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModuleSubject;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
@@ -42,18 +42,32 @@ import ee.hitsa.ois.util.SubjectStudyPeriodUtil;
 public class SubjectStudyPeriodDeclarationService {
 
     @Autowired
+    private DeclarationService declarationService;
+    @Autowired
     private EntityManager em;
 
     private static final String DECLARATION_EXISTS = "exists(select * from declaration d where d.student_id = s.id and d.study_period_id = :studyPeriodId)";
     private static final String DECLARATION_DOES_NOT_EXIST = "not " + DECLARATION_EXISTS;
 
-    private static final String SUBJECT_IS_MANDATORY = "exists( select * "
+    private static final String SUBJECT_IS_MANDATORY = "exists(select * "
                 + "from curriculum_version_hmodule_subject cvhms "
                 + "join curriculum_version_hmodule cvhm on cvhms.curriculum_version_hmodule_id = cvhm.id "
-                + "where cvhms.is_optional is false "
+                + "where cvhms.is_optional is false and cvhm.is_minor_speciality = false "
                 + "and cvhm.curriculum_version_id = s.curriculum_version_id "
+                + "and cvhm.type_code != '" + HigherModuleType.KORGMOODUL_L.name() + "' "
+                + "and (s.curriculum_speciality_id is null or "
+                    + DeclarationService.isCurriculumSpecialitySubject("s.curriculum_speciality_id", "cvhm.id") + ") "
+                + "and (cvhm.type_code != '" + HigherModuleType.KORGMOODUL_F.name() + "' or "
+                    + DeclarationService.finalExamModuleSubjectAllowedQuery("s.id", "s.curriculum_version_id",
+                        "s.curriculum_speciality_id") + ")"
                 + "and cvhms.subject_id = :subjectId)";
-    
+
+    private static final String SUBJECT_NOT_IN_FINAL_MODULE = "not exists(select 1 "
+            + "from curriculum_version_hmodule_subject cvhms "
+            + "join curriculum_version_hmodule cvhm on cvhms.curriculum_version_hmodule_id = cvhm.id "
+            + "join curriculum_version cv on cv.id = cvhm.curriculum_version_id and cv.id = s.curriculum_version_id "
+            + "where cvhms.subject_id = :subjectId and cvhm.type_code in :finalModuleTypes)";
+
     private static final String NOT_DECLARED_IN_CURRENT_TERM = " not exists "
             + "(select ds.id "
             + "from declaration_subject ds "
@@ -62,20 +76,8 @@ public class SubjectStudyPeriodDeclarationService {
             + "where d.student_id = s.id "
             + "and ssp.subject_id = :subjectId)";
         
-    private static final String NO_POSITIVE_RESULT = ""
-            + " not exists "
-            + "("
-                + " select ps.id from protocol_student ps join protocol p on p.id = ps.protocol_id"
-                + " join protocol_hdata hdata on hdata.protocol_id = p.id"
-                + " join subject_study_period ssp on ssp.id = hdata.subject_study_period_id"
-                + " where ssp.subject_id = :subjectId"
-                + " and ps.student_id = s.id"
-                + " and ps.grade_code not in "
-                + "("
-                    + "'" + HigherAssessment.KORGHINDAMINE_0.name() + "', "
-                    + "'" + HigherAssessment.KORGHINDAMINE_M.name() + "', "
-                    + "'" + HigherAssessment.KORGHINDAMINE_MI.name() + "'"
-                + ")"
+    private static final String NO_POSITIVE_RESULT = "not exists("
+            + DeclarationService.hasPositiveResultQuery("s.id", ":subjectId", ":hprGradeCode")
             + ")";
 
     private static final String STUDENT_IS_STUDYING = " s.status_code = '" + StudentStatus.OPPURSTAATUS_O.name() + "' ";
@@ -112,9 +114,10 @@ public class SubjectStudyPeriodDeclarationService {
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
         qb.requiredCriteria(DECLARATION_EXISTS, "studyPeriodId", studyPeriod);
         qb.requiredCriteria(NOT_DECLARED_IN_CURRENT_TERM, "subjectId", subjectId);
-        qb.requiredCriteria(NO_POSITIVE_RESULT, "subjectId", subjectId);
         qb.requiredCriteria(SUBJECT_IS_MANDATORY, "subjectId", subjectId);
         qb.filter(STUDENT_IS_STUDYING);
+        qb.filter(NO_POSITIVE_RESULT);
+        qb.parameter("hprGradeCode", HigherAssessment.GRADE_POSITIVE);
 
         List<?> data = qb.select("s.id", em).getResultList();
         return StreamUtil.toMappedList(r -> resultAsLong(r, 0), data);
@@ -129,9 +132,10 @@ public class SubjectStudyPeriodDeclarationService {
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
         qb.requiredCriteria(DECLARATION_DOES_NOT_EXIST, "studyPeriodId", studyPeriod);
         qb.requiredCriteria(NOT_DECLARED_IN_CURRENT_TERM, "subjectId", subjectId);
-        qb.requiredCriteria(NO_POSITIVE_RESULT, "subjectId", subjectId);
         qb.requiredCriteria(SUBJECT_IS_MANDATORY, "subjectId", subjectId);
         qb.filter(STUDENT_IS_STUDYING);
+        qb.filter(NO_POSITIVE_RESULT);
+        qb.parameter("hprGradeCode", HigherAssessment.GRADE_POSITIVE);
 
         List<?> data = qb.select("s.id", em).getResultList();
         return StreamUtil.toMappedList(r -> resultAsLong(r, 0), data);
@@ -148,11 +152,15 @@ public class SubjectStudyPeriodDeclarationService {
         qb.requiredCriteria("s.student_group_id in :studentGroupIds", "studentGroupIds", studentGroups);
         qb.requiredCriteria(DECLARATION_EXISTS, "studyPeriodId", studyPeriod);
         qb.requiredCriteria(NOT_DECLARED_IN_CURRENT_TERM, "subjectId", subjectId);
-        qb.requiredCriteria(NO_POSITIVE_RESULT, "subjectId", subjectId);
         if (isMandatory) {
             qb.requiredCriteria(SUBJECT_IS_MANDATORY, "subjectId", subjectId);
+        } else {
+            qb.requiredCriteria(SUBJECT_NOT_IN_FINAL_MODULE, "subjectId", subjectId);
+            qb.parameter("finalModuleTypes", HigherModuleType.FINAL_MODULES);
         }
         qb.filter(STUDENT_IS_STUDYING);
+        qb.filter(NO_POSITIVE_RESULT);
+        qb.parameter("hprGradeCode", HigherAssessment.GRADE_POSITIVE);
 
         List<?> data = qb.select("s.id", em).getResultList();
         return StreamUtil.toMappedList(r -> resultAsLong(r, 0), data);
@@ -169,11 +177,15 @@ public class SubjectStudyPeriodDeclarationService {
         qb.requiredCriteria("s.student_group_id in :studentGroupIds", "studentGroupIds", studentGroups);
         qb.requiredCriteria(DECLARATION_DOES_NOT_EXIST, "studyPeriodId", studyPeriod);
         qb.requiredCriteria(NOT_DECLARED_IN_CURRENT_TERM, "subjectId", subjectId);
-        qb.requiredCriteria(NO_POSITIVE_RESULT, "subjectId", subjectId);
         if (isMandatory) {
             qb.requiredCriteria(SUBJECT_IS_MANDATORY, "subjectId", subjectId);
+        } else {
+            qb.requiredCriteria(SUBJECT_NOT_IN_FINAL_MODULE, "subjectId", subjectId);
+            qb.parameter("finalModuleTypes", HigherModuleType.FINAL_MODULES);
         }
         qb.filter(STUDENT_IS_STUDYING);
+        qb.filter(NO_POSITIVE_RESULT);
+        qb.parameter("hprGradeCode", HigherAssessment.GRADE_POSITIVE);
 
         List<?> data = qb.select("s.id", em).getResultList();
         return StreamUtil.toMappedList(r -> resultAsLong(r, 0), data);
@@ -201,28 +213,14 @@ public class SubjectStudyPeriodDeclarationService {
         SubjectStudyPeriodSubgroup subgroup = sortedSubgroupsByCode.pollFirst();
         
         for(Declaration declaration : declarations) {
+            CurriculumVersionHigherModuleSubject moduleSubject = declarationService.curriculumSubjectModule(declaration,
+                    EntityUtil.getId(subjectStudyPeriod));
+
             DeclarationSubject ds = new DeclarationSubject();
             ds.setDeclaration(declaration);
             ds.setSubjectStudyPeriod(subjectStudyPeriod);
-            ds.setModule(getHigherModuleOfSubject(declaration, subjectStudyPeriod));
-            ds.setIsOptional(Boolean.TRUE);
-            // set mandatory if subject is in students curriculum version and optional = false
-            Student student = declaration.getStudent();
-            CurriculumVersion cv = student.getCurriculumVersion();
-            if (cv != null) {
-                List<CurriculumVersionHigherModuleSubject> cvhms = em.createQuery("select cvhms "
-                        + "from CurriculumVersionHigherModuleSubject cvhms "
-                        + "where cvhms.optional is false "
-                        + "and cvhms.module.curriculumVersion.id = ?1 "
-                        + "and cvhms.subject.id = ?2", CurriculumVersionHigherModuleSubject.class)
-                        .setParameter(1, EntityUtil.getId(cv))
-                        .setParameter(2, EntityUtil.getId(subjectStudyPeriod.getSubject()))
-                        .getResultList();
-                // found curriculum version subject that is mandatory
-                if (!cvhms.isEmpty()) {
-                    ds.setIsOptional(Boolean.FALSE);
-                }
-            }
+            ds.setModule(moduleSubject != null ? moduleSubject.getModule() : null);
+            ds.setIsOptional(moduleSubject != null ? moduleSubject.getOptional() : Boolean.TRUE);
             while (subgroup != null && subgroup.getDeclarationSubjects().size() >= subgroup.getPlaces().intValue()) {
                 subgroup = sortedSubgroupsByCode.pollFirst();
             }
@@ -236,23 +234,6 @@ public class SubjectStudyPeriodDeclarationService {
             }
             em.persist(ds);
         }
-    }
-
-    private CurriculumVersionHigherModule getHigherModuleOfSubject(Declaration declaration, SubjectStudyPeriod subjectStudyPeriod) {
-        Long subjectId = EntityUtil.getId(subjectStudyPeriod.getSubject());
-        Long curriculumVersionId = EntityUtil.getId(declaration.getStudent().getCurriculumVersion());
-
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from curriculum_version_hmodule_subject cvhms "
-                + "join curriculum_version_hmodule cvhm on cvhm.id = cvhms.curriculum_version_hmodule_id");
-        qb.requiredCriteria("cvhms.subject_id = :subjectId ", "subjectId", subjectId);
-        qb.requiredCriteria("cvhm.curriculum_version_id = :curriculumVersionId ", "curriculumVersionId", curriculumVersionId);
-        qb.filter("cvhm.is_minor_speciality is false ");
-
-        List<?> data = qb.select("cvhms.curriculum_version_hmodule_id ", em).setMaxResults(1).getResultList();
-        if(data.isEmpty()) {
-            return null;
-        }
-        return em.getReference(CurriculumVersionHigherModule.class, resultAsLong(data.get(0), 0));
     }
 
     private List<Declaration> createDeclarations(List<Long> studentsWithoutDeclaration, StudyPeriod studyPeriod) {

@@ -26,11 +26,16 @@
             <table md-table class="secondary-table">
                 <tbody md-body>
                     <tr md-row ng-repeat="teacher in record.teachers" ng-class-odd="'odd'" ng-class-even="'even'">
-                        <td md-cell width="50%">{{teacher.name}}</td>
-                        <td md-cell width="50%" ng-hide="record.teachers.length === 1">
+                        <td md-cell width="40%">{{teacher.name}}</td>
+                        <td md-cell width="30%" ng-hide="record.teachers.length === 1">
                             <md-checkbox ng-model="teacher.isSignatory" disabled aria-label="{{'subjectStudyPeriodTeacher.isSignatory' | translate}}">
                                 {{'subjectStudyPeriodTeacher.isSignatory' | translate}}
                             </md-checkbox>
+                        </td>
+                        <td md-cell width="30%" ng-hide="record.teachers.length === 1">
+                          <md-checkbox ng-model="teacher.isDiplomaSupplement" disabled aria-label="{{'subjectStudyPeriodTeacher.isDiplomaSupplement' | translate}}">
+                            {{'subjectStudyPeriodTeacher.isDiplomaSupplement' | translate}}
+                          </md-checkbox>
                         </td>
                     </tr>
                 </tbody>

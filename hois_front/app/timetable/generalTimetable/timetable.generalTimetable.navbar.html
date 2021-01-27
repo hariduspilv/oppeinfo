@@ -1,4 +1,4 @@
-<md-nav-bar hide-xs md-selected-nav-item="currentNavItem" 
+<md-nav-bar hide-xs md-selected-nav-item="currentNavItem"
   aria-label="{{auth.higher ? ('timetable.optionsHigher' | translate) : ('timetable.optionsVocational' | translate)}}">
   <md-nav-item ng-if="auth && (auth.isStudent() || auth.isTeacher())" md-nav-href="#/timetable/personalGeneralTimetable?_menu" name="personal">
     {{'timetable.myTimetable' | translate}}</md-nav-item>
@@ -6,10 +6,10 @@
     {{'timetable.parentTimetable' | translate}}</md-nav-item>
   <md-nav-item md-nav-href="{{'#/timetable/' + (schoolParam = auth && auth.schoolId ? '' : schoolId + '/') + 'generalTimetable/group?_menu'}}" name="group">{{'timetable.studentGroups' | translate}}</md-nav-item>
   <md-nav-item md-nav-href="{{'#/timetable/' + schoolParam + 'generalTimetable/teacher'}}" name="teacher">
-    {{auth.higher ? ('timetable.teachersHigher' | translate) : ('timetable.teachersVocational' | translate)}}
+    {{(isHigherSchool ? 'timetable.teachersHigher' : 'timetable.teachersVocational') | translate}}
   </md-nav-item>
   <md-nav-item md-nav-href="{{'#/timetable/' + schoolParam + 'generalTimetable/room'}}" name="room">{{'timetable.rooms' | translate}}</md-nav-item>
-  <md-nav-item md-nav-href="{{'#/timetable/' + schoolParam + 'searchGeneralTimetable'}}" name="search">
+  <md-nav-item md-nav-href="{{'#/timetable/' + schoolParam + 'searchGeneralTimetable?_menu'}}" name="search">
     <md-icon md-font-set="material-icons" ng-style="currentNavItem === 'search' ? {'color': 'rgb(13,71,161)'} : {'color': 'rgba(0,0,0,0.54)'}">search</md-icon>
   </md-nav-item>
 </md-nav-bar>
@@ -22,9 +22,7 @@
   <md-button class="md-raised" ng-href="{{'#/timetable/' + (schoolParam = auth && auth.schoolId ? '' : schoolId + '/') + 'generalTimetable/group?_menu'}}" ng-class="{'md-accent': currentNavItem === 'studentGroup'}"
     name="group">{{'timetable.studentGroups' | translate}}</md-button>
   <md-button class="md-raised" ng-href="{{'#/timetable/' + schoolParam + 'generalTimetable/teacher'}}" ng-class="{'md-accent': currentNavItem === 'teacher'}"
-    name="teacher">
-    {{auth.higher ? ('timetable.teachersHigher' | translate) : ('timetable.teachersVocational' | translate)}}
-  </md-button>
+    name="teacher">{{(isHigherSchool ? 'timetable.teachersHigher' : 'timetable.teachersVocational') | translate}}</md-button>
   <md-button class="md-raised" ng-href="{{'#/timetable/' + schoolParam + 'generalTimetable/room'}}" ng-class="{'md-accent': currentNavItem === 'room'}"
     name="room">{{'timetable.rooms' | translate}}</md-button>
   <md-button class="md-raised" ng-class="{'md-accent': currentNavItem === 'search'}" ng-href="{{'#/timetable/' + schoolParam + 'searchGeneralTimetable'}}"

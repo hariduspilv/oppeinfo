@@ -9,8 +9,11 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
+import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodTeacher;
+import ee.hitsa.ois.domain.subject.subjectprogram.SubjectProgramTeacher;
 import ee.hitsa.ois.service.GradingSchemaService;
 import ee.hitsa.ois.web.dto.gradingSchema.GradingSchemaDto;
+import ee.hitsa.ois.web.dto.report.CurriculumVersionSummaryReport;
 import ee.hitsa.ois.web.dto.timetable.SchoolPublicDataSettingsDto;
 
 import org.apache.commons.codec.binary.Base64;
@@ -38,6 +41,7 @@ import ee.hitsa.ois.domain.subject.subjectprogram.SubjectProgram;
 import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.enums.CurriculumStatus;
 import ee.hitsa.ois.enums.CurriculumVersionStatus;
+import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.report.SubjectProgramReport;
 import ee.hitsa.ois.report.curriculum.CurriculumModulesReport;
 import ee.hitsa.ois.report.curriculum.CurriculumVersionModulesReport;
@@ -46,13 +50,15 @@ import ee.hitsa.ois.service.AutocompleteService;
 import ee.hitsa.ois.service.ClassifierService;
 import ee.hitsa.ois.service.PdfService;
 import ee.hitsa.ois.service.PublicDataService;
+import ee.hitsa.ois.service.RtfService;
 import ee.hitsa.ois.service.SchoolService;
 import ee.hitsa.ois.service.StateCurriculumService;
+import ee.hitsa.ois.service.curriculum.CurriculumVersionService;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CryptoUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.HttpUtil;
-import ee.hitsa.ois.util.SubjectProgramUtil;
+import ee.hitsa.ois.util.SubjectProgramValidation;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.web.commandobject.SchoolCapacityTypeCommand;
@@ -72,6 +78,7 @@ import ee.hitsa.ois.web.dto.SubjectDto;
 import ee.hitsa.ois.web.dto.SubjectSearchDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumSearchDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
+import ee.hitsa.ois.web.dto.curriculumVersion.CurriculumVersionNominalCapacityDto;
 import ee.hitsa.ois.web.dto.student.StudentGroupSearchDto;
 import ee.hitsa.ois.web.dto.studymaterial.JournalDto;
 import ee.hitsa.ois.web.dto.studymaterial.StudyMaterialSearchDto;
@@ -88,7 +95,7 @@ public class PublicDataController {
     @Autowired
     private PdfService pdfService;
     @Autowired
-    private SubjectProgramUtil subjectProgramUtil;
+    private SubjectProgramValidation subjectProgramValidation;
     @Autowired
     private ClassifierService classifierService;
     @Autowired
@@ -97,6 +104,11 @@ public class PublicDataController {
     private SchoolService schoolService;
     @Autowired
     private GradingSchemaService gradingSchemaService;
+    @Autowired
+    private CurriculumVersionService curriculumVersionService;
+    @Autowired
+    private RtfService rtfService;
+    
     @Value("${hois.frontend.baseUrl}")
     private String frontendBaseUrl;
     @Value("${file.cypher.key}")
@@ -130,6 +142,11 @@ public class PublicDataController {
     @GetMapping("/curriculum/{curriculum:\\d+}/{id:\\d+}")
     public Object curriculumVersion(@PathVariable("curriculum") Long curriculum, @PathVariable("id") Long id) {
         return publicDataService.curriculumVersion(curriculum, id);
+    }
+    
+    @GetMapping("/curriculumVersionSpecialities/{id:\\d+}")
+    public List<CurriculumVersionNominalCapacityDto> getCurriculumVersionNominalCapacities(@WithEntity CurriculumVersion curriculumVersion) {
+        return curriculumVersionService.getCurriculumVersionNominalCapacities(curriculumVersion);
     }
     
     @GetMapping("/{id:\\d+}/schoolCapacityTypes")
@@ -171,6 +188,17 @@ public class PublicDataController {
         HttpUtil.pdf(response, "curriculum_version_modules.pdf",
                 pdfService.generate(CurriculumVersionModulesReport.VOCATIONAL_TEMPLATE_NAME, report));
     }
+    
+    @GetMapping("/print/curriculumVersion/{id:\\d+}/curriculumVersionSummary.rtf")
+    public void printRtf(@WithEntity CurriculumVersion curriculumVersion, HttpServletResponse response, 
+            @RequestParam(required = false) Language lang) throws IOException {
+        UserUtil.throwAccessDeniedIf(!ClassifierUtil.equals(CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_K, curriculumVersion.getStatus())
+                || !Boolean.FALSE.equals(curriculumVersion.getCurriculum().getHigher()));
+        CurriculumVersionSummaryReport report = new CurriculumVersionSummaryReport(curriculumVersion, lang, frontendBaseUrl);
+        report.getCurriculumVersionModules().setIsHigherSchool(Boolean.valueOf(schoolService.schoolType(EntityUtil.getId(curriculumVersion.getCurriculum().getSchool())).isHigher()));
+        HttpUtil.rtf(response, "curriculum_version_summary.rtf",
+                rtfService.generateFop(CurriculumVersionSummaryReport.TEMPLATE_NAME, report, lang));
+    }
 
     @GetMapping("/subject/{id:\\d+}")
     public Object subject(@PathVariable("id") Long id) {
@@ -179,14 +207,14 @@ public class PublicDataController {
     
     @GetMapping("/subjectProgram/{id:\\d+}")
     public Object subjectProgram(@WithEntity SubjectProgram program) {
-        subjectProgramUtil.assertCanView(null, program);
+        subjectProgramValidation.assertCanView(null, program);
         return publicDataService.subjectProgram(program);
     }
     
     @GetMapping("/print/subjectProgram/{id:\\d+}/program.pdf")
     public void print(@WithEntity SubjectProgram program, HttpServletResponse response) throws IOException {
-        subjectProgramUtil.assertCanView(null, program);
-        HttpUtil.pdf(response, "subject_program_" + program.getSubjectStudyPeriodTeacher().getSubjectStudyPeriod().getSubject().getCode() + ".pdf",
+        subjectProgramValidation.assertCanView(null, program);
+        HttpUtil.pdf(response, "subject_program_" + program.getSubjectStudyPeriod().getSubject().getCode() + ".pdf",
                 pdfService.generate(SubjectProgramReport.TEMPLATE_NAME, new SubjectProgramReport(program, new ClassifierUtil.ClassifierCache(classifierService))));
     }
 

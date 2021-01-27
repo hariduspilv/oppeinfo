@@ -3,9 +3,10 @@ package ee.hitsa.ois.web.dto.report.teacherdetailload;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
-public class TeacherDetailLoadJournalSubjectDto extends PeriodDetailLoadDto {
+public class TeacherDetailLoadJournalSubjectDto extends PeriodDetailLoadDto implements Cloneable {
 
     private AutocompleteResult journalSubject;
     private List<String> studentGroups = new ArrayList<>();
@@ -43,5 +44,9 @@ public class TeacherDetailLoadJournalSubjectDto extends PeriodDetailLoadDto {
 	public void setCredits(BigDecimal credits) {
 		this.credits = credits;
 	}
+    
+    public TeacherDetailLoadJournalSubjectDto clone() throws CloneNotSupportedException {
+        return (TeacherDetailLoadJournalSubjectDto) super.clone();
+    }
 
 }

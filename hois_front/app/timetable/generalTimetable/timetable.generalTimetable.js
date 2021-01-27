@@ -54,9 +54,8 @@
       }
       return GeneralTimetableUtil;
     }
-  ]).controller('GeneralTimetableSearchController', ['$route', '$scope', 'GeneralTimetableUtils', 'QueryUtils', 'message',
-    function ($route, $scope, GeneralTimetableUtils, QueryUtils, message) {
-      $scope.generalTimetableUtils = new GeneralTimetableUtils();
+  ]).controller('GeneralTimetableSearchController', ['$route', '$scope', 'QueryUtils', 'dialogService',
+    function ($route, $scope, QueryUtils, dialogService) {
       $scope.auth = $route.current.locals.auth;
       $scope.currentNavItem = "search";
       $scope.formState = {};
@@ -80,93 +79,80 @@
         if (!schoolAuthenticatedUser) {
           QueryUtils.endpoint('/public/schoolSettings').get({schoolId: $scope.schoolId}).$promise.then(function (result) {
             $scope.isForbidden = result.isTimetableNotPublic;
+            $scope.isHigherSchool = result.isHigher;
           });
         } else {
           $scope.isForbidden = false;
+          $scope.isHigherSchool = $scope.auth.higher;
         }
       } else {
         $location.url('/timetables');
       }
 
       if ($scope.schoolId) {
-        QueryUtils.endpoint('/timetables/timetableStudyYears/:schoolId').query({schoolId: $scope.schoolId}).$promise.then(function (result) {
-          $scope.studyYears = result;
-          $scope.criteria.studyYearId = $scope.generalTimetableUtils.getStudyYearId($scope.schoolId, result);
-          $scope.generalTimetableUtils.changeState({ studyYearId: $scope.criteria.studyYearId }, $scope.schoolId);
+        QueryUtils.endpoint('/timetableevents/timetableSearch/:schoolId/searchFormData').search({
+          schoolId: $scope.schoolId
+        }).$promise.then(function (result) {
+          $scope.formState.teachers = result.teachers ? result.teachers : [];
+          $scope.formState.studentGroups = result.studentGroups ? result.studentGroups : [];
+          $scope.formState.rooms = result.rooms ? result.rooms : [];
+          $scope.formState.subjects = result.subjects ? result.subjects : [];
         });
       }
 
-      $scope.$watch('criteria.studyYearId', function () {
-        if (angular.isDefined($scope.criteria.studyYearId) && $scope.criteria.studyYearId !== null) {
-          QueryUtils.endpoint('/timetableevents/timetableSearch/:schoolId/searchFormData/:studyYearId').search({
-            schoolId: $scope.schoolId,
-            studyYearId: $scope.criteria.studyYearId
-          }).$promise.then(function (result) {
-            $scope.formState.teachers = result.teachers ? result.teachers : [];
-            $scope.formState.studentGroups = result.studentGroups ? result.studentGroups : [];
-            $scope.formState.rooms = result.rooms ? result.rooms : [];
-            $scope.formState.subjects = result.subjects ? result.subjects : [];
-            setCriteria();
-            if (atLeastOneParameterFilled()) {
-              search();
-            }
-          });
-        }
-      });
-
-      function setCriteria() {
-        angular.extend($scope.criteria, $scope.generalTimetableUtils.loadState($scope.schoolId));
-        if ($scope.criteria.subjectObject) {
-          var studyYearSubject = $scope.formState.subjects.filter(function (it) { return it.id === $scope.criteria.subjectObject.id });
-          $scope.criteria.subjectObject = studyYearSubject;
-        }
-      }
-
-      function saveCriteria() {
-        $scope.generalTimetableUtils.changeState({
-          roomObject: $scope.criteria.roomObject,
-          teacherObject: $scope.criteria.teacherObject,
-          studentGroupObject: $scope.criteria.studentGroupObject,
-          subjectObject: $scope.criteria.subjectObject
-        }, $scope.schoolId);
-      }
-
-      $scope.search = function() {
-        if (atLeastOneParameterFilled()) {
-          search();
-        } else {
-          message.error('timetable.error.atleastOneParameterMustBeFilled');
-        }
-      };
-
-      function search() {
-        saveCriteria();
-        $scope.$broadcast("updateWeekTimetable", { criteria: $scope.criteria });
-      }
-
-      function atLeastOneParameterFilled() {
-        return $scope.criteria.roomObject != null || $scope.criteria.teacherObject != null ||
-          $scope.criteria.studentGroupObject != null || $scope.criteria.subjectObject != null;
-      }
+      QueryUtils.createQueryForm($scope, '/timetableevents/timetableSearch/' + $scope.schoolId,
+        {from: moment().startOf('isoweek').toDate(), thru: moment().endOf('isoweek').toDate()});
+      $scope.loadData();
 
       $scope.parameterSearch = function (searchText, formData) {
         searchText = (searchText || '').toUpperCase();
-        return (formData || []).filter(function (it) { return $scope.currentLanguageNameField(it).toUpperCase().indexOf(searchText) !== -1; });
+        return (formData || []).filter(function (it) {
+          return $scope.currentLanguageNameField(it).toUpperCase().indexOf(searchText) !== -1;
+        });
       };
 
-      $scope.changeStudyYear = function (studyYear) {
-        $scope.generalTimetableUtils.changeState({ studyYearId: studyYear.id }, $scope.schoolId);
-        $scope.criteria.studyYearId = studyYear.id;
+      $scope.selectedTeacherChanged = function (selectedTeacher) {
+        $scope.criteria.teachers = angular.isDefined(selectedTeacher) ? [selectedTeacher.id] : [];
       };
 
+      $scope.selectedStudentGroupChanged = function (selectedStudentGroup) {
+        $scope.criteria.studentGroups = angular.isDefined(selectedStudentGroup) ? [selectedStudentGroup.id] : [];
+      };
+
+      $scope.selectedRoomChanged = function (selectedRoom) {
+        $scope.criteria.room = angular.isDefined(selectedRoom) ? selectedRoom.id : null;
+      };
+
+      var _clearCriteria = $scope.clearCriteria;
       $scope.clearSearchParameters = function() {
-        $scope.criteria = {studyYearId: $scope.criteria.studyYearId};
+        _clearCriteria();
         $scope.teacherSearchText = null;
         $scope.studentGroupSearchText = null;
         $scope.roomSearchText = null;
-        $scope.subjectSearchText = null;
       };
 
+      $scope.openEventRelatedEntitiesDialog = function (event, entityType) {
+        dialogService.showDialog('lessonplan/event/event.related.entities.dialog.html', function (dialogScope) {
+          dialogScope.event = event;
+          dialogScope.entityType = entityType;
+
+          dialogScope.tableData = { size: 10 };
+          if (entityType === 'teacher') {
+            dialogScope.tableData.content = event.teachers;
+            dialogScope.searchLabel = $scope.isHigherSchool ?
+              'timetable.timetableEvent.teachersHigher' : 'timetable.timetableEvent.teachersVocational';
+            dialogScope.searchParam = 'name';
+          } else if (entityType === 'studentGroup') {
+            dialogScope.tableData.content = event.studentGroups;
+            dialogScope.searchLabel = 'timetable.timetableEvent.studentGroups';
+            dialogScope.searchParam = 'code';
+          } else if (entityType === 'student') {
+            dialogScope.tableData.content = event.students;
+            dialogScope.searchLabel = 'timetable.timetableEvent.students';
+            dialogScope.searchParam = 'name';
+          }
+        });
+      };
     }
   ]).controller('GeneralTimetableController', ['$route', '$location', '$scope', 'GeneralTimetableUtils', 'QueryUtils',
     function ($route, $location, $scope, GeneralTimetableUtils, QueryUtils) {
@@ -194,9 +180,11 @@
         if (!schoolAuthenticatedUser) {
           QueryUtils.endpoint('/public/schoolSettings').get({schoolId: $scope.schoolId}).$promise.then(function (result) {
             $scope.isForbidden = result.isTimetableNotPublic;
+            $scope.isHigherSchool = result.higher;
           });
         } else {
           $scope.isForbidden = false;
+          $scope.isHigherSchool = $scope.auth.higher;
         }
       } else {
         $location.url('/timetables');
@@ -205,7 +193,6 @@
       if (angular.isDefined($scope.auth) && $scope.auth.isAdmin()) {
         QueryUtils.endpoint('/schoolBoard/:schoolId').get({schoolId: $scope.schoolId}).$promise.then(function (result) {
           $scope.schoolBoardUrl = result.url;
-          console.log($scope.schoolBoardUrl);
         });
       }
 
@@ -281,6 +268,7 @@
           });
         } else {
           $scope.schoolId = $scope.auth.school.id;
+          $scope.isHigherSchool = $scope.auth.higher;
           QueryUtils.endpoint('/timetables/timetableStudyYears/:schoolId').query({schoolId: $scope.schoolId}).$promise.then(function (result) {
             $scope.studyYears = result;
             $scope.criteria.studyYearId = $scope.generalTimetableUtils.getStudyYearId($scope.schoolId, result);

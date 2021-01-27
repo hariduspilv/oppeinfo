@@ -20,6 +20,7 @@ public class TeacherDetailLoadReport {
     private List<PeriodDto> periods;
     private List<Map<String, Object>> periodTypesRow;
     private List<LoadTypeDto> loadTypesRow;
+    private List<TeacherResultRowDto> teachers;
     private List<ResultRowDto> rows;
     private Boolean journalSubjectReport;
     private Boolean teacherReport = Boolean.FALSE;
@@ -137,5 +138,13 @@ public class TeacherDetailLoadReport {
 	public void setTeacherReport(Boolean teacherReport) {
 		this.teacherReport = teacherReport;
 	}
+
+    public List<TeacherResultRowDto> getTeachers() {
+        return teachers;
+    }
+
+    public void setTeachers(List<TeacherResultRowDto> teachers) {
+        this.teachers = teachers;
+    }
 
 }

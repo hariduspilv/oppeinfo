@@ -74,7 +74,7 @@ public class CurriculumDto extends CurriculumForm {
         //TODO: use partial dto 
         dto.setOccupations(StreamUtil.toMappedSet(CurriculumOccupationDto::of, curriculum.getOccupations()));
         dto.setCanHaveOccupations(Boolean.valueOf(CurriculumUtil.canHaveOccupations(curriculum)));
-
+        dto.setStudyPeriod(curriculum.getStudyPeriod());
         return dto;
     }
     

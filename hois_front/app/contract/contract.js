@@ -339,7 +339,7 @@ angular.module('hitsaOis').controller('ContractEditController', function ($locat
   };
 
   $scope.updateCredits = function (moduleSubject, index) {
-    moduleSubject.credits = DataUtils.hoursToCredits(moduleSubject.hours);
+    moduleSubject.credits = DataUtils.hoursToCredits(moduleSubject.hours, 2);
     $scope.contractForm['credits[' + index + ']'].$setDirty();
   };
 

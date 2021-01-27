@@ -43,6 +43,7 @@
                               md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
       </md-table-container>
     </hois-collapsable>
+    <ng-include src="'persons/adminRoles/admin.roles.edit.action.buttons.html'"></ng-include>
     <div flex>
       <md-table-container>
         <table md-table>
@@ -67,17 +68,11 @@
         </table>
       </md-table-container>
     </div>
-    <md-button ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
-    <md-button ng-if="role.id" ng-click="delete()" class="md-raised">{{'main.button.delete' | translate}}</md-button>
-    <md-button ng-click="back('#/persons/admin-roles?_menu')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+    <ng-include src="'persons/adminRoles/admin.roles.edit.action.buttons.html'"></ng-include>
   </form>
 </div>
 
 <style>
-    .readonly {
-      margin-bottom: 0px !important;
-      margin-top: 18px !important;
-    }
     .hois-collapse2 .hois-collapse-header {
       font-size: 14px;
     }

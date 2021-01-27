@@ -24,10 +24,10 @@ angular.module('hitsaOis').controller('StudentGroupAbsenceController',
     $scope.criteria = {};
     $scope.directiveControllers = [];
     $scope.formState = {
-      studyYears: QueryUtils.endpoint('/autocomplete/studyYears').query(setCurrentStudyYearAndWeek), 
+      studyYears: QueryUtils.endpoint('/autocomplete/studyYears').query(setCurrentStudyYearAndWeek),
       studyWeeks: []
     };
-    
+
     $scope.studyYearChanged = function (setCurrentWeek) {
       var studyWeeks = [];
       if (setCurrentWeek) {
@@ -47,7 +47,7 @@ angular.module('hitsaOis').controller('StudentGroupAbsenceController',
 
       $scope.criteria.studyWeekStart = $scope.criteria.studyWeek ? $scope.criteria.studyWeek.start : null;
       $scope.criteria.studyWeekEnd = $scope.criteria.studyWeek ? $scope.criteria.studyWeek.end : null;
-      
+
       QueryUtils.loadingWheel($scope, true);
       QueryUtils.endpoint(baseUrl).get($scope.criteria).$promise.then(function (result) {
         QueryUtils.loadingWheel($scope, false);
@@ -58,7 +58,7 @@ angular.module('hitsaOis').controller('StudentGroupAbsenceController',
       });
       stateStorageService.changeState(schoolId, stateKey, $scope.criteria);
     };
-  
+
     $scope.clearCriteria = function() {
       $scope.criteria = {};
       $scope.directiveControllers.forEach(function (c) {
@@ -145,7 +145,7 @@ angular.module('hitsaOis').controller('StudentGroupAbsenceController',
       $scope.studentAbsences = {};
       for (var i = 0; i < absences.length; i++) {
         var absence = absences[i];
-        
+
         var studentId = absence.student;
         if (!angular.isDefined($scope.studentAbsences[studentId])) {
           $scope.studentAbsences[studentId] = {};
@@ -158,14 +158,23 @@ angular.module('hitsaOis').controller('StudentGroupAbsenceController',
 
         var date = getDateStringWithoutTime(absence.entryDate);
         if (!angular.isDefined($scope.studentAbsences[studentId][journalId][date])) {
-          $scope.studentAbsences[studentId][journalId][date] = {};
+          $scope.studentAbsences[studentId][journalId][date] = [];
         }
 
-        var entryId = absence.journalStudentEntry;
-        if (!angular.isDefined($scope.studentAbsences[studentId][journalId][date][entryId])) {
-          $scope.studentAbsences[studentId][journalId][date][entryId] = [];
+        var entry = $scope.studentAbsences[studentId][journalId][date].find(function (entry) {
+          return entry.id === absence.journalStudentEntry;
+        });
+
+        if (angular.isUndefined(entry)) {
+          entry = {
+            id: absence.journalStudentEntry,
+            startLessonNr: absence.startLessonNr,
+            lessons: absence.lessons,
+            absences: []
+          };
+          $scope.studentAbsences[studentId][journalId][date].push(entry);
         }
-        $scope.studentAbsences[studentId][journalId][date][entryId].push(absence);
+        entry.absences.push(absence);
       }
     }
 

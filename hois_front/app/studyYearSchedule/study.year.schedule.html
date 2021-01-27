@@ -39,6 +39,7 @@
       <hois-value value="frontendBaseUrl() + '/#/studyYearSchedule/public/' + record.encryptedSchoolId" href-value="'#/studyYearSchedule/public/' + record.encryptedSchoolId"></hois-value>
     </md-input-container>
   </hois-collapsable>
+  <ng-include src="'studyYearSchedule/study.year.schedule.action.buttons.html'"></ng-include>
   <form name="studyYearScheduleForm">
     <div layout="column">
       <div layout="row" layout-sm="column" layout-xs="column">
@@ -104,18 +105,7 @@
           </tbody>
         </table>
       </md-table-container>
-      <div layout="row">
-        <md-button class="md-button md-raised" ng-if="criteria.schoolDepartments.length === 0" 
-        ng-click="raiseError('studyYearSchedule.error.departments')">{{'main.button.printPdf' | translate}}</md-button>
-        <a ng-href="{{exportUrl(formState.pdfUrl)}}" ng-if="criteria.schoolDepartments.length !== 0"  target="_blank" class="md-button md-raised">
-          {{'main.button.printPdf' | translate}}
-        </a>
-        <md-button class="md-button md-raised" ng-if="criteria.schoolDepartments.length === 0" 
-        ng-click="raiseError('studyYearSchedule.error.departments')">{{'main.button.printXls' | translate}}</md-button>
-        <a ng-href="{{exportUrl(formState.xlsUrl)}}" ng-if="criteria.schoolDepartments.length !== 0" target="_blank" class="md-button md-raised">
-          {{'main.button.printXls' | translate}}
-        </a>
-      </div>
+      <ng-include src="'studyYearSchedule/study.year.schedule.action.buttons.html'"></ng-include>
     </div>
   </form>
 </div>

@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web.commandobject.finalprotocol;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
@@ -20,6 +21,7 @@ public class FinalHigherProtocolSearchCommand {
     private LocalDate insertedThru;
     private LocalDate confirmDateFrom;
     private LocalDate confirmDateThru;
+    private List<Long> studentGroups;
     
     public String getStudentName() {
         return studentName;
@@ -91,6 +93,14 @@ public class FinalHigherProtocolSearchCommand {
     
     public void setConfirmDateThru(LocalDate confirmDateThru) {
         this.confirmDateThru = confirmDateThru;
+    }
+
+    public List<Long> getStudentGroups() {
+        return studentGroups;
+    }
+
+    public void setStudentGroups(List<Long> studentGroups) {
+        this.studentGroups = studentGroups;
     }
     
 }

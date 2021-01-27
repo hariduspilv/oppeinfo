@@ -4,6 +4,7 @@ import static ee.hitsa.ois.service.subjectstudyperiod.SubjectStudyPeriodCapaciti
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsDecimal;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDateTime;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
@@ -39,6 +40,7 @@ import ee.hitsa.ois.domain.report.SchoolQuery;
 import ee.hitsa.ois.domain.report.SchoolQueryCriteria;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.school.SchoolDepartment;
+import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.teacher.Teacher;
@@ -55,6 +57,9 @@ import org.springframework.stereotype.Service;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.enums.ApelApplicationStatus;
+import ee.hitsa.ois.enums.ApplicationType;
+import ee.hitsa.ois.enums.ContractStatus;
+import ee.hitsa.ois.enums.CurriculumConsecution;
 import ee.hitsa.ois.enums.DeclarationStatus;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
@@ -69,6 +74,8 @@ import ee.hitsa.ois.enums.StudentCountType;
 import ee.hitsa.ois.enums.StudentMovementType;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.enums.StudentType;
+import ee.hitsa.ois.enums.StudyForm;
+import ee.hitsa.ois.enums.StudyLevel;
 import ee.hitsa.ois.enums.SupportServiceType;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.exception.HoisException;
@@ -81,6 +88,7 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.TranslateUtil;
 import ee.hitsa.ois.web.commandobject.ClassifierSearchCommand;
@@ -96,6 +104,7 @@ import ee.hitsa.ois.web.commandobject.report.ScholarshipStatisticsCommand;
 import ee.hitsa.ois.web.commandobject.report.SchoolQueryCommand;
 import ee.hitsa.ois.web.commandobject.report.StudentCountCommand;
 import ee.hitsa.ois.web.commandobject.report.StudentDataCommand;
+import ee.hitsa.ois.web.commandobject.report.StudentLunchSupportCommand;
 import ee.hitsa.ois.web.commandobject.report.StudentMovementCommand;
 import ee.hitsa.ois.web.commandobject.report.StudentSearchCommand;
 import ee.hitsa.ois.web.commandobject.report.StudentStatisticsByPeriodCommand;
@@ -117,6 +126,7 @@ import ee.hitsa.ois.web.dto.report.ReportStudentDataDto;
 import ee.hitsa.ois.web.dto.report.ScholarshipReportDto;
 import ee.hitsa.ois.web.dto.report.SchoolQueryDto;
 import ee.hitsa.ois.web.dto.report.StudentCountDto;
+import ee.hitsa.ois.web.dto.report.StudentLunchSupportDto;
 import ee.hitsa.ois.web.dto.report.StudentMovementDto;
 import ee.hitsa.ois.web.dto.report.StudentRepresentativeDto;
 import ee.hitsa.ois.web.dto.report.StudentSearchDto;
@@ -1101,71 +1111,59 @@ public class ReportService {
             qb.requiredCriteria("c.id in (:userCurriculumIds)", "userCurriculumIds", user.getCurriculumIds());
         }
 
-        qb.requiredCriteria("s.status_code in (:status)", "status", StudentStatus.STUDENT_STATUS_ACTIVE);
+        qb.requiredCriteria("s.status_code in (:status)", "status", !criteria.getStatus().isEmpty()
+                ? criteria.getStatus() : StudentStatus.STUDENT_STATUS_ACTIVE);
         qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"), "name", criteria.getName());
         qb.optionalCriteria("cv.id = :curriculumVersion", "curriculumVersion", criteria.getCurriculumVersion());
         qb.optionalCriteria("s.study_load_code = :studyLoad", "studyLoad", criteria.getStudyLoad());
         qb.optionalCriteria("s.study_form_code = :studyForm", "studyForm", criteria.getStudyForm());
         qb.optionalCriteria("s.student_group_id = :studentGroup", "studentGroup", criteria.getStudentGroup());
 
-        Page<CurriculumCompletionDto> page = JpaQueryUtil.pagingResult(qb, "s.id, p.firstname, p.lastname, " +
-                "cv.code, c.name_et, c.name_en, sg.code as student_group_code, s.study_load_code, s.study_form_code, s.status_code, " +
-                "scc.credits, round((c.credits + scc.study_backlog) * 100 / c.credits), " +
-                "(select count(*) from study_period sp join study_year sy on sy.id = sp.study_year_id"+
-                " where sy.school_id = s.school_id and sp.end_date < now() and s.study_start < sp.end_date) as period_count, " +
-                "(select count(*) from study_year sy"+
-                " where sy.school_id = s.school_id and sy.end_date < now() and s.study_start < sy.end_date) as year_count, " +
-                "s.type_code as studentType"
-        , em, pageable).map(r -> new CurriculumCompletionDto(r));
-        if (!page.getContent().isEmpty()) {
-            setLastStudyPeriodCredits(user.getSchoolId(), page.getContent());
-        }
-        return page;
-    }
+        String select = "s.id student_id, p.firstname, p.lastname, s.type_code student_type, " +
+                "cv.code cv_code, c.name_et c_name_et, c.name_en c_name_en, c.credits c_credits, c.is_higher, " +
+                "sg.code sg_code, s.study_load_code, s.study_form_code, s.status_code, p.idcode, s.nominal_study_end, " +
+                "get_student_participated_study_period_count(s.id) participated_periods, " +
+                "get_student_study_period_count(s.id) periods, get_student_last_study_period(s.id) last_study_period_id, " +
+                "get_leave_period_count(s.id, 'KASKKIRI_AKAD', 'KASKKIRI_AKADK') academic_leave_periods, " +
+                "get_leave_period_count(s.id, 'KASKKIRI_VALIS', 'KASKKIRI_VALISKATK') abroad_studies_periods, " +
+                "(select count(*) from study_year sy where sy.school_id = s.school_id and sy.end_date < now() " +
+                    "and s.study_start < sy.end_date) as year_count, " +
+                "coalesce(scc.credits_before_current_study_period, 0) credits_before_current_study_period, scc.credits scc_credits, " +
+                "c.credits + scc.study_backlog considered_credits";
 
-    private void setLastStudyPeriodCredits(Long schoolId, List<CurriculumCompletionDto> curriculumCompletionDtos) {
-        Long lastStudyPeridodId = studyYearService.getPreviousStudyPeriod(schoolId);
-        if (lastStudyPeridodId != null) {
-            StudyPeriod sp = em.getReference(StudyPeriod.class, lastStudyPeridodId);
-            Map<Long, CurriculumCompletionDto> dtosByStudent = StreamUtil.toMap(c -> c.getId(),
-                    curriculumCompletionDtos);
+        qb.sort(pageable);
+        String query = qb.querySql(select, true);
+        Map<String, Object> parameters =  new HashMap<>(qb.queryParameters());
 
-            List<?> data = em.createNativeQuery(
-                    "select s.id, (select spCredits.sum from (" +
-                        "select * from (select sum(credits) from (select distinct on (svr.curriculum_version_omodule_id) first_value(svr.credits) " +
-                        "over (partition by svr.curriculum_version_omodule_id order by coalesce(svr.changed, svr.inserted) desc) credits " +
-                        "from student_vocational_result svr " +
-                        "where svr.student_id = s.id and c.is_higher = false and svr.grade_code in (:vocationalPositiveGrades) " +
-                        "and svr.grade_date >= :studyPeriodStart and svr.grade_date <= :studyPeriodEnd " +
-                        ") as distinct_module_credits) credits_sum where sum is not null " +
-                        "union all " +
-                        "select sum(shr.credits) from student_higher_result shr " +
-                        "where shr.student_id = s.id and c.is_higher = true and shr.grade_code in (:higherPositiveGrades) " +
-                        "and shr.is_active = true and shr.grade_date >= :studyPeriodStart and shr.grade_date <= :studyPeriodEnd " +
-                        "group by shr.student_id) spCredits) " +
-                    "from student s " +
-                    "join curriculum_version cv on cv.id = s.curriculum_version_id " +
-                    "join curriculum c on c.id = cv.curriculum_id " +
-                    "where s.id in (:studentIds)")
-                    .setParameter("studentIds", dtosByStudent.keySet())
-                    .setParameter("studyPeriodStart", JpaQueryUtil.parameterAsTimestamp(sp.getStartDate()))
-                    .setParameter("studyPeriodEnd", JpaQueryUtil.parameterAsTimestamp(sp.getEndDate()))
-                    .setParameter("vocationalPositiveGrades", OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE)
-                    .setParameter("higherPositiveGrades", HigherAssessment.GRADE_POSITIVE)
-                    .getResultList();
+        qb = new JpaNativeQueryBuilder("from (" + query + ") x " +
+                "left join study_period sp on sp.id = x.last_study_period_id");
+        String higherPositiveGrades = HigherAssessment.GRADE_POSITIVE.stream()
+                .map(g -> "'" + g + "'").collect(Collectors.joining(", "));
+        String vocationalPositiveGrades = OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE.stream()
+                .map(g -> "'" + g + "'").collect(Collectors.joining(", "));
 
-            Map<Long, BigDecimal> lastSpCreditsByStudent = StreamUtil.nullSafeList(data).stream()
-                    .filter(r -> resultAsDecimal(r, 1) != null)
-                    .collect(Collectors.toMap(r -> resultAsLong(r, 0), r -> resultAsDecimal(r, 1)));
-            for (Long studentId : lastSpCreditsByStudent.keySet()) {
-                dtosByStudent.get(studentId).setCreditsLastStudyPeriod(lastSpCreditsByStudent.get(studentId));
-            }
-        }
+        return JpaQueryUtil.pagingResult(qb, "student_id, firstname, lastname, student_type, cv_code, c_name_et, " +
+                "c_name_en, sg_code, study_load_code, study_form_code, status_code, idcode, nominal_study_end, " +
+                "participated_periods, periods, academic_leave_periods, abroad_studies_periods, year_count, " +
+                "case when is_higher then (select coalesce(sum(shr.credits), 0) from student_higher_result shr " +
+                    "where shr.student_id = x.student_id and shr.grade_code in (" + higherPositiveGrades + ") " +
+                    "and shr.is_active = true and sp.start_date <= shr.grade_date and sp.end_date >= shr.grade_date) " +
+                "else (select coalesce(sum(svr.credits), 0) from student_vocational_result svr " +
+                    "where svr.student_id = x.student_id and svr.grade_code in (" + vocationalPositiveGrades + ") " +
+                    "and sp.start_date <= svr.grade_date and sp.end_date >= svr.grade_date) end last_study_period_credits, " +
+                "credits_before_current_study_period, considered_credits, scc_credits, " +
+                "case when is_higher then get_cumulative_credits(student_id, get_student_last_period_study_period_count(" +
+                    "student_id, sp.id), credits_before_current_study_period) else null end before_current_period_cumulative_completion, " +
+                "case when is_higher then get_cumulative_credits(student_id, periods, considered_credits) " +
+                    "else null end cumulative_completion, " +
+                "(considered_credits / c_credits * 100) curriculum_completion, " +
+                "sp.name_et, sp.name_en"
+                , parameters, em, pageable).map(CurriculumCompletionDto::new);
     }
 
     public byte[] curriculumCompletionAsExcel(HoisUserDetails user, CurriculumCompletionCommand criteria) {
         List<CurriculumCompletionDto> students = curriculumCompletion(user, criteria,
-                new PageRequest(0, Integer.MAX_VALUE)).getContent();
+                new PageRequest(0, Integer.MAX_VALUE, new Sort("p.lastname, p.firstname"))).getContent();
         Map<String, Object> data = new HashMap<>();
         data.put("criteria", criteria);
         data.put("students", students);
@@ -1335,7 +1333,8 @@ public class ReportService {
                     .sort(pageable);
             qb.requiredCriteria("j.school_id = :schoolId", "schoolId", schoolId);
             qb.requiredCriteria("j.study_year_id = :studyYear", "studyYear", criteria.getStudyYear());
-            qb.optionalCriteria("jc.study_period_id = :studyPeriod", "studyPeriod", criteria.getStudyPeriod());
+            qb.optionalCriteria("coalesce(jc.study_period_id, jtc.study_period_id) = :studyPeriod",
+                    "studyPeriod", criteria.getStudyPeriod());
             qb.optionalCriteria("jt.teacher_id = :teacher", "teacher", criteria.getTeacher());
             // module filter
             qb.optionalCriteria("j.id in (select jot.journal_id from journal_omodule_theme jot " +
@@ -1445,10 +1444,10 @@ public class ReportService {
                         "join curriculum_version_omodule cvo on cvot.curriculum_version_omodule_id = cvo.id "+
                         "where cvo.curriculum_module_id = :module)", "module", criteria.getModule());
 
-                qb.groupBy("jt.teacher_id, coalesce(jc.study_period_id, jtc.study_period_id), jct.capacity_type_code, sctl.load_percentage");
+                qb.groupBy("j.id, jt.teacher_id, coalesce(jc.study_period_id, jtc.study_period_id), jct.capacity_type_code, sctl.load_percentage");
                 
                 String hoursByTypeQuery = qb.querySql("jt.teacher_id, coalesce(jc.study_period_id, jtc.study_period_id) as study_period_id,"
-                        + " coalesce(sctl.load_percentage, 100) * (coalesce(sum(jc.hours), 0) + coalesce(sum(jtc.hours), 0)) / 100.0 as hours", false);
+                        + " coalesce(case when j.is_free = true then 0 end, sctl.load_percentage, 100) * (coalesce(sum(jc.hours), 0) + coalesce(sum(jtc.hours), 0)) / 100.0 as hours", false);
                 Map<String, Object> parameters = new HashMap<>(qb.queryParameters());
 
                 qb = new JpaNativeQueryBuilder("from (" + hoursByTypeQuery + ") bytype");
@@ -3164,5 +3163,82 @@ public class ReportService {
             }
         }
         return dtos;
+    }
+
+    public Page<StudentLunchSupportDto> studentsLunchSupport(HoisUserDetails user, StudentLunchSupportCommand criteria,
+            Pageable pageable) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student s "
+                + "join person p on s.person_id = p.id "
+                + "left join curriculum_version cv on s.curriculum_version_id = cv.id "
+                + "left join curriculum c on cv.curriculum_id = c.id "
+                + "left join student_group sg on s.student_group_id = sg.id "
+                + "left join (select coalesce(akadK.start_date, sp2.end_date, ds.end_date) as endDate, ds.student_id "
+                    + "from directive d join directive_student ds on d.id = ds.directive_id "
+                    + "left join study_period sp1 on sp1.id = ds.study_period_start_id and ds.is_period = true "
+                    + "left join study_period sp2 on sp2.id = ds.study_period_end_id and ds.is_period = true "
+                    + "left join application a on a.directive_id = d.id and a.student_id = ds.student_id and a.type_code = '" + ApplicationType.AVALDUS_LIIK_AKADK.name()
+                        + "' left join (select ds2.application_id, ds2.student_id, ds2.start_date "
+                        + "from directive_student ds2 "
+                        + "join directive d2 on d2.id = ds2.directive_id and d2.type_code = '" + DirectiveType.KASKKIRI_AKADK.name() + "' "
+                        + "where ds2.canceled != true and d2.status_code = '" + DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name() + "') "
+                        + "akadK on akadK.student_id = ds.student_id and akadK.application_id = a.id "
+                    + "where coalesce(sp1.start_date, ds.start_date) <= :now and coalesce(akadK.start_date, sp2.end_date, ds.end_date) >= :now "
+                    + "and d.status_code = 'KASKKIRI_STAATUS_KINNITATUD' "
+                    + "and d.type_code = 'KASKKIRI_AKAD' "
+                    + "and ds.canceled = false "
+                    + ") akad on akad.student_id = s.id").sort(pageable);
+
+        qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
+        if (user.isLeadingTeacher()) {
+            qb.requiredCriteria("c.id in (:userCurriculumIds)", "userCurriculumIds", user.getCurriculumIds());
+        }
+        qb.parameter("now", LocalDate.now());
+        qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"), "name", criteria.getName());
+        qb.optionalContains("coalesce(p.idcode, p.foreign_idcode)", "idcode", criteria.getIdcode());
+        qb.optionalCriteria("s.student_group_id = :studentGroupId", "studentGroupId", criteria.getStudentGroup());
+        qb.optionalCriteria("c.id = :curriculumId", "curriculumId", criteria.getCurriculum());
+        qb.optionalCriteria("s.study_start >= :studyStartFrom", "studyStartFrom", criteria.getStartFrom());
+        qb.optionalCriteria("s.study_start <= :studyStartThru", "studyStartThru", criteria.getStartThru());
+        qb.optionalCriteria("s.status_code in (:activeStatuses)", "activeStatuses", StudentStatus.STUDENT_STATUS_ACTIVE);
+        qb.filter("c.is_higher = false");
+        if (Long.valueOf(1).equals(criteria.getSearchType())) {
+            qb.optionalCriteria("s.status_code = :studyingStatus", "studyingStatus", StudentStatus.OPPURSTAATUS_O.name());
+            qb.optionalCriteria("s.previous_study_level_code in (:studyLevels)", "studyLevels", EnumUtil.toNameList(StudyLevel.OPPEASTE_110, StudyLevel.OPPEASTE_210, 
+                    StudyLevel.OPPEASTE_215, StudyLevel.OPPEASTE_216, StudyLevel.OPPEASTE_233));
+            qb.optionalCriteria("s.study_form_code in (:studyForms)", "studyForms", EnumUtil.toNameList(StudyForm.OPPEVORM_W, StudyForm.OPPEVORM_Z));
+            qb.optionalCriteria("c.consecution_code = :consecutionCode", "consecutionCode", CurriculumConsecution.OPPEKAVA_TYPE_E.name());
+            qb.optionalCriteria("not exists(select c1.id from contract c1 "
+                + "where c1.student_id = s.id "
+                + "and c1.status_code = :contractStatus "
+                + "and c1.canceled is null)", "contractStatus", ContractStatus.LEPING_STAATUS_K.name());
+        } else if (Long.valueOf(2).equals(criteria.getSearchType())) {
+            qb.filter("s.is_school_meal = true");
+        }
+        Page<StudentLunchSupportDto> result = JpaQueryUtil.pagingResult(qb, "s.id as studentId, p.firstname, p.lastname, s.type_code, "
+                + "coalesce(p.idcode, p.foreign_idcode) as idcode, sg.id as studentGroupId, sg.code, s.status_code, s.is_school_meal, "
+                + "s.school_meal_changed, s.school_meal_changed_by, akad.endDate"
+        , em, pageable).map(r -> {
+            StudentLunchSupportDto dto = new StudentLunchSupportDto();
+            dto.setStudentId(resultAsLong(r, 0));
+            dto.setFullname(PersonUtil.fullnameTypeSpecific(resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 3)));
+            dto.setIdcode(resultAsString(r, 4));
+            dto.setStudentGroup(new AutocompleteResult(resultAsLong(r, 5), resultAsString(r, 6), resultAsString(r, 6)));
+            dto.setStatus(resultAsString(r, 7));
+            dto.setIsSchoolMeal(resultAsBoolean(r,8));
+            dto.setSchoolMealChanged(resultAsLocalDateTime(r, 9));
+            dto.setSchoolMealChangedBy(resultAsString(r, 10));
+            dto.setAkadEnd(resultAsLocalDate(r, 11));
+            return dto;
+        });
+        return result;
+    }
+
+    public void updateSchoolMeal(HoisUserDetails user, Student student, StudentLunchSupportDto form) {
+        em.createNativeQuery("update student set is_school_meal = :isSchoolMeal, school_meal_changed = current_timestamp(3), school_meal_changed_by=:changer, "
+                + "changed = current_timestamp(3), changed_by = :changer "
+                + "where id = :studentId")
+        .setParameter("isSchoolMeal", form.getIsSchoolMeal())
+        .setParameter("changer", user.getUsername())
+        .setParameter("studentId", EntityUtil.getId(student)).executeUpdate();
     }
 }

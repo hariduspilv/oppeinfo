@@ -1,6 +1,9 @@
 package ee.hitsa.ois.web.dto;
 
+import ee.hitsa.ois.web.dto.subject.subjectprogram.SubjectProgramResult;
+
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -11,18 +14,19 @@ public class SubjectStudyPeriodSearchDto {
     private Long hours;
     private List<String> teachers;
     private List<SubjectProgramResult> programs;
+    private SubjectProgramResult jointProgram;
     private AutocompleteResult subject;
     private AutocompleteResult studyPeriod;
     private Set<AutocompleteResult> midtermTasks;
     private Boolean isPracticeSubject;
     private Long moodleCourseId;
-    private Long subjectProgramId;
-    private String subjectProgramStatus;
+    private SubjectProgramResult program;
     private Integer subgroups;
     private BigDecimal credits;
     private String studentgroups;
 
     private Boolean canEdit;
+    private Boolean canEditJointProgram;
 
     public Boolean getIsPracticeSubject() {
         return isPracticeSubject;
@@ -104,20 +108,12 @@ public class SubjectStudyPeriodSearchDto {
         this.moodleCourseId = moodleCourseId;
     }
 
-    public Long getSubjectProgramId() {
-        return subjectProgramId;
+    public SubjectProgramResult getProgram() {
+        return program;
     }
 
-    public void setSubjectProgramId(Long subjectProgramId) {
-        this.subjectProgramId = subjectProgramId;
-    }
-
-    public String getSubjectProgramStatus() {
-        return subjectProgramStatus;
-    }
-
-    public void setSubjectProgramStatus(String subjectProgramStatus) {
-        this.subjectProgramStatus = subjectProgramStatus;
+    public void setProgram(SubjectProgramResult program) {
+        this.program = program;
     }
 
     public Integer getSubgroups() {
@@ -150,5 +146,21 @@ public class SubjectStudyPeriodSearchDto {
 
     public void setStudentgroups(String studentgroups) {
         this.studentgroups = studentgroups;
+    }
+
+    public SubjectProgramResult getJointProgram() {
+        return jointProgram;
+    }
+
+    public void setJointProgram(SubjectProgramResult jointProgram) {
+        this.jointProgram = jointProgram;
+    }
+
+    public Boolean getCanEditJointProgram() {
+        return canEditJointProgram;
+    }
+
+    public void setCanEditJointProgram(Boolean canEditJointProgram) {
+        this.canEditJointProgram = canEditJointProgram;
     }
 }

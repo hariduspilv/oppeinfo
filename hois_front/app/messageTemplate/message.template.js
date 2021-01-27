@@ -119,6 +119,6 @@ angular.module('hitsaOis').controller('MessageTemplateListController', ['$scope'
       }, function () {
         QueryUtils.loadingWheel($scope, false);
       });
-    })
+    });
   }
 ]);

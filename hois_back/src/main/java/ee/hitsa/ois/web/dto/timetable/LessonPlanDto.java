@@ -32,14 +32,16 @@ import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ClassifierDto;
+import ee.hitsa.ois.web.dto.StudyPeriodEventDto;
 import ee.hitsa.ois.web.dto.StudyPeriodWithWeeksDto;
+import ee.hitsa.ois.web.dto.StudyYearDto;
 
 import static ee.hitsa.ois.util.JpaQueryUtil.getOrDefault;
 
 public class LessonPlanDto extends LessonPlanForm {
 
     private Long id;
-    private String studyYearCode;
+    private StudyYearDto studyYear;
     private String studentGroupCode;
     private Short courseNr;
     private String curriculumCode;
@@ -48,13 +50,15 @@ public class LessonPlanDto extends LessonPlanForm {
     private List<StudyPeriodWithWeeksDto> studyPeriods;
     private List<Short> weekNrs;
     private List<LocalDate> weekBeginningDates;
+    private List<StudyPeriodEventDto> vacations;
     private List<LessonPlanLegendDto> legends;
     private List<LessonPlanTeacherDto> teachers;
     private List<ClassifierDto> lessonPlanCapacities;
+    private List<String> vocationalContactCapacities;
 
     public static LessonPlanDto of(LessonPlan lessonPlan, Map<Long, Long> weekNrsLegends) {
         LessonPlanDto dto = EntityUtil.bindToDto(lessonPlan, new LessonPlanDto(), "coefficient");
-        dto.setStudyYearCode(EntityUtil.getCode(lessonPlan.getStudyYear().getYear()));
+        dto.setStudyYear(StudyYearDto.ofMin(lessonPlan.getStudyYear()));
         dto.setCoefficient(getOrDefault(EntityUtil.getNullableCode(lessonPlan.getCoefficient()),
                 Coefficient.KOEFITSIENT_K1.name()));
         
@@ -97,13 +101,13 @@ public class LessonPlanDto extends LessonPlanForm {
     public void setId(Long id) {
         this.id = id;
     }
-    
-    public String getStudyYearCode() {
-        return studyYearCode;
+
+    public StudyYearDto getStudyYear() {
+        return studyYear;
     }
 
-    public void setStudyYearCode(String studyYearCode) {
-        this.studyYearCode = studyYearCode;
+    public void setStudyYear(StudyYearDto studyYear) {
+        this.studyYear = studyYear;
     }
 
     public String getStudentGroupCode() {
@@ -170,6 +174,14 @@ public class LessonPlanDto extends LessonPlanForm {
         this.weekBeginningDates = weekBeginningDates;
     }
 
+    public List<StudyPeriodEventDto> getVacations() {
+        return vacations;
+    }
+
+    public void setVacations(List<StudyPeriodEventDto> vacations) {
+        this.vacations = vacations;
+    }
+
     public List<LessonPlanLegendDto> getLegends() {
         return legends;
     }
@@ -194,6 +206,14 @@ public class LessonPlanDto extends LessonPlanForm {
         this.lessonPlanCapacities = lessonPlanCapacities;
     }
 
+    public List<String> getVocationalContactCapacities() {
+        return vocationalContactCapacities;
+    }
+
+    public void setVocationalContactCapacities(List<String> vocationalContactCapacities) {
+        this.vocationalContactCapacities = vocationalContactCapacities;
+    }
+
     public static class LessonPlanModuleDto extends LessonPlanModuleForm {
 
         private String nameEt;
@@ -202,29 +222,35 @@ public class LessonPlanDto extends LessonPlanForm {
         private Long typeOrder;
         private Long curriculumVersionId;
         private Short orderNr;
+        private Integer previousHours;
+        private Boolean isPlanned;
 
         public static LessonPlanModuleDto of(LessonPlanModule lessonPlanModule, LessonPlanCapacityMapper capacityMapper) {
             LessonPlanModuleDto dto = new LessonPlanModuleDto();
             dto.setId(lessonPlanModule.getId());
-            setOccupationModuleValues(dto, lessonPlanModule.getCurriculumVersionOccupationModule());
-            dto.setTeacher(lessonPlanModule.getTeacher() != null ? AutocompleteResult.of(lessonPlanModule.getTeacher()) : null);
+            CurriculumVersionOccupationModule module = lessonPlanModule.getCurriculumVersionOccupationModule();
+            setOccupationModuleValues(dto, module);
+            dto.setTeacher(lessonPlanModule.getTeacher() != null? AutocompleteResult.of(lessonPlanModule.getTeacher())
+                    : (module.getTeacher() != null ? AutocompleteResult.of(module.getTeacher()) : null));
             dto.setJournals(lessonPlanModule.getJournalOccupationModuleThemes().stream().map(r -> r.getJournal()).distinct()
                     .map(r -> LessonPlanModuleJournalDto.of(lessonPlanModule.getLessonPlan(), r, capacityMapper))
                     .sorted(Comparator.comparing(r -> r.getNameEt(), String.CASE_INSENSITIVE_ORDER))
                     .collect(Collectors.toList()));
-            dto.setTotalHours(Integer.valueOf(lessonPlanModule.getCurriculumVersionOccupationModule().getCapacities()
-                    .stream().mapToInt(CurriculumVersionOccupationModuleCapacity::getHours).sum()));
-            dto.setTypeOrder(Long.valueOf(CurriculumUtil.vocationalModuleOrderNr(lessonPlanModule.getCurriculumVersionOccupationModule())));
-            dto.setCurriculumVersionId(EntityUtil.getId(lessonPlanModule.getCurriculumVersionOccupationModule().getCurriculumVersion()));
-            dto.setOrderNr(lessonPlanModule.getCurriculumVersionOccupationModule().getCurriculumModule().getOrderNr());
+            dto.setTotalHours(Integer.valueOf(module.getCapacities().stream()
+                    .mapToInt(CurriculumVersionOccupationModuleCapacity::getHours).sum()));
+            dto.setTypeOrder(Long.valueOf(CurriculumUtil.vocationalModuleOrderNr(module)));
+            dto.setCurriculumVersionId(EntityUtil.getId(module.getCurriculumVersion()));
+            dto.setOrderNr(module.getCurriculumModule().getOrderNr());
             return dto;
         }
 
         public static LessonPlanModuleDto of(CurriculumVersionOccupationModule occupationModule) {
             LessonPlanModuleDto dto = new LessonPlanModuleDto();
             setOccupationModuleValues(dto, occupationModule);
+            dto.setTeacher(occupationModule.getTeacher() != null ? AutocompleteResult.of(occupationModule.getTeacher()) : null);
             dto.setJournals(Collections.emptyList());
-            dto.setTotalHours(Integer.valueOf(0));
+            dto.setTotalHours(Integer.valueOf(occupationModule.getCapacities().stream()
+                    .mapToInt(CurriculumVersionOccupationModuleCapacity::getHours).sum()));
             dto.setTypeOrder(Long.valueOf(CurriculumUtil.vocationalModuleOrderNr(occupationModule)));
             dto.setCurriculumVersionId(EntityUtil.getId(occupationModule.getCurriculumVersion()));
             dto.setOrderNr(occupationModule.getCurriculumModule().getOrderNr());
@@ -286,6 +312,21 @@ public class LessonPlanDto extends LessonPlanForm {
             this.orderNr = orderNr;
         }
 
+        public Integer getPreviousHours() {
+            return previousHours;
+        }
+
+        public void setPreviousHours(Integer previousHours) {
+            this.previousHours = previousHours;
+        }
+
+        public Boolean getIsPlanned() {
+            return isPlanned;
+        }
+
+        public void setIsPlanned(Boolean isPlanned) {
+            this.isPlanned = isPlanned;
+        }
     }
 
     public static class LessonPlanModuleJournalDto extends LessonPlanModuleJournalForm {
@@ -422,12 +463,14 @@ public class LessonPlanDto extends LessonPlanForm {
 
         private final Long id;
         private final String nameEt;
+        private final AutocompleteResult module;
         private final BigDecimal credits;
         private final Map<String, Short> hours;
 
         public LessonPlanModuleJournalThemeDto(CurriculumVersionOccupationModuleTheme theme) {
             id = theme.getId();
             nameEt = theme.getNameEt();
+            module = AutocompleteResult.of(theme.getModule(), false);
             credits = theme.getCredits();
             hours = StreamUtil.toMap(r -> EntityUtil.getCode(r.getCapacityType()), r -> r.getHours(), theme.getCapacities());
         }
@@ -438,6 +481,10 @@ public class LessonPlanDto extends LessonPlanForm {
 
         public String getNameEt() {
             return nameEt;
+        }
+
+        public AutocompleteResult getModule() {
+            return module;
         }
 
         public BigDecimal getCredits() {
@@ -500,6 +547,7 @@ public class LessonPlanDto extends LessonPlanForm {
         private Map<String, Long> plannedLessonsByCapacity;
         private List<Long> studyLoadByWeek;
         private Map<String, List<Long>> studyLoadByWeekAndCapacity;
+        private List<LessonPlanTeacherLoadDto> subjectStudyLoads;
 
         public Long getId() {
             return id;
@@ -557,5 +605,12 @@ public class LessonPlanDto extends LessonPlanForm {
             this.studyLoadByWeekAndCapacity = studyLoadByWeekAndCapacity;
         }
 
+        public List<LessonPlanTeacherLoadDto> getSubjectStudyLoads() {
+            return subjectStudyLoads;
+        }
+
+        public void setSubjectStudyLoads(List<LessonPlanTeacherLoadDto> subjectStudyLoads) {
+            this.subjectStudyLoads = subjectStudyLoads;
+        }
     }
 }

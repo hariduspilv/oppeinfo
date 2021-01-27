@@ -1,12 +1,13 @@
 package ee.hitsa.ois.service;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -15,6 +16,9 @@ import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 
+import ee.hitsa.ois.enums.HigherModuleType;
+import ee.hitsa.ois.util.StudentUtil;
+import ee.hitsa.ois.web.dto.finalthesis.FinalThesisDtoContainer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -64,13 +68,41 @@ public class FinalThesisService {
     private static final String SEARCH_FROM = "from final_thesis ft"
             + " left join final_thesis_supervisor fts on fts.final_thesis_id = ft.id"
             + " join student s on ft.student_id = s.id"
-            + " join student_group sg on s.student_group_id = sg.id"
+            + " left join student_group sg on s.student_group_id = sg.id"
             + " join person p on s.person_id = p.id"
             + " join curriculum_version cv on s.curriculum_version_id = cv.id" 
             + " join curriculum c on cv.curriculum_id = c.id";
     private static final String SEARCH_SELECT = "ft.id as final_thesis_id, ft.theme_et, ft.theme_en, s.id as student_id, p.firstname," + 
             " p.lastname, p.idcode, string_agg(fts.firstname || ' ' || fts.lastname, ', ' order by fts.is_primary desc)," +
-            " cv.code as curriculum_version_code, c.name_et, c.name_en, sg.code as student_group_code, ft.inserted, ft.confirmed";
+            " cv.code as curriculum_version_code, c.name_et, c.name_en, sg.code as student_group_code, ft.inserted," +
+            " ft.confirmed, ft.status_code ft_status";
+
+    private static final String FINAL_THESIS_EXPECTED = "exists (select c.id from curriculum c"
+            + " join curriculum_version cv on cv.curriculum_id = c.id"
+            + " left join curriculum_version_hmodule cvhm on cvhm.curriculum_version_id = cv.id"
+            + " where cv.id = s.curriculum_version_id and"
+            + " (c.is_higher = false or (cvhm.is_minor_speciality = false and (cvhm.type_code = '" + HigherModuleType.KORGMOODUL_L.name() + "'"
+                + " and (s.curriculum_speciality_id is null or s.curriculum_speciality_id in ("
+                    + " select cs.id from curriculum_version_hmodule_speciality cvhs"
+                    + " join curriculum_version_speciality cvs on cvs.id = cvhs.curriculum_version_speciality_id"
+                    + " join curriculum_speciality cs on cs.id = cvs.curriculum_speciality_id"
+                    + " where cvhs.curriculum_version_hmodule_id = cvhm.id))))))";
+
+    private static final String NO_FINAL_EXAM_DECLARED = "not exists (select ds.id from student s2"
+            + " join curriculum_version cv2 on cv2.id = s2.curriculum_version_id"
+            + " join curriculum_version_hmodule cvhm2 on cvhm2.curriculum_version_id = cv2.id"
+            + " join curriculum_version_hmodule_subject cvhs on cvhs.curriculum_version_hmodule_id = cvhm2.id"
+            + " join subject_study_period ssp on ssp.subject_id = cvhs.subject_id"
+            + " join declaration_subject ds on ds.subject_study_period_id = ssp.id"
+            + " join declaration d on d.id = ds.declaration_id and d.student_id = s2.id"
+            + " where s2.id = s.id and cvhm2.type_code = '" + HigherModuleType.KORGMOODUL_F.name() +  "')";
+
+    private static final String EXISTING_FINAL_THESIS = "select ft.id from final_thesis ft where ft.student_id = s.id limit 1";
+    private static final String NO_FINAL_THESIS = "not exists (" + EXISTING_FINAL_THESIS + ")";
+
+    private static final String SPECIALITY_REQUIREMENT_MET = "case when (select count(cvs.id) from curriculum_version cv2 "
+            + "join curriculum_version_speciality cvs on cvs.curriculum_version_id = cv2.id "
+            + "where cv2.id = s.curriculum_version_id) > 1 then s.curriculum_speciality_id is not null else true end";
 
     public Page<FinalThesisSearchDto> search(HoisUserDetails user, @Valid FinalThesisSearchCommand criteria, Pageable pageable) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(SEARCH_FROM).sort(pageable);
@@ -139,43 +171,91 @@ public class FinalThesisService {
             dto.setStudentGroup(resultAsString(r, 11));
             dto.setInserted(resultAsLocalDate(r, 12));
             dto.setConfirmed(resultAsLocalDate(r, 13));
+            dto.setStatus(resultAsString(r, 14));
             //TODO: get rid of em.getReference ?
             dto.setCanBeEdited(Boolean.valueOf(FinalThesisUtil.canEdit(user, em.getReference(FinalThesis.class, dto.getId()))));
             return dto;
         });
     }
-    
-    public FinalThesisDto get(HoisUserDetails user, FinalThesis finalThesis) {
+
+    public FinalThesisDtoContainer get(HoisUserDetails user, FinalThesis finalThesis) {
+        FinalThesisDtoContainer container = new FinalThesisDtoContainer();
+        container.setFinalThesis(finalThesisDto(user, finalThesis));
+        container.setStudent(new FinalThesisStudentDto(finalThesis.getStudent()));
+        setFinalThesisRequirements(container, finalThesis.getStudent().getId());
+        return container;
+    }
+
+    private FinalThesisDto finalThesisDto(HoisUserDetails user, FinalThesis finalThesis) {
         FinalThesisDto dto = FinalThesisDto.of(finalThesis);
         dto.setCanBeEdited(Boolean.valueOf(FinalThesisUtil.canEdit(user, finalThesis)));
+        dto.setCanBeDeleted(Boolean.valueOf(FinalThesisUtil.canDelete(user, finalThesis)));
         dto.setCanBeConfirmed(Boolean.valueOf(FinalThesisUtil.canConfirm(user, finalThesis)));
-        
         if (user.isStudent()) {
             dto.getSupervisors().stream().filter(s -> s.getTeacher() != null).forEach(s -> s.setIdcode(null));
         }
         
         return dto;
     }
-    
-    public FinalThesis create(FinalThesisForm form) {
-        studentIsUnique(form.getStudent().getId());
-        
+
+    public FinalThesisDtoContainer studentFinalThesis(HoisUserDetails user, Long studentId) {
+        List<FinalThesis> theses = em.createQuery("select ft from FinalThesis ft"
+                + " where ft.student.id = ?1", FinalThesis.class)
+                .setParameter(1, user.getStudentId())
+                .setMaxResults(1).getResultList();
+
+        FinalThesisDtoContainer container = new FinalThesisDtoContainer();
+        if (!theses.isEmpty()) {
+            container.setFinalThesis(finalThesisDto(user, theses.get(0)));
+        }
+        container.setStudent(new FinalThesisStudentDto(em.getReference(Student.class, studentId)));
+        setFinalThesisRequirements(container, studentId);
+        return container;
+    }
+
+    private void setFinalThesisRequirements(FinalThesisDtoContainer container, Long studentId) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student s");
+        qb.requiredCriteria("s.id = :studentId", "studentId", studentId);
+        qb.parameter("studentStatusCodes", StudentStatus.STUDENT_STATUS_ACTIVE);
+        Object result = qb.select("s.status_code in (:studentStatusCodes) is_student_active, "
+                + FINAL_THESIS_EXPECTED + " is_final_thesis_expected, "
+                + NO_FINAL_EXAM_DECLARED + " no_final_exam_declared, "
+                + SPECIALITY_REQUIREMENT_MET + " speciality_requirement_met", em)
+                .setMaxResults(1).getResultList().get(0);
+
+        container.setIsStudentActive(resultAsBoolean(result, 0));
+        container.setFinalThesisExpected(resultAsBoolean(result, 1));
+        container.setNoFinalExamDeclaration(resultAsBoolean(result, 2));
+        container.setSpecialitySet(resultAsBoolean(result, 3));
+    }
+
+    public FinalThesis create(HoisUserDetails user, FinalThesisForm form) {
+        isFinalThesisStudentValid(form);
+
         FinalThesis finalThesis = EntityUtil.bindToEntity(form, new FinalThesis(), "student", "status", "supervisors");
         finalThesis.setStudent(EntityUtil.getOptionalOne(Student.class, form.getStudent(), em));
         finalThesis.setStatus(em.getReference(Classifier.class, FinalThesisStatus.LOPUTOO_STAATUS_S.name()));
-
         return save(finalThesis, form);
     }
-    
-    private void studentIsUnique(Long studentId) {
-        List<?> data = em.createNativeQuery("select ft.id from final_thesis ft where ft.student_id = ?1")
-        .setParameter(1, studentId).setMaxResults(1).getResultList();
-        
-        if (!data.isEmpty()) {
-            throw new ValidationFailedException("finalThesis.error.studentNotUnique");
-        }
+
+    private void isFinalThesisStudentValid(FinalThesisForm form) {
+        FinalThesisDtoContainer container = new FinalThesisDtoContainer();
+        setFinalThesisRequirements(container, form.getStudent().getId());
+
+        ValidationFailedException.throwIf(!Boolean.TRUE.equals(container.getIsStudentActive()),
+                "finalThesis.error.studentNotActive");
+        ValidationFailedException.throwIf(!Boolean.TRUE.equals(container.getFinalThesisExpected()),
+                "finalThesis.error.noFinalThesisModule");
+        ValidationFailedException.throwIf(!Boolean.TRUE.equals(container.getNoFinalExamDeclaration()),
+                "finalThesis.error.existsFinalExamDeclaration");
+        ValidationFailedException.throwIf(!Boolean.TRUE.equals(container.getSpecialitySet()),
+                "finalThesis.error.specialityNotSet");
     }
-    
+
+    public Map<String, Boolean> isFinalThesisStudentActive(FinalThesis finalThesis) {
+        return Collections.singletonMap("isActive", StudentUtil.isActive(finalThesis.getStudent()));
+    }
+
     public FinalThesis save(FinalThesis finalThesis, FinalThesisForm form) {
         EntityUtil.bindToEntity(form, finalThesis, classifierRepository, "student", "status", "supervisors", "draft", "cercs");
         finalThesis.setDraft(Boolean.TRUE.equals(form.getHasDraft()) ? form.getDraft() : null);
@@ -238,22 +318,26 @@ public class FinalThesisService {
             supervisor.setPhone(teacher.getPhone());
         }
     }
-    
+
+    public void delete(HoisUserDetails user, FinalThesis finalThesis) {
+        EntityUtil.setUsername(user.getUsername(), em);
+        EntityUtil.deleteEntity(finalThesis, em);
+    }
+
     public List<AutocompleteResult> students(HoisUserDetails user, SearchCommand lookup) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student s inner join person p on s.person_id = p.id")
-                .sort("p.lastname", "p.firstname");
-        
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student s "
+                + "join person p on s.person_id = p.id");
+
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.requiredCriteria("s.status_code in :statusCodes", "statusCodes", StudentStatus.STUDENT_STATUS_ACTIVE);
         qb.requiredCriteria("s.type_code != :studentType", "studentType", StudentType.OPPUR_K.name());
+        qb.filter(NO_FINAL_THESIS);
+        qb.filter(FINAL_THESIS_EXPECTED);
+        qb.filter(NO_FINAL_EXAM_DECLARED);
+        qb.filter(SPECIALITY_REQUIREMENT_MET);
         qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"), "name", lookup.getName());
-        qb.filter("exists (select c.id from curriculum c "
-                + "join curriculum_version cv on cv.curriculum_id = c.id "
-                + "left join curriculum_version_hmodule cvh on cvh.curriculum_version_id = cv.id "
-                + "where cv.id = s.curriculum_version_id "
-                + "and (c.is_higher = false or cvh.type_code = 'KORGMOODUL_L'))");
-        qb.filter("s.id not in (select ft.student_id from final_thesis ft)");
-        
+
+        qb.sort("p.lastname", "p.firstname");
         List<?> data = qb.select("s.id, p.firstname, p.lastname, p.idcode", em).setMaxResults(20).getResultList();
         return StreamUtil.toMappedList(r -> {
             String name = PersonUtil.fullnameAndIdcode(resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 3));
@@ -272,33 +356,11 @@ public class FinalThesisService {
     }
     
     public FinalThesis confirm(HoisUserDetails user, FinalThesis finalThesis, FinalThesisForm form) {
+        isFinalThesisStudentValid(form);
+
         finalThesis.setStatus(em.getReference(Classifier.class,  FinalThesisStatus.LOPUTOO_STAATUS_K.name()));
         finalThesis.setConfirmed(LocalDateTime.now());
         finalThesis.setConfirmedBy(user.getUsername());
         return save(finalThesis, form);
     }
-    
-    public Map<String, Object> studentFinalThesis(HoisUserDetails user) {
-        List<?> finalThesisRequired = em.createNativeQuery("select s.id from student s " + 
-                "join curriculum_version cv on cv.id = s.curriculum_version_id " + 
-                "join curriculum c on c.id = cv.curriculum_id " + 
-                "left join curriculum_version_hmodule cvh on cvh.curriculum_version_id = cv.id " + 
-                "where s.id = ?1 and (c.is_higher = false or cvh.type_code = 'KORGMOODUL_L')")
-                .setParameter(1, user.getStudentId()).getResultList();
-        Boolean required = !finalThesisRequired.isEmpty() ? Boolean.TRUE : Boolean.FALSE;
-        
-        List<?> existingThesis = em.createNativeQuery("select ft.id from final_thesis ft where ft.student_id = ?1")
-        .setParameter(1, user.getStudentId()).setMaxResults(1).getResultList();
-        Long finalThesisId = !existingThesis.isEmpty() ? resultAsLong(existingThesis.get(0), 0) : null;
-        
-        Map<String, Object> studentFinalThesis = new HashMap<>();
-        studentFinalThesis.put("finalThesisRequired", required);
-        studentFinalThesis.put("finalThesis", finalThesisId);
-        return studentFinalThesis;
-    }
-
-    public FinalThesisStudentDto student(Student student) {
-        return new FinalThesisStudentDto(student);
-    }
-    
 }

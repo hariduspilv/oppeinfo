@@ -1,3 +1,13 @@
+<div ng-if="auth.isStudent()" ng-controller="FinalThesisEditController">
+  <div ng-if="thesis.id" ng-include="'finalThesis/final.thesis.view.html'"></div>
+  <div ng-if="!thesis.id">
+    <div ng-if="!allRequirementsMet" class="ois-form-layout-padding ois-form-layout" ng-cloak>
+      <div ng-include="'finalThesis/final.thesis.warnings.tmpl.html'"></div>
+    </div>
+    <div ng-if="allRequirementsMet" ng-include="'finalThesis/final.thesis.edit.html'"></div>
+  </div>
+</div>
+
 <div ng-if="auth.isAdmin() || auth.isLeadingTeacher() || auth.isTeacher()" class="ois-form-layout-padding ois-form-layout" ng-cloak>
   <div flex>
     <fieldset>
@@ -111,8 +121,11 @@
             <td md-cell>{{row.inserted | hoisDate}}</td>
             <td md-cell>{{row.confirmed | hoisDate}}</td>
             <td md-cell>
-              <div ng-if="row.canBeEdited">
+              <div ng-if="row.canBeEdited && row.status.code !== 'LOPUTOO_STAATUS_K'">
                 <md-button md-no-ink class="md-primary change-button" ng-href="#/finalThesis/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
+              </div>
+              <div ng-if="!row.canBeEdited || row.status.code === 'LOPUTOO_STAATUS_K'">
+                <md-button md-no-ink class="md-primary change-button" ng-href="#/finalThesis/{{::row.id}}/view">{{'main.button.view' | translate}}</md-button>
               </div>
             </td>
           </tr>
@@ -123,13 +136,4 @@
       md-on-paginate="loadData" md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
       md-page-select></md-table-pagination>
   </div>
-</div>
-
-<div ng-if="noFinalThesisModule" layout-padding>
-  <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
-    <div md-colors="{color: 'accent'}">
-      <md-icon md-colors="{color: 'accent'}" md-font-set="material-icons">info_outline</md-icon>
-      <span>{{'finalThesis.error.noFinalThesisModule' | translate}}</span>
-    </div>
-  </md-whiteframe>
 </div>

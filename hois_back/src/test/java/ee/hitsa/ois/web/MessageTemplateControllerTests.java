@@ -20,8 +20,8 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import ee.hitsa.ois.TestConfigurationService;
 import ee.hitsa.ois.enums.Role;
-import ee.hitsa.ois.web.commandobject.MessageTemplateForm;
-import ee.hitsa.ois.web.dto.MessageTemplateDto;
+import ee.hitsa.ois.web.commandobject.message.MessageTemplateForm;
+import ee.hitsa.ois.web.dto.message.MessageTemplateDto;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)

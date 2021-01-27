@@ -69,16 +69,48 @@
                 </md-select>
               </td>
               <td md-cell ng-repeat="result in record.studentResults | filter: filterStudentResults(student)">
-                <md-input-container ng-if="result.isText">
-                  <input ng-model="result.pointsTxt" type="text" md-maxlength="10"
-                  aria-label="{{'midtermTask.pointsTxt' | translate}}"
-                  ng-disabled="!student.studentResultCanBeChanged || moodleTasks[result.midtermTask]">
-                </md-input-container>
-                <md-input-container ng-if="!result.isText">
-                  <input ng-model="result.points" type="number" min="0" max="{{result.maxPoints}}" pattern="^\d+(\.\d{1,2})?$"
-                  aria-label="{{'midtermTask.points' | translate}}"
-                  ng-disabled="!student.studentResultCanBeChanged || moodleTasks[result.midtermTask]">
-                </md-input-container>
+                <div layout="column">
+                  <div layout="row" ng-repeat="history in result.history" style="min-width: 80px;">
+                    <md-input-container ng-if="history.isText">
+                      <input ng-model="history.pointsTxt" type="text" md-maxlength="10"
+                             aria-label="{{'midtermTask.pointsTxt' | translate}}"
+                             ng-disabled="history.id" ng-required="!history.id">
+                      <md-tooltip md-direction="right" ng-if="history.changed">{{history.changed | hoisDateTime}}</md-tooltip>
+                    </md-input-container>
+                    <md-input-container ng-if="!history.isText" style="min-width: 80px;">
+                      <input ng-model="history.points" type="number" min="0" max="{{history.id ? 999 : result.maxPoints}}" pattern="^\d+(\.\d{1,2})?$"
+                             aria-label="{{'midtermTask.points' | translate}}"
+                             ng-disabled="history.id" ng-required="!history.id">
+                      <md-tooltip md-direction="right" ng-if="history.changed">{{history.changed | hoisDateTime}}</md-tooltip>
+                    </md-input-container>
+                  </div>
+                  <div layout="row">
+                    <md-input-container ng-if="result.isText" style="min-width: 80px;" flex>
+                      <input ng-model="result.pointsTxt" type="text" md-maxlength="10"
+                             aria-label="{{'midtermTask.pointsTxt' | translate}}"
+                             ng-disabled="!student.studentResultCanBeChanged || moodleTasks[result.midtermTask]"
+                             ng-required="result.history.length > 0">
+                      <md-tooltip md-direction="right" ng-if="result.changed">{{result.changed | hoisDateTime}}</md-tooltip>
+                    </md-input-container>
+                    <md-input-container ng-if="!result.isText" style="min-width: 80px;" flex>
+                      <input ng-model="result.points" type="number" min="0" max="{{result.maxPoints}}" pattern="^\d+(\.\d{1,2})?$"
+                             aria-label="{{'midtermTask.points' | translate}}"
+                             ng-disabled="!student.studentResultCanBeChanged || moodleTasks[result.midtermTask]"
+                             ng-required="result.history.length > 0">
+                      <md-tooltip md-direction="right" ng-if="result.changed">{{result.changed | hoisDateTime}}</md-tooltip>
+                    </md-input-container>
+                    <div ng-if="student.studentResultCanBeChanged && !moodleTasks[result.midtermTask]" flex layout="row">
+                      <md-button ng-if="canAddResult(result)" style="min-width: 0; min-height: 0;" ng-click="addResult(result)">
+                        <md-icon class="md-primary md-hue-2" md-font-set="material-icons">add</md-icon>
+                        <md-tooltip>{{'midtermTask.addResult' | translate}}</md-tooltip>
+                      </md-button>
+                      <md-button ng-if="canRemoveResult(result)" style="min-width: 0; min-height: 0; margin: 6px 0" ng-click="removeResult(result)">
+                        <md-icon class="md-primary md-hue-2" md-font-set="material-icons">remove</md-icon>
+                        <md-tooltip>{{'midtermTask.removeResult' | translate}}</md-tooltip>
+                      </md-button>
+                    </div>
+                  </div>
+                </div>
               </td>
               <td md-cell>
                 <table>
@@ -155,6 +187,10 @@
   table.md-table th.md-column:last-child {
     padding-right: 90px;
     padding-left: 100px;
+  }
+
+  table.md-table md-input-container {
+    margin-bottom: 0;
   }
 
 </style>

@@ -38,26 +38,30 @@
           </div>
         </div>
 
-        <div layout="row" layout-sm="column" layout-xs="column"  >
+        <div layout="row" layout-sm="column" layout-xs="column">
             <md-input-container flex="100">
               <label class="textInput">{{'main.status' | translate}}</label>
               <hois-classifier-select multiple ng-model="criteria.status" model-value-attr="code" main-classifier-code="AVALDUS_STAATUS"></hois-classifier-select>
             </md-input-container>
         </div>
 
-        <div layout="row" layout-sm="column" layout-xs="column"  >
+        <div layout="row" layout-sm="column" layout-xs="column">
             <md-input-container flex="100">
               <label class="textInput">{{'application.studentName' | translate}}</label>
               <input ng-model="criteria.studentName" type="text" md-maxlength="255">
             </md-input-container>
         </div>
 
-        <div layout="row" layout-sm="column" layout-xs="column"  >
+        <div layout="row" layout-sm="column" layout-xs="column">
             <md-input-container flex="100">
               <label class="textInput">{{'application.studentIdCode' | translate}}</label>
               <input ng-model="criteria.studentIdCode" type="text" minlength="11" md-maxlength="11">
             </md-input-container>
         </div>
+
+        <hois-autocomplete flex ng-model="criteria.studentGroups" ha-attribute="id"  ha-controller="directiveControllers"
+                method="studentgroups" name="studentGroups" label="{{'application.studentGroup'}}" multiple
+                additional-query-params="{userId: auth.isLeadingTeacher() ? auth.user : null}" ></hois-autocomplete>
 
 
         <div layout="row" layout-xs="column">

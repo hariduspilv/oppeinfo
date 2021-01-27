@@ -15,6 +15,9 @@ import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 
+import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.domain.timetable.TimetableEventStudent;
+import ee.hitsa.ois.enums.StudentStatus;
 import org.apache.commons.lang.StringUtils;
 
 import ee.hitsa.ois.domain.Classifier;
@@ -51,6 +54,7 @@ public class AscTimetableImport extends AbstractTimetableImport<AscTimetable, As
 
     private Map<String, AscPeriod> mappedPeriods;
     private Map<String, SimpleEntry<AscClass, StudentGroup>> mappedStudentGroups;
+    private Map<String, SimpleEntry<AscClass, Student>> mappedStudents;
     private Map<String, SimpleEntry<AscTeacher, Teacher>> mappedTeachers;
     private Map<String, SimpleEntry<AscClassroom, Room>> mappedRooms;
     private Set<TimetableImportMessage> messages;
@@ -93,7 +97,7 @@ public class AscTimetableImport extends AbstractTimetableImport<AscTimetable, As
     }
     
     private boolean containsNonstandardCharset(String value) {
-        return value.toUpperCase().matches("^.*[ŽŠÖÜÕÄ].*$");
+        return value.toUpperCase().matches("^.*[ŽŠÖÜÕÄÉ].*$");
     }
     
     private Set<String> modifyFullname(String fullname) {
@@ -106,7 +110,8 @@ public class AscTimetableImport extends AbstractTimetableImport<AscTimetable, As
             {"Ö", "O"},
             {"Ä", "A"},
             {"Ü", "U", "Y"},
-            {"Õ", "O", "6"}
+            {"Õ", "O", "6"},
+			{"É", "E"}
         };
         
         combination(value, mapping, result, 0);
@@ -137,34 +142,87 @@ public class AscTimetableImport extends AbstractTimetableImport<AscTimetable, As
         // separated by comma, not space which @XmlList supports)
         mappedPeriods = data.getPeriods().stream().collect(Collectors.toMap(AscPeriod::getPeriod, p -> p, (o, n) -> o));
 
-        /* Student Groups */
-        
-        Map<String, AscClass> mappedAscStudentGroups = data.getClasses().stream()
-                .filter(o -> !StringUtils.isBlank(o.getName()))
-                .collect(Collectors.toMap(AscClass::getId, o -> o, (o, n) -> o));
-        Set<String> sgNames = mappedAscStudentGroups.values().stream().filter(Objects::nonNull).map(cl -> cl.getName())
-                .filter(Objects::nonNull).map(name -> name.trim().toUpperCase()).collect(Collectors.toSet());
+        if (Boolean.TRUE.equals(dto.getIsIndividual())) {
+            /* Students */
+            Map<String, AscClass> mappedAscStudents = data.getClasses().stream()
+                    .filter(o -> !StringUtils.isBlank(o.getName()))
+                    .collect(Collectors.toMap(AscClass::getId, o -> o, (o, n) -> o));
+            Set<String> sgStudentNames = mappedAscStudents.values().stream().filter(Objects::nonNull).map(cl -> cl.getName())
+                    .filter(Objects::nonNull).map(name -> name.trim().toUpperCase()).collect(Collectors.toSet());
 
-        Map<String, Set<StudentGroup>> mappedStudentGroupsByName = sgNames.isEmpty() ? Collections.emptyMap()
-                : em.createQuery("select sg from StudentGroup sg where sg.school.id = ?1 and upper(sg.code) in (?2)",
-                        StudentGroup.class).setParameter(1, school.getId()).setParameter(2, sgNames).getResultList()
-                        .stream().collect(Collectors.groupingBy(sg -> sg.getCode().toUpperCase(),
-                                Collectors.mapping(sg -> sg, Collectors.toSet())));
+            Map<String, Set<Student>> mappedStudentsByName = new HashMap<>();
+            if (!sgStudentNames.isEmpty())
+            {
+	            List<Student> students = em.createQuery("select s from Student s "
+	                    + "join fetch s.studentGroup sg "
+	                    + "join fetch s.person p "
+	                    + "where s.school.id = ?1 and s.status.code in (?2) "
+	                    /*+ "and upper(concat(s.studentGroup.code, '-', s.person.lastname)) in (?3)"*/, Student.class)
+	                    .setParameter(1, school.getId())
+	                    .setParameter(2, StudentStatus.STUDENT_STATUS_ACTIVE)
+	                    /*.setParameter(3, sgStudentNames)*/
+	                    .getResultList();
+	            Map<String, Set<Student>> additionalmappedStudents = new HashMap<>();
+	            additionalmappedStudents = students.stream().collect(Collectors.groupingBy(
+                        s -> (s.getStudentGroup().getCode() + "-" + s.getPerson().getLastname()).toUpperCase(),
+                        Collectors.mapping(s -> s, Collectors.toSet())));
+	            mappedStudentsByName.putAll(additionalmappedStudents);	
+	            //collect also group+name+idcode
+	            Map<String, Set<Student>> mappedStudentsByIdcode=students.stream().collect(Collectors.groupingBy(
+	                    s -> (s.getStudentGroup().getCode() + "-" + s.getPerson().getLastname() +(s.getPerson().getIdcode().isEmpty() ? s.getPerson().getUniqueCode(): " "+s.getPerson().getIdcode()) ).toUpperCase(),
+	                    Collectors.mapping(s -> s, Collectors.toSet())));
+	            mappedStudentsByName.putAll(mappedStudentsByIdcode);	
+            }
 
-        mappedStudentGroups = mappedAscStudentGroups.entrySet().stream()
-                .collect(Collectors.toMap(e -> e.getKey(), (e) -> {
-                    String key = e.getValue().getName().trim().toUpperCase();
-                    Set<StudentGroup> foundGroups = mappedStudentGroupsByName.get(key);
-                    return new SimpleEntry<>(e.getValue(),
-                            foundGroups != null ? foundGroups.stream().findAny().orElse(null) : null);
+           Map<String, Set<Student>> additionalmappedStudents = new HashMap<>();
+           mappedStudentsByName.entrySet().stream()
+                .filter(e -> containsNonstandardCharset(e.getKey()))
+                .forEach(e -> {
+                    Set<String> modifiedNames = modifyFullname(e.getKey());
+                    additionalmappedStudents.putAll(modifiedNames.stream()
+                            .collect(Collectors.toMap(n -> n, n -> e.getValue(), (o, n) -> o)));
+                });
+			mappedStudentsByName.putAll(additionalmappedStudents);	           
+
+		   mappedStudents = mappedAscStudents.entrySet().stream().collect(Collectors.toMap(e -> e.getKey(), (e) -> {
+                String key = e.getValue().getName().trim().toUpperCase();
+                Set<Student> foundStudents = mappedStudentsByName.get(key);
+                return new SimpleEntry<>(e.getValue(),
+                        foundStudents != null ? foundStudents.stream().findAny().orElse(null) : null);
                 }, (o, n) -> o));
-        
+				
+			
+			
+			
+        } else {
+            /* Student Groups */
+            Map<String, AscClass> mappedAscStudentGroups = data.getClasses().stream()
+                    .filter(o -> !StringUtils.isBlank(o.getName()))
+                    .collect(Collectors.toMap(AscClass::getId, o -> o, (o, n) -> o));
+            Set<String> sgNames = mappedAscStudentGroups.values().stream().filter(Objects::nonNull).map(cl -> cl.getName())
+                    .filter(Objects::nonNull).map(name -> name.trim().toUpperCase()).collect(Collectors.toSet());
+
+            Map<String, Set<StudentGroup>> mappedStudentGroupsByName = sgNames.isEmpty() ? Collections.emptyMap()
+                    : em.createQuery("select sg from StudentGroup sg where sg.school.id = ?1 and upper(sg.code) in (?2)",
+                    StudentGroup.class).setParameter(1, school.getId()).setParameter(2, sgNames).getResultList()
+                    .stream().collect(Collectors.groupingBy(sg -> sg.getCode().toUpperCase(),
+                            Collectors.mapping(sg -> sg, Collectors.toSet())));
+
+            mappedStudentGroups = mappedAscStudentGroups.entrySet().stream()
+                    .collect(Collectors.toMap(e -> e.getKey(), (e) -> {
+                        String key = e.getValue().getName().trim().toUpperCase();
+                        Set<StudentGroup> foundGroups = mappedStudentGroupsByName.get(key);
+                        return new SimpleEntry<>(e.getValue(),
+                                foundGroups != null ? foundGroups.stream().findAny().orElse(null) : null);
+                    }, (o, n) -> o));
+        }
+
         /* Teachers */
-        
+
         Map<String, AscTeacher> mappedAscTeachers = data.getTeachers().stream()
-                .filter(o -> !StringUtils.isBlank(o.getName()))
+                .filter(o -> !StringUtils.isBlank(o.getFullname()))
                 .collect(Collectors.toMap(AscTeacher::getId, o -> o, (o, n) -> o));
-        Set<String> tNames = mappedAscTeachers.values().stream().filter(Objects::nonNull).map(cl -> cl.getName())
+        Set<String> tNames = mappedAscTeachers.values().stream().filter(Objects::nonNull).map(AscTeacher::getFullname)
                 .filter(Objects::nonNull).map(name -> name.trim().toUpperCase()).collect(Collectors.toSet());
 
         Map<String, Set<Teacher>> mappedTeachersByName = tNames.isEmpty() ? Collections.emptyMap()
@@ -185,7 +243,7 @@ public class AscTimetableImport extends AbstractTimetableImport<AscTimetable, As
         mappedTeachersByName.putAll(additionalTeacherByModifiedName);
         
         mappedTeachers = mappedAscTeachers.entrySet().stream().collect(Collectors.toMap(e -> e.getKey(), (e) -> {
-            String key = e.getValue().getName().trim().toUpperCase();
+            String key = e.getValue().getFullname().trim().toUpperCase();
             Set<Teacher> foundTeachers = mappedTeachersByName.get(key);
             return new SimpleEntry<>(e.getValue(),
                     foundTeachers != null ? foundTeachers.stream().findAny().orElse(null) : null);
@@ -229,6 +287,8 @@ public class AscTimetableImport extends AbstractTimetableImport<AscTimetable, As
             return;
         }
 
+        Set<String> notExistsStudent = new LinkedHashSet<>();
+        List<Student> students = new ArrayList<>();
         Set<String> notExistsGroup = new LinkedHashSet<>();
         List<StudentGroup> studentGroups = new ArrayList<>();
         Set<String> notExistsTeacher = new LinkedHashSet<>();
@@ -237,17 +297,31 @@ public class AscTimetableImport extends AbstractTimetableImport<AscTimetable, As
         List<Room> rooms = new ArrayList<>();
         
         for (String id : lesson.getClasses()) {
-            SimpleEntry<AscClass, StudentGroup> entry = mappedStudentGroups.get(id);
-            if (entry == null || entry.getKey() == null || entry.getKey().getName() == null) {
-                notExistsGroup.add(id);
-                continue;
+            if (Boolean.TRUE.equals(dto.getIsIndividual())) {
+                SimpleEntry<AscClass, Student> entry = mappedStudents.get(id);
+                if (entry == null || entry.getKey() == null || entry.getKey().getName() == null) {
+                    notExistsStudent.add(id);
+                    continue;
+                }
+                String name = entry.getKey().getName();
+                if (entry.getValue() == null) {
+                    notExistsStudent.add(name);
+                    continue;
+                }
+                students.add(entry.getValue());
+            } else {
+                SimpleEntry<AscClass, StudentGroup> entry = mappedStudentGroups.get(id);
+                if (entry == null || entry.getKey() == null || entry.getKey().getName() == null) {
+                    notExistsGroup.add(id);
+                    continue;
+                }
+                String name = entry.getKey().getName();
+                if (entry.getValue() == null) {
+                    notExistsGroup.add(name);
+                    continue;
+                }
+                studentGroups.add(entry.getValue());
             }
-            String name = entry.getKey().getName();
-            if (entry.getValue() == null) {
-                notExistsGroup.add(name);
-                continue;
-            }
-            studentGroups.add(entry.getValue());
         }
 
         for (String id : lesson.getTeachers()) {
@@ -278,7 +352,7 @@ public class AscTimetableImport extends AbstractTimetableImport<AscTimetable, As
             rooms.add(entry.getValue());
         }
 
-        if (studentGroups.isEmpty() && teachers.isEmpty() && rooms.isEmpty()) {
+        if (students.isEmpty() && studentGroups.isEmpty() && teachers.isEmpty() && rooms.isEmpty()) {
             messages.add(new TimetableImportMessage("timetable.importDialog.messages.notFoundEverything",
                     generateCardErrorParameters(card), TimetableImportMessage.ErrorLevel.ERROR, Boolean.FALSE));
             return;
@@ -287,13 +361,24 @@ public class AscTimetableImport extends AbstractTimetableImport<AscTimetable, As
         Map<String, Object> params;
         TimetableImportMessage message;
         String uniid = UUID.randomUUID().toString();
-        if (!notExistsGroup.isEmpty()) {
-            params = generateCardErrorParameters(card);
-            params.put("nfGroups", notExistsGroup);
-            message = new TimetableImportMessage("timetable.importDialog.messages.notFoundGroup", params,
-                    TimetableImportMessage.ErrorLevel.WARNING, Boolean.FALSE);
-            message.setUniid(uniid);
-            messages.add(message);
+        if (Boolean.TRUE.equals(dto.getIsIndividual())) {
+            if (!notExistsStudent.isEmpty()) {
+                params = generateCardErrorParameters(card);
+                params.put("nfStudents", notExistsStudent);
+                message = new TimetableImportMessage("timetable.importDialog.messages.notFoundStudent", params,
+                        TimetableImportMessage.ErrorLevel.WARNING, Boolean.FALSE);
+                message.setUniid(uniid);
+                messages.add(message);
+            }
+        } else {
+            if (!notExistsGroup.isEmpty()) {
+                params = generateCardErrorParameters(card);
+                params.put("nfGroups", notExistsGroup);
+                message = new TimetableImportMessage("timetable.importDialog.messages.notFoundGroup", params,
+                        TimetableImportMessage.ErrorLevel.WARNING, Boolean.FALSE);
+                message.setUniid(uniid);
+                messages.add(message);
+            }
         }
         if (!notExistsTeacher.isEmpty()) {
             params = generateCardErrorParameters(card);
@@ -335,6 +420,13 @@ public class AscTimetableImport extends AbstractTimetableImport<AscTimetable, As
         eventTime.setEnd(event.getEnd());
         eventTime.setTimetableEvent(event);
         event.getTimetableEventTimes().add(eventTime);
+
+        for (Student s : students) {
+            TimetableEventStudent tes = new TimetableEventStudent();
+            tes.setStudent(s);
+            tes.setTimetableEventTime(eventTime);
+            eventTime.getTimetableEventStudents().add(tes);
+        }
 
         for (StudentGroup sg : studentGroups) {
             TimetableEventStudentGroup ttsg = new TimetableEventStudentGroup();

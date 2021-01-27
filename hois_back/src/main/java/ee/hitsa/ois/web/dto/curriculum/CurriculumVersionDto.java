@@ -3,7 +3,6 @@ package ee.hitsa.ois.web.dto.curriculum;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -18,16 +17,15 @@ import ee.hitsa.ois.enums.Language;
 import org.hibernate.validator.constraints.NotBlank;
 
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
-import ee.hitsa.ois.enums.HigherModuleType;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.CurriculumVersionYearCapacitiesUtil;
 import ee.hitsa.ois.util.EntityUtil;
-import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.web.dto.InsertedChangedVersionDto;
+import ee.hitsa.ois.web.dto.curriculumVersion.CurriculumVersionNominalCapacityDto;
 
 public class CurriculumVersionDto extends InsertedChangedVersionDto {
 
@@ -75,6 +73,8 @@ public class CurriculumVersionDto extends InsertedChangedVersionDto {
     private Set<Long> specialitiesReferenceNumbers;
     
     private List<BigDecimal> yearCapacities;
+    
+    private List<CurriculumVersionNominalCapacityDto> nominalCapacities;
     
     private Boolean canChange;
     private Boolean canConfirm;
@@ -309,5 +309,13 @@ public class CurriculumVersionDto extends InsertedChangedVersionDto {
 
     public void setCanDelete(Boolean canDelete) {
         this.canDelete = canDelete;
+    }
+
+    public List<CurriculumVersionNominalCapacityDto> getNominalCapacities() {
+        return nominalCapacities;
+    }
+
+    public void setNominalCapacities(List<CurriculumVersionNominalCapacityDto> nominalCapacities) {
+        this.nominalCapacities = nominalCapacities;
     }
 }

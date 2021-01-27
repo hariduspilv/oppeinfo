@@ -29,6 +29,12 @@ angular.module('hitsaOis')
     var GRAND_PERIOD_TOTAL = 'grandPeriodTotal';
     var GRAND_WEEK_TOTAL = 'grandWeekTotal';
     var GRAND_TOTAL = 'grandTotal';
+    var GRAND_PERIOD_CREDITS_TOTAL = 'grandPeriodCreditsTotal';
+    var GRAND_WEEK_CREDITS_TOTAL = 'grandWeekCreditsTotal';
+    var GRAND_CREDITS_TOTAL = 'grandCreditsTotal';
+    var GRAND_PERIOD_CONTACT_TOTAL = 'grandPeriodContactTotal';
+    var GRAND_WEEK_CONTACT_TOTAL = 'grandWeekContactTotal';
+    var GRAND_CONTACT_TOTAL = 'grandContactTotal';
 
     // CLASSES
     var BUTTON = 'md-primary change-button';
@@ -36,10 +42,13 @@ angular.module('hitsaOis')
     var CROSS = 'cross';
     var DIVIDER = 'dividerBorder';
     var FIX = 'fix';
+    var MODULE_ROW = 'lessonplan-module-row';
     var TEACHER_STUDY_LOAD = 'lessonplan-teacher-load';
     var TEACHER_LOAD_LABEL = 'lessonplan-teacher-load-label';
     var TEACHER_CAPACITIES = 'material-icons pointer';
     var TOTAL_ROW = 'lessonplan-total-row';
+
+    var VACATION_COLOR = '#eee';
 
     lessonPlanTableService.generateLessonPlan = function (scope, isView) {
       var table = document.getElementById('lessonplan-table');
@@ -51,6 +60,10 @@ angular.module('hitsaOis')
       var journalDialogFunctions = [];
       for (var moduleIndex = 0; moduleIndex < scope.record.modules.length; moduleIndex++) {
         var module = scope.record.modules[moduleIndex];
+        if (scope.formState.showPlannedModules && !module.isPlanned) {
+          continue;
+        }
+
         body.appendChild(moduleRow(scope, module, moduleIndex, isView));
         body.appendChild(moduleHoursRow(scope, module));
 
@@ -96,8 +109,11 @@ angular.module('hitsaOis')
               for (var teacherIndex = 0; teacherIndex < journal.teachers.length; teacherIndex++) {
                 var teacher = journal.teachers[teacherIndex];
                 var teacherDiv = document.createElement('div');
-                teacherDiv.title = $translate.instant('lessonplan.teacherLoad',
-                  getTeacherLoad(scope.formState.studyPeriods, scope.formState.teachers, teacher.teacher.id));
+                var teacherLoad = getTeacherLoad(scope.formState.studyPeriods, scope.formState.teachers, teacher.teacher.id);
+                if (teacherLoad.unplannedLessons < 0) {
+                  teacherDiv.style.color = 'red';
+                }
+                teacherDiv.title = $translate.instant('lessonplan.teacherLoad', teacherLoad);
                 teacherDiv.innerHTML = '';
                 teacherDiv.innerHTML = teacher.teacher.nameEt;
                 teachersGroupsSpan.appendChild(teacherDiv);
@@ -182,6 +198,9 @@ angular.module('hitsaOis')
                   }
                   ctHourColumn.appendChild(ctHourInput);
 
+                  if (week.hasVacation) {
+                    ctHourColumn.style.backgroundColor = VACATION_COLOR;
+                  }
                   ctRow.appendChild(ctHourColumn);
                 }
               }
@@ -224,8 +243,11 @@ angular.module('hitsaOis')
         }
       }
 
-      addTotalRows(scope, body);
       table.appendChild(body);
+
+      var footer = document.createElement('tfoot');
+      addTotalRows(scope, footer);
+      table.appendChild(footer);
 
       table = $compile(table)(scope);
       scope.$broadcast('refreshFixedColumns');
@@ -292,9 +314,9 @@ angular.module('hitsaOis')
     }
 
     function getTeacherStudyLoad(teachers, teacherId) {
-      return teachers.filter(function (teacher) {
+      return teachers.find(function (teacher) {
         return teacher.id === teacherId;
-      })[0];
+      });
     }
 
     function newJournalUrl(lessonPlanId, module) {
@@ -323,14 +345,14 @@ angular.module('hitsaOis')
         var scheduleLoad = teacher.isStudyPeriodScheduleLoad ? teacher.scheduleLoad * studyPeriods.length : teacher.scheduleLoad;
         return {
           scheduleLoad: scheduleLoad,
-          unplannedLessons: scheduleLoad - teacher.plannedLessons > 0 ? scheduleLoad - teacher.plannedLessons : 0
+          unplannedLessons: scheduleLoad - teacher.plannedLessons
         };
       }
       return null;
     }
 
-    function totalColumnValue(value) {
-      return value ? $filter('hoisNumber')(value, 1) : 0;
+    function totalColumnValue(value, decimals) {
+      return value ? $filter('hoisNumber')(value, decimals ? decimals : 1) : 0;
     }
 
     function capacityTypeValueColumn(capacityType) {
@@ -373,14 +395,14 @@ angular.module('hitsaOis')
         weeksRow.appendChild(moduleLengthColumn());
 
         if (!scope.atLeastOneShownPeriod) {
-          studyPeriodsRow.appendChild(noShownPeriodColumn());
+          weeksRow.appendChild(noShownPeriodColumn());
         }
 
         for (var weekIndex = 0; weekIndex < scope.formState.weekNrs.length; weekIndex++) {
           var week = scope.formState.weekNrs[weekIndex];
           if (week.show) {
             var weekColumn = document.createElement("th");
-            weekColumn.title = $filter('hoisDate')(scope.formState.weekBeginningDates[weekIndex]);
+            weekColumn.title = $filter('hoisDate')(week.start);
             weekColumn.innerHTML = week.nr;
             weekColumn.classList.add(CENTER);
             if (week.endOfPeriod) {
@@ -390,6 +412,8 @@ angular.module('hitsaOis')
             var legend = getLegendByWeek(scope, week.nr);
             if (legend) {
               weekColumn.style.backgroundColor = legend;
+            } else if (week.hasVacation) {
+              weekColumn.style.backgroundColor = VACATION_COLOR;
             }
             weeksRow.appendChild(weekColumn);
           }
@@ -401,17 +425,18 @@ angular.module('hitsaOis')
 
     function moduleRow(scope, module, moduleIndex, isView) {
       var row = document.createElement("tr");
+      row.classList.add(MODULE_ROW);
 
       var moduleNameTd = document.createElement("td");
       moduleNameTd.id = MODULE_ID + module.occupationModuleId;
       moduleNameTd.colSpan = 3;
       moduleNameTd.className = DIVIDER;
-      moduleNameTd.style = 'border-top:1px solid #aaa';
+      moduleNameTd.style.borderTop = '1px solid #aaa';
       var moduleSpan = document.createElement("span");
-      moduleSpan.className = 'hois-collapse-header';
+      moduleSpan.classList.add('hois-collapse-header');
       moduleSpan.innerHTML = scope.currentLanguageNameField(module) + '&nbsp;' + '&nbsp;';
       if (scope.record.curriculumVersion.id !== module.curriculumVersionId) {
-        moduleSpan.style = 'color: red';
+        moduleSpan.style.color = 'red';
       }
       moduleNameTd.appendChild(moduleSpan);
 
@@ -482,6 +507,8 @@ angular.module('hitsaOis')
 
     function moduleHoursRow(scope, module) {
       var row = document.createElement("tr");
+      row.classList.add(MODULE_ROW);
+
       var moduleHoursColumn = document.createElement("td");
       moduleHoursColumn.className = DIVIDER;
       moduleHoursColumn.colSpan = 3;
@@ -491,6 +518,12 @@ angular.module('hitsaOis')
       var shownWeeksColumn = document.createElement("td");
       shownWeeksColumn.className = DIVIDER;
       shownWeeksColumn.colSpan = scope.formState.shownWeeksCount;
+
+      var studyYear = scope.currentLanguageNameField(scope.record.studyYear.year);
+      shownWeeksColumn.innerHTML = $translate.instant('lessonplan.beforePlannedHoursTotal', {studyYear: studyYear, hours: module.previousHours}) +
+        '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' +
+        $translate.instant('lessonplan.untilUnplanned', {studyYear: studyYear, hours: module.totalHours - module.previousHours});
+
       row.appendChild(shownWeeksColumn);
       return row;
     }
@@ -698,22 +731,22 @@ angular.module('hitsaOis')
         var capacityType = totalCapacityTypes[ctIndex];
 
         var totalCtRow = document.createElement('tr');
-        totalCtRow.classList.add(FIX);
+        totalCtRow.classList.add(CROSS);
         totalCtRow.classList.add(TOTAL_ROW);
 
         if (ctIndex === 0) {
-          var totalsStringColumn = document.createElement('td');
-          totalsStringColumn.rowSpan = Object.keys(totalCapacityTypes).length + 1;
-          totalsStringColumn.className = FIX;
-          totalsStringColumn.innerHTML = $translate.instant('lessonplan.grandTotal');
-          totalCtRow.appendChild(totalsStringColumn);
+          totalCtRow.appendChild(grandTotalStringColumn(Object.keys(totalCapacityTypes).length + 3));
         }
 
-        totalCtRow.appendChild(capacityTypeValueColumn(capacityType));
+        var grandCtTypeValueColumn = capacityTypeValueColumn(capacityType);
+        grandCtTypeValueColumn.classList.add(CROSS);
+        totalCtRow.appendChild(grandCtTypeValueColumn);
 
         var id = GRAND_CAPACITY_TOTAL + SEPARATOR + capacityType.code;
         var value = totalColumnValue(scope.formState.grandTotals._[capacityType.code]);
-        totalCtRow.appendChild(totalColumn(id, value));
+        var grandCtTotalColumn = totalColumn(id, value);
+        grandCtTotalColumn.classList.add(CROSS);
+        totalCtRow.appendChild(grandCtTotalColumn);
 
         if (!scope.atLeastOneShownPeriod) {
           totalCtRow.appendChild(noShownPeriodColumn());
@@ -741,22 +774,31 @@ angular.module('hitsaOis')
         table.appendChild(totalCtRow);
       }
       // grand total row
-      table.appendChild(grandTotalRow(scope));
+      table.appendChild(grandTotalRow(scope, totalCapacityTypes));
+      table.appendChild(grandTotalCreditsRow(scope));
+      table.appendChild(grandContactTotalRow(scope));
     }
 
-    function grandTotalRow(scope) {
+    function grandTotalRow(scope, totalCapacityTypes) {
       var row = document.createElement('tr');
-      row.classList.add(FIX);
+      row.classList.add(CROSS);
       row.classList.add(TOTAL_ROW);
 
+      // if capacity types exists then this column is added to first capacity type
+      if (totalCapacityTypes.length === 0) {
+        row.appendChild(grandTotalStringColumn(2));
+      }
+
       var totalsStringColumn = document.createElement('td');
-      totalsStringColumn.className = FIX;
+      totalsStringColumn.className = CROSS;
       totalsStringColumn.innerHTML = $translate.instant('lessonplan.total');
       row.appendChild(totalsStringColumn);
 
       var grandTotalId = GRAND_TOTAL;
       var grandTotalValue = totalColumnValue(scope.formState.grandTotals.__);
-      row.appendChild(totalColumn(grandTotalId, grandTotalValue));
+      var grandTotalColumn = totalColumn(grandTotalId, grandTotalValue);
+      grandTotalColumn.classList.add(CROSS);
+      row.appendChild(grandTotalColumn);
 
       if (!scope.atLeastOneShownPeriod) {
         row.appendChild(noShownPeriodColumn());
@@ -777,6 +819,97 @@ angular.module('hitsaOis')
           if (studyPeriod._selected) {
             var grandPeriodId = GRAND_PERIOD_TOTAL + SEPARATOR + spIndex;
             var grandPeriodValue = totalColumnValue(scope.formState.grandTotalsSp[spIndex]);
+            row.appendChild(studyPeriodTotalColumn(grandPeriodId, grandPeriodValue, studyPeriod));
+          }
+        }
+      }
+      return row;
+    }
+
+    function grandTotalStringColumn(rowSpan) {
+      var totalsStringColumn = document.createElement('td');
+      totalsStringColumn.rowSpan = rowSpan;
+      totalsStringColumn.classList.add(CROSS);
+      totalsStringColumn.innerHTML = $translate.instant('lessonplan.grandTotal');
+      return totalsStringColumn;
+    }
+
+    function grandTotalCreditsRow(scope) {
+      var row = document.createElement('tr');
+      row.classList.add(TOTAL_ROW);
+
+      var totalCreditsStringColumn = document.createElement('td');
+      totalCreditsStringColumn.classList.add(CROSS);
+      totalCreditsStringColumn.innerHTML = $translate.instant('lessonplan.credits');
+      row.appendChild(totalCreditsStringColumn);
+
+      var grandCreditsTotalId = GRAND_CREDITS_TOTAL;
+      var grandCreditsTotalValue = totalColumnValue(scope.formState.grandCreditTotals.__, 2);
+      var grandCreditsTotalColumn = totalColumn(grandCreditsTotalId, grandCreditsTotalValue);
+      grandCreditsTotalColumn.classList.add(CROSS);
+      row.appendChild(grandCreditsTotalColumn);
+
+      if (!scope.atLeastOneShownPeriod) {
+        row.appendChild(noShownPeriodColumn());
+      }
+
+      if (scope.formState.showWeeks) {
+        for (var weekIndex = 0; weekIndex < scope.formState.weekNrs.length; weekIndex++) {
+          var week = scope.formState.weekNrs[weekIndex];
+          if (week.show) {
+            var grandWeekCreditsId = GRAND_WEEK_CREDITS_TOTAL + SEPARATOR + weekIndex;
+            var grandWeekCreditsValue = totalColumnValue(scope.formState.grandCreditTotals._._[weekIndex], 2);
+            row.appendChild(weekTotalColumn(grandWeekCreditsId, grandWeekCreditsValue, week));
+          }
+        }
+      } else {
+        for (var spIndex = 0; spIndex < scope.formState.studyPeriods.length; spIndex++) {
+          var studyPeriod = scope.formState.studyPeriods[spIndex];
+          if (studyPeriod._selected) {
+            var grandPeriodCreditsId = GRAND_PERIOD_CREDITS_TOTAL + SEPARATOR + spIndex;
+            var grandPeriodCreditsValue = totalColumnValue(scope.formState.grandCreditTotalsSp[spIndex], 2);
+            row.appendChild(studyPeriodTotalColumn(grandPeriodCreditsId, grandPeriodCreditsValue, studyPeriod));
+          }
+        }
+      }
+      return row;
+    }
+
+    function grandContactTotalRow(scope) {
+      var row = document.createElement('tr');
+      row.classList.add(CROSS);
+      row.classList.add(TOTAL_ROW);
+
+      var contactTotalStringColumn = document.createElement('td');
+      contactTotalStringColumn.classList.add(CROSS);
+      contactTotalStringColumn.innerHTML = $translate.instant('lessonplan.contractPlannedHoursTotal');
+      row.appendChild(contactTotalStringColumn);
+
+      var grandContactTotalId = GRAND_CONTACT_TOTAL;
+      var grandContactTotalValue = totalColumnValue(scope.formState.grandContactTotals.__, 2);
+      var grandContactTotalColumn = totalColumn(grandContactTotalId, grandContactTotalValue);
+      grandContactTotalColumn.classList.add(CROSS);
+      row.appendChild(grandContactTotalColumn);
+
+      if (!scope.atLeastOneShownPeriod) {
+        row.appendChild(noShownPeriodColumn());
+      }
+
+      if (scope.formState.showWeeks) {
+        for (var weekIndex = 0; weekIndex < scope.formState.weekNrs.length; weekIndex++) {
+          var week = scope.formState.weekNrs[weekIndex];
+          if (week.show) {
+            var grandWeekId = GRAND_WEEK_CONTACT_TOTAL + SEPARATOR + weekIndex;
+            var grandWeekValue = totalColumnValue(scope.formState.grandContactTotals._._[weekIndex]);
+            row.appendChild(weekTotalColumn(grandWeekId, grandWeekValue, week));
+          }
+        }
+      } else {
+        for (var spIndex = 0; spIndex < scope.formState.studyPeriods.length; spIndex++) {
+          var studyPeriod = scope.formState.studyPeriods[spIndex];
+          if (studyPeriod._selected) {
+            var grandPeriodId = GRAND_PERIOD_CONTACT_TOTAL + SEPARATOR + spIndex;
+            var grandPeriodValue = totalColumnValue(scope.formState.grandContactTotalsSp[spIndex]);
             row.appendChild(studyPeriodTotalColumn(grandPeriodId, grandPeriodValue, studyPeriod));
           }
         }
@@ -826,7 +959,6 @@ angular.module('hitsaOis')
 
           var moduleWeekTotal = document.getElementById(MODULE_WEEK_TOTAL + SEPARATOR + moduleIndex + SEPARATOR + SEPARATOR + weekIndex);
           moduleWeekTotal.innerHTML = totalColumnValue(scope.formState.moduleTotals[module.id]._._[weekIndex]);
-
         }
 
         var grandCapacityWeekTotal = document.getElementById(GRAND_CAPACITY_WEEK_TOTAL + SEPARATOR + capacityCode + SEPARATOR + weekIndex);
@@ -834,6 +966,12 @@ angular.module('hitsaOis')
 
         var grandWeekTotal = document.getElementById(GRAND_WEEK_TOTAL + SEPARATOR + weekIndex);
         grandWeekTotal.innerHTML = totalColumnValue(scope.formState.grandTotals._._[weekIndex]);
+
+        var grandWeekCreditsTotal = document.getElementById(GRAND_WEEK_CREDITS_TOTAL + SEPARATOR + weekIndex);
+        grandWeekCreditsTotal.innerHTML = totalColumnValue(scope.formState.grandCreditTotals._._[weekIndex]);
+
+        var grandWeekContactTotal = document.getElementById(GRAND_WEEK_CONTACT_TOTAL + SEPARATOR + weekIndex);
+        grandWeekContactTotal.innerHTML = totalColumnValue(scope.formState.grandContactTotals._._[weekIndex]);
 
         changeTotalsIrrespectiveOfChosenPeriod(scope, module, journal, moduleIndex, journalIndex, capacityCode);
       });
@@ -875,6 +1013,12 @@ angular.module('hitsaOis')
         var grandPeriodTotal = document.getElementById(GRAND_PERIOD_TOTAL + SEPARATOR + spIndex);
         grandPeriodTotal.innerHTML = totalColumnValue(scope.formState.grandTotalsSp[spIndex]);
 
+        var grandPeriodCreditsTotal = document.getElementById(GRAND_PERIOD_CREDITS_TOTAL + SEPARATOR + spIndex);
+        grandPeriodCreditsTotal.innerHTML = totalColumnValue(scope.formState.grandCreditTotalsSp[spIndex]);
+
+        var grandPeriodContactTotal = document.getElementById(GRAND_PERIOD_CONTACT_TOTAL + SEPARATOR + spIndex);
+        grandPeriodContactTotal.innerHTML = totalColumnValue(scope.formState.grandContactTotalsSp[spIndex]);
+
         changeTotalsIrrespectiveOfChosenPeriod(scope, module, journal, moduleIndex, journalIndex, capacityCode);
       });
       input.addEventListener('mousewheel', function(event) {
@@ -904,6 +1048,12 @@ angular.module('hitsaOis')
 
       var grandTotal = document.getElementById(GRAND_TOTAL);
       grandTotal.innerHTML = totalColumnValue(scope.formState.grandTotals.__);
+
+      var grandCreditsTotal = document.getElementById(GRAND_CREDITS_TOTAL);
+      grandCreditsTotal.innerHTML = totalColumnValue(scope.formState.grandCreditTotals.__);
+
+      var grandContactTotal = document.getElementById(GRAND_CONTACT_TOTAL);
+      grandContactTotal.innerHTML = totalColumnValue(scope.formState.grandContactTotals.__);
     }
 
     function journalTotalRow(scope, journal) {
@@ -964,7 +1114,13 @@ angular.module('hitsaOis')
       if (week.endOfPeriod) {
         totalHourColumn.classList.add(DIVIDER);
       }
-      totalHourColumn.style.color = fontColor;
+      if (angular.isDefined(fontColor) && fontColor !== null) {
+        totalHourColumn.style.color = fontColor;
+      }
+
+      if (week.hasVacation) {
+        totalHourColumn.style.backgroundColor = VACATION_COLOR;
+      }
       return totalHourColumn;
     }
 
@@ -975,7 +1131,9 @@ angular.module('hitsaOis')
       totalHourColumn.colSpan = studyPeriod.weekNrs.length;
       totalHourColumn.classList.add(CENTER);
       totalHourColumn.classList.add(DIVIDER);
-      totalHourColumn.style.color = fontColor;
+      if (angular.isDefined(fontColor) && fontColor !== null) {
+        totalHourColumn.style.color = fontColor;
+      }
       return totalHourColumn;
     }
 

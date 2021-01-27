@@ -6,6 +6,7 @@
         <th md-column>{{'directive.student.fullname' | translate}}</th>
         <th md-column>{{'directive.student.idcode' | translate}}</th>
         <th md-column class="required">{{'directive.student.akadCancelDate' | translate}}</th>
+        <th md-column class="required">{{'directive.student.directive' | translate}}</th>
         <th></th>
       </tr>
     </thead>
@@ -27,6 +28,11 @@
               <br ng-if="!$last">
             </div>
           </hois-table-data-detail>
+        </td>
+        <td md-cell>
+          <span ng-if="row.directiveStudentObject">
+            {{::row.directiveStudentObject.directiveNr}} ({{::row.directiveStudentObject.startDate | hoisDate}} - {{::row.directiveStudentObject.endDate | hoisDate}})
+          </span>
         </td>
         <td md-cell>
           <a ng-click="deleteStudent(row)" md-no-ink  class="remove">&times;</a>

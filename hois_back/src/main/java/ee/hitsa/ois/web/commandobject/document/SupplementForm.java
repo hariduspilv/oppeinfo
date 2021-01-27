@@ -11,6 +11,7 @@ public class SupplementForm {
     private Boolean showTeacher;
     private Long numeral;
     private Long additionalNumeral;
+    private Long paddingChange;
     
     public Long getSigner1Id() {
         return signer1Id;
@@ -60,5 +61,11 @@ public class SupplementForm {
     public void setAdditionalNumeral(Long additionalNumeral) {
         this.additionalNumeral = additionalNumeral;
     }
-    
+
+    public Long getPaddingChange() {
+        return paddingChange != null ? paddingChange : (paddingChange = Long.valueOf(0));
+    }
+    public void setPaddingChange(Long paddingChange) {
+        this.paddingChange = paddingChange;
+    }
 }

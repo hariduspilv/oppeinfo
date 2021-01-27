@@ -47,7 +47,6 @@ import ee.hitsa.ois.domain.curriculum.CurriculumSpeciality;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
-import ee.hitsa.ois.domain.timetable.Timetable;
 import ee.hitsa.ois.enums.CurriculumStatus;
 import ee.hitsa.ois.enums.CurriculumVersionStatus;
 import ee.hitsa.ois.enums.DirectiveType;
@@ -82,7 +81,6 @@ import ee.hitsa.ois.web.commandobject.BuildingAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.ClassifierSearchCommand;
 import ee.hitsa.ois.web.commandobject.CommitteeAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.DirectiveCoordinatorAutocompleteCommand;
-import ee.hitsa.ois.web.commandobject.JournalAndSubjectAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.JournalAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.PersonLookupCommand;
 import ee.hitsa.ois.web.commandobject.PracticeEvaluationAutocompleteCommand;
@@ -110,7 +108,6 @@ import ee.hitsa.ois.web.dto.ClassifierDto;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
 import ee.hitsa.ois.web.dto.JournalAutocompleteResult;
 import ee.hitsa.ois.web.dto.LiteralResult;
-import ee.hitsa.ois.web.dto.OccupiedAutocompleteResult;
 import ee.hitsa.ois.web.dto.PersonDto;
 import ee.hitsa.ois.web.dto.RoomAutocompleteResult;
 import ee.hitsa.ois.web.dto.SchoolDepartmentResult;
@@ -265,7 +262,12 @@ public class AutocompleteService {
         String nameField = Language.EN.equals(classifierSearchCommand.getLang()) ? "nameEn" : "nameEt";
         JpaQueryBuilder<Classifier> qb = new JpaQueryBuilder<>(Classifier.class, "c").sort(nameField);
         qb.requiredCriteria("c.mainClassCode = :mainClassCode", "mainClassCode", classifierSearchCommand.getMainClassCode());
-        qb.optionalCriteria("c.valid = :valid", "valid", classifierSearchCommand.getValid());
+        if (classifierSearchCommand.getValid() != null) {
+            boolean isValid = Boolean.TRUE.equals(classifierSearchCommand.getValid());
+            qb.requiredCriteria((isValid ? "" : "not ") +
+                    "((c.validFrom is null or c.validFrom <= :now) and (c.validThru is null or c.validThru >= :now))", "now", LocalDate.now());
+        }
+//        qb.optionalCriteria("c.valid = :valid", "valid", classifierSearchCommand.getValid());
         qb.optionalContains("c." + nameField, "name", classifierSearchCommand.getName());
 
         return qb.select(em).setMaxResults(MAX_ITEM_COUNT).getResultList();
@@ -1658,39 +1660,7 @@ public class AutocompleteService {
             return enterpriseResult;
         }, data);
     }
-    
-    public List<AutocompleteResult> journalsAndSubjects(Long schoolId, JournalAndSubjectAutocompleteCommand lookup) {
-        JournalAutocompleteCommand journalLookup = new JournalAutocompleteCommand();
-        journalLookup.setStudyYear(lookup.getStudyYear());
-        if (lookup.getName() != null) {
-            journalLookup.setLang(lookup.getLang());
-            journalLookup.setName(lookup.getName());
-        }
-        List<JournalAutocompleteResult> journalsList = journals(schoolId, journalLookup);
-        // Change journal ids to negative to differentiate between journal and subject ids
-        for (AutocompleteResult journal : journalsList) {
-            journal.setId(Long.valueOf(-journal.getId().longValue()));
-        }
 
-        SubjectAutocompleteCommand subjectLookup = new SubjectAutocompleteCommand();
-        if (lookup.getName() != null) {
-            journalLookup.setLang(lookup.getLang());
-            subjectLookup.setName(lookup.getName());
-        }
-        subjectLookup.setPractice(lookup.getPractice());
-        List<SubjectResult> subjectsList = subjects(schoolId, subjectLookup);
-        
-        List<AutocompleteResult> journalsAndSubjects = new ArrayList<>();
-        journalsAndSubjects.addAll(journalsList);
-        journalsAndSubjects.addAll(subjectsList);
-
-        journalsAndSubjects.sort(Comparator.comparing(
-                Language.EN.equals(lookup.getLang()) ? AutocompleteResult::getNameEn : AutocompleteResult::getNameEt,
-                String.CASE_INSENSITIVE_ORDER));
-        
-        return journalsAndSubjects;
-    }
-    
     public List<LiteralResult> journalsAndStudentGroups(Long schoolId, SearchCommand lookup) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from journal j "
                 + "left join journal_omodule_theme jot on j.id = jot.journal_id "

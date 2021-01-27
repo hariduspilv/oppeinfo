@@ -10,6 +10,7 @@ import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.validation.ValidationFailedException;
+import ee.hitsa.ois.web.commandobject.FinalThesisForm;
 
 public abstract class FinalThesisUtil {
 
@@ -54,11 +55,11 @@ public abstract class FinalThesisUtil {
         return isSupervisor(user, finalThesis);
     }
 
-    public static boolean canCreate(HoisUserDetails user) {
+    public static boolean canCreate(HoisUserDetails user, FinalThesisForm form) {
         if (user.isSchoolAdmin()) {
             return hasFinalThesisEditPermission(user);
         }
-        return user.isStudent();
+        return user.isStudent() && user.getStudentId().equals(form.getStudent().getId());
     }
 
     public static boolean canEdit(HoisUserDetails user, FinalThesis finalThesis) {
@@ -68,7 +69,19 @@ public abstract class FinalThesisUtil {
             }
             return hasFinalThesisEditPermission(user);
         } else if (user.isStudent()) {
-            return !confirmed(finalThesis);
+            return !confirmed(finalThesis) && UserUtil.isStudent(user, finalThesis.getStudent());
+        }
+        return false;
+    }
+
+    public static boolean canDelete(HoisUserDetails user, FinalThesis finalThesis) {
+        if (confirmed(finalThesis)) {
+            return false;
+        }
+        if (user.isSchoolAdmin() || isSupervisor(user, finalThesis)) {
+            return hasFinalThesisEditPermission(user);
+        } else if (user.isStudent()) {
+            return UserUtil.isStudent(user, finalThesis.getStudent());
         }
         return false;
     }
@@ -88,12 +101,16 @@ public abstract class FinalThesisUtil {
         UserUtil.throwAccessDeniedIf(!canView(user, finalThesis), "finalProtocol.error.noPermissionToView");
     }
 
-    public static void assertCanCreate(HoisUserDetails user) {
-        UserUtil.throwAccessDeniedIf(!canCreate(user), "finalProtocol.error.noPermissionToCreate");
+    public static void assertCanCreate(HoisUserDetails user, FinalThesisForm form) {
+        UserUtil.throwAccessDeniedIf(!canCreate(user, form), "finalProtocol.error.noPermissionToCreate");
     }
 
     public static void assertCanEdit(HoisUserDetails user, FinalThesis finalThesis) {
         UserUtil.throwAccessDeniedIf(!canEdit(user, finalThesis), "finalProtocol.error.noPermissionToEdit");
+    }
+
+    public static void assertCanDelete(HoisUserDetails user, FinalThesis finalThesis) {
+        UserUtil.throwAccessDeniedIf(!canDelete(user, finalThesis));
     }
 
     public static void assertCanConfirm(HoisUserDetails user, FinalThesis finalThesis) {

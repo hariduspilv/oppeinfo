@@ -932,7 +932,7 @@ public class DocumentService {
         }
         supplement.setPgNrEt(Integer.valueOf(pdfService.getPageCount(SUPPLEMENT_TEMPLATE_NAME, 
                 getViewReport(supplement, showSubjectCode, showTeacher, isSchoolUsingLetterGrades(student),
-                        areCurriculumModulesGraded(student), Language.ET),
+                        areCurriculumModulesGraded(student), Long.valueOf(0), Language.ET),
                 Language.ET)));
     }
     
@@ -971,7 +971,7 @@ public class DocumentService {
         supplement.setStatusEn(status);
         supplement.setPgNrEn(Integer.valueOf(pdfService.getPageCount(SUPPLEMENT_EN_TEMPLATE_NAME, 
                 getViewReport(supplement, showSubjectCode, showTeacher, isSchoolUsingLetterGrades(student),
-                        areCurriculumModulesGraded(student), Language.EN),
+                        areCurriculumModulesGraded(student), Long.valueOf(0), Language.EN),
                 Language.EN)));
     }
 
@@ -1001,8 +1001,10 @@ public class DocumentService {
             moduleCredits.put(name, moduleCredits.computeIfAbsent(name, k -> BigDecimal.valueOf(0))
                     .add(module.getTotalCredits()));
         }
+        
+        
         return moduleCredits.entrySet().stream()
-                .map(e -> e.getKey() + " " + e.getValue() + (Language.EN.equals(lang) ? "" : " EAP"))
+                .map(e ->  (Language.EN.equals(lang) ? e.getKey() : e.getKey().toLowerCase()) + " " + e.getValue() + (Language.EN.equals(lang) ? "" : " EAP"))
                 .collect(Collectors.joining(", "));
     }
 
@@ -1193,7 +1195,7 @@ public class DocumentService {
                 + " case when (select count (*) from apel_application_informal_subject_or_module aaf where sv.apel_application_record_id=aaf.apel_application_record_id) > 0 then true else false end as is_apel_informal,"
                 + " aps.name_et,aps.name_en,case when pp.is_final=true then true else false end as is_final,"
                 + " occup.name_et as occup_name_et, partoccup.name_et as partoccup_name_et, speciality.name_et as speciality_name_et,"
-                + " case when pp.is_final = true and s.language_code != 'OPPEKEEL_E' then ps.language_code end as lang"
+                + " case when pp.is_final = true then ps.language_code end as lang"
                 + " from student_vocational_result sv"
                 + " join student s on sv.student_id = s.id"
                 + " join ("
@@ -1256,10 +1258,13 @@ public class DocumentService {
                             if (!StringUtils.isEmpty(speciality)) {
                                 nameBuilder.append(", ").append(speciality);
                             }
-                            String language = resultAsString(r, 17);
-                            if (!StringUtils.isEmpty(language)) {
-                                nameBuilder.append(" (").append(resultLanguage(language)).append(")");
-                            }
+                            studyResult.setNameEt(nameBuilder.toString());
+                        }
+
+                        String language = resultAsString(r, 17);
+                        if (!StringUtils.isEmpty(language)) {
+                            nameBuilder = new StringBuilder(studyResult.getNameEt());
+                            nameBuilder.append(" (").append(resultLanguage(language)).append(")");
                             studyResult.setNameEt(nameBuilder.toString());
                         }
                     }
@@ -1506,7 +1511,8 @@ public class DocumentService {
         Student student = directiveStudent.getStudent();
         return pdfService.generate(getSupplementTemplateName(directiveStudent, form.getLang()), 
                 getViewReport(getSupplement(directiveStudent), form.getShowSubjectCode(), form.getShowTeacher(),
-                        isSchoolUsingLetterGrades(student), areCurriculumModulesGraded(student), form.getLang()),
+                        isSchoolUsingLetterGrades(student), areCurriculumModulesGraded(student),
+                        form.getPaddingChange(), form.getLang()),
                 form.getLang());
     }
     
@@ -1517,7 +1523,7 @@ public class DocumentService {
         updateSupplement(supplement, student, isHigher);
         return pdfService.generate(getSupplementTemplateName(isHigher, lang),
                 getViewReport(supplement, Boolean.TRUE, Boolean.TRUE, isSchoolUsingLetterGrades(student),
-                        areCurriculumModulesGraded(student), lang), lang);
+                        areCurriculumModulesGraded(student), Long.valueOf(0), lang), lang);
     }
     
     private void updateSupplement(DiplomaSupplement supplement, Student student, Boolean isHigher) {
@@ -1535,9 +1541,9 @@ public class DocumentService {
     }
 
     private DiplomaSupplementReport getViewReport(DiplomaSupplement supplement, Boolean showSubjectCode,
-            Boolean showTeacher, Boolean isLetterGrades, Boolean modulesGraded, Language lang) {
+            Boolean showTeacher, Boolean isLetterGrades, Boolean modulesGraded, Long paddingChange, Language lang) {
         DiplomaSupplementReport report = new DiplomaSupplementReport(supplement, Collections.singletonList("XXXXXX"),
-                showSubjectCode, showTeacher, isLetterGrades, modulesGraded, lang);
+                showSubjectCode, showTeacher, isLetterGrades, modulesGraded, paddingChange, lang);
         setReportResults(report, supplement.getStudyResults(), showSubjectCode, showTeacher, lang);
         return report;
     }
@@ -1694,7 +1700,7 @@ public class DocumentService {
         DiplomaSupplementReport report = new DiplomaSupplementReport(supplement,
                 requireExtraForms(user, directiveStudent, form).stream()
                     .map(Form::getFullCode).collect(Collectors.toList()), form.getShowSubjectCode(), form.getShowTeacher(), 
-                    isSchoolUsingLetterGrades(student), areCurriculumModulesGraded(student), form.getLang());
+                    isSchoolUsingLetterGrades(student), areCurriculumModulesGraded(student), form.getPaddingChange(), form.getLang());
         setReportResults(report, supplement.getStudyResults(), form.getShowSubjectCode(), form.getShowTeacher(), form.getLang());
         return pdfService.generate(getSupplementTemplateName(directiveStudent, form.getLang()), report, form.getLang());
     }
@@ -1722,7 +1728,8 @@ public class DocumentService {
         Language lang = language == null ? Language.ET : language;
 
         DiplomaSupplementReport report = new DiplomaSupplementReport(supplement, getSupplementForms(supplement, lang),
-                Boolean.TRUE, Boolean.TRUE, isSchoolUsingLetterGrades(student), areCurriculumModulesGraded(student), lang);
+                Boolean.TRUE, Boolean.TRUE, isSchoolUsingLetterGrades(student), areCurriculumModulesGraded(student),
+                Long.valueOf(0), lang);
         setReportResults(report, supplement.getStudyResults(), Boolean.TRUE, Boolean.TRUE, lang);
         return pdfService.generate(getSupplementTemplateName(supplement.getDiploma().getDirective(), lang), report,
                 lang);

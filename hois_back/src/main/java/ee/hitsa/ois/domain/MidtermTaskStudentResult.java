@@ -1,11 +1,15 @@
 package ee.hitsa.ois.domain;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 
 @Entity
 public class MidtermTaskStudentResult extends BaseEntityWithId {
@@ -20,6 +24,9 @@ public class MidtermTaskStudentResult extends BaseEntityWithId {
 
     private BigDecimal points;
     private String pointsTxt;
+
+    @OneToMany(cascade = {CascadeType.MERGE, CascadeType.PERSIST}, mappedBy = "midtermTaskStudentResult", fetch = FetchType.LAZY)
+    private List<MidtermTaskStudentResultHistory> history;
 
     public MidtermTask getMidtermTask() {
         return midtermTask;
@@ -51,5 +58,14 @@ public class MidtermTaskStudentResult extends BaseEntityWithId {
 
     public void setPointsTxt(String pointsTxt) {
         this.pointsTxt = pointsTxt;
+    }
+
+    public List<MidtermTaskStudentResultHistory> getHistory() {
+        return history != null ? history : (history = new ArrayList<>());
+    }
+
+    public void setHistory(List<MidtermTaskStudentResultHistory> history) {
+        getHistory().clear();
+        getHistory().addAll(history);
     }
 }

@@ -17,7 +17,7 @@ public class ExamDto extends ExamForm {
     private final List<ExamStudent> studentRecords;
     private final Boolean userCanEdit;
 
-    public ExamDto(SubjectStudyPeriodExam exam, AutocompleteResult room, List<String> teachers, List<ExamStudent> students, boolean editable) {
+    public ExamDto(SubjectStudyPeriodExam exam, AutocompleteResult room, List<String> teachers, List<ExamStudent> students, boolean editable, List<String> groups) {
         setSubjectStudyPeriod(EntityUtil.getId(exam.getSubjectStudyPeriod()));
         setStartDate(exam.getTimetableEvent().getStart());
         setStartTime(exam.getTimetableEvent().getStart().toLocalTime());
@@ -32,7 +32,7 @@ public class ExamDto extends ExamForm {
         setVersion(exam.getVersion());
 
         id = exam.getId();
-        subjectStudyPeriodDto = SubjectStudyPeriodDto.of(exam.getSubjectStudyPeriod(), teachers);
+        subjectStudyPeriodDto = SubjectStudyPeriodDto.of(exam.getSubjectStudyPeriod(), teachers, groups);
         name = exam.getTimetableEvent().getName();
         studentRecords = students;
         userCanEdit = Boolean.valueOf(editable);

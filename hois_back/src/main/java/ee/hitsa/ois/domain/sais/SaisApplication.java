@@ -72,6 +72,8 @@ public class SaisApplication extends BaseEntityWithId {
     private String addressAdsOid;
     @Size(max = 20)
     private String postcode;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Classifier secondarySchoolCountry;
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "sais_application_id", nullable = false, updatable = false)
     private Set<SaisApplicationGraduatedSchool> graduatedSchools = new HashSet<>();
@@ -304,5 +306,13 @@ public class SaisApplication extends BaseEntityWithId {
 
     public void setOtherData(Set<SaisApplicationOtherData> otherData) {
         this.otherData = otherData;
+    }
+
+    public Classifier getSecondarySchoolCountry() {
+        return secondarySchoolCountry;
+    }
+
+    public void setSecondarySchoolCountry(Classifier secondarySchoolCountry) {
+        this.secondarySchoolCountry = secondarySchoolCountry;
     }
 }

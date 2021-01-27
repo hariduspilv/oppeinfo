@@ -48,17 +48,18 @@
           </div>
         </div>
       </div>
-      <div layout="row">
-        <md-input-container flex="15">
+      <div layout="row" layout-xs="column">
+        <md-input-container>
           <label>{{'user.validFrom' | translate}}</label>
           <md-datepicker ng-model="user.validFrom" md-max-date="user.validThru" required md-open-on-focus></md-datepicker>
         </md-input-container>
-        <md-input-container flex>
+        <md-input-container>
           <label>{{'user.validThru' | translate}}</label>
           <md-datepicker ng-model="user.validThru" md-min-date="user.validFrom" md-open-on-focus></md-datepicker>
         </md-input-container>
       </div>
     </div>
+    <ng-include src="'persons/users.edit.action.buttons.html'"></ng-include>
     <div>
       <div flex>
         <md-table-container>
@@ -85,9 +86,7 @@
         </md-table-container>
       </div>
     </div>
-    <md-button ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
-    <md-button ng-if="user.id" ng-click="delete()" class="md-raised">{{'main.button.delete' | translate}}</md-button>
-    <md-button ng-click="back('#/persons/' + user.person.id + '/edit')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+    <ng-include src="'persons/users.edit.action.buttons.html'"></ng-include>
   </form>
 </div>
 

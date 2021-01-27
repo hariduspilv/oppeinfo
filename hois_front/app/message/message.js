@@ -2,13 +2,33 @@
 
 angular.module('hitsaOis')
 .controller('messageSentController', ['$scope', 'QueryUtils', 'DataUtils', '$route', "USER_ROLES", "AuthService",
-  function ($scope, QueryUtils, DataUtils, $route, USER_ROLES, AuthService) {
+  'dialogService', 'message', '$location',
+  function ($scope, QueryUtils, DataUtils, $route, USER_ROLES, AuthService, dialogService, message, $location) {
+    $scope.STATES = Object.freeze({
+      SEARCH: 0,
+      DELETE: 1,
+    });
+
     $scope.currentNavItem = 'message.sent';
+    $scope.deleteQueryForm = {};
     QueryUtils.createQueryForm($scope, '/message/sent', {order: "-inserted"});
-    $scope.loadData();
     DataUtils.convertStringToDates($scope.criteria, ['sentFrom', 'sentThru']);
     $scope.auth = $route.current.locals.auth;
     $scope.canSeeAutomatic = $scope.auth.isAdmin() && AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_AUTOTEADE);
+
+    // saved state for back btn
+    if ($location.search()['delete']) {
+      $scope.state = $scope.STATES.DELETE;
+    } else {
+      $scope.state = $scope.STATES.SEARCH;
+    }
+    $scope.$watch('state', function (newVal) {
+      if (newVal === $scope.STATES.DELETE) {
+        $location.search('delete', true);
+      } else {
+        $location.search('delete', undefined);
+      }
+    });
 
     $scope.showReceivers = function(row, bool) {
         var name = "";
@@ -23,22 +43,114 @@ angular.module('hitsaOis')
     };
 
     $scope.formState = {
-      canSend: AuthService.isAuthorized($route.routes["/message/new"].data.authorizedRoles)
+      canSend: AuthService.isAuthorized($route.routes["/message/new"].data.authorizedRoles),
+      canDelete: true
     };
 
-    angular.element(document).ready(function() {
-        var scrollAmount = document.getElementsByName('message.sent')[0].offsetLeft;
-        document.getElementById('scrolling_div').scrollLeft += scrollAmount;
-    });
+    QueryUtils.createQueryForm($scope.deleteQueryForm, '/message/messagesForDelete',
+      {order: "-inserted", sent: true, automatic: false, size: 100}, undefined, false, true);
 
-}]).controller('messageAutomaticSentController', ['$scope', 'QueryUtils', 'DataUtils', '$route', "USER_ROLES", "AuthService",
-  function ($scope, QueryUtils, DataUtils, $route, USER_ROLES, AuthService) {
+    var ignore = ['page', 'size', 'sent', 'automatic'];
+    function updateCriteria(source, destination) {
+      for (var key in destination) {
+        if (!destination.hasOwnProperty(key) || ignore.indexOf(key) !== -1) {
+          continue;
+        }
+        destination[key] = undefined;
+      }
+      for (key in source) {
+        if (!source.hasOwnProperty(key) || ignore.indexOf(key) !== -1) {
+          continue;
+        }
+        destination[key] = source[key];
+      }
+    }
+
+    $scope.deleteQueryForm._loadData = $scope.deleteQueryForm.loadData;
+    $scope.deleteQueryForm.loadData = function () {
+      $scope.deleteQueryForm._loadData();
+      updateCriteria($scope.deleteQueryForm.criteria, $scope.criteria);
+      $scope.updateStorage();
+    };
+
+    function unselectAll() {
+      $scope.selectAll = false;
+      $scope.updateAllCheckBoxes(false);
+    }
+
+    $scope.deleteForm = function () {
+      $scope.state = $scope.STATES.DELETE;
+      updateCriteria($scope.criteria, $scope.deleteQueryForm.criteria);
+      $scope.deleteQueryForm.loadData();
+    };
+
+    $scope.changeStateToSearch = function () {
+      $scope.state = $scope.STATES.SEARCH;
+      unselectAll();
+      $scope.loadData();
+    };
+
+    $scope.delete = function () {
+      if (!$scope.deleteQueryForm) {
+        return;
+      }
+      var ids = $scope.deleteQueryForm.tabledata.content.filter(function (it) {
+        return it.delete === true;
+      }).map(function (it) {
+        return it.id;
+      });
+      if (ids.length === 0) {
+        message.error("main.messages.error.atLeastOneMustBeSelected");
+        return;
+      }
+      dialogService.confirmDialog({prompt: 'message.confirmDelete'}, function () {
+        QueryUtils.endpoint('/message/messages').post({receiver: false, ids: ids}, function () {
+          $scope.deleteQueryForm.loadData();
+          message.info('main.messages.delete.success');
+        });
+      });
+    };
+
+    $scope.updateAllCheckBoxes = function (value) {
+      if (!$scope.deleteQueryForm) {
+        return;
+      }
+      $scope.deleteQueryForm.tabledata.content.forEach(function (it) {
+        it.delete = value;
+      });
+    };
+
+    if ($scope.state === $scope.STATES.DELETE) {
+      $scope.deleteForm();
+    } else {
+      $scope.loadData();
+    }
+}]).controller('messageAutomaticSentController', ['$scope', 'QueryUtils', 'DataUtils', '$route', "USER_ROLES", "AuthService", 'dialogService', 'message', '$location',
+  function ($scope, QueryUtils, DataUtils, $route, USER_ROLES, AuthService, dialogService, message, $location) {
+    $scope.STATES = Object.freeze({
+      SEARCH: 0,
+      DELETE: 1,
+    });
     $scope.currentNavItem = 'message.automaticSent';
+    $scope.deleteQueryForm = {};
     QueryUtils.createQueryForm($scope, '/message/sent/automatic', {order: "-inserted"});
-    $scope.loadData();
     DataUtils.convertStringToDates($scope.criteria, ['sentFrom', 'sentThru']);
     $scope.auth = $route.current.locals.auth;
     $scope.canSeeAutomatic = $scope.auth.isAdmin() && AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_AUTOTEADE);
+
+    // saved state for back btn
+    if ($location.search()['delete']) {
+      $scope.state = $scope.STATES.DELETE;
+    } else {
+      $scope.state = $scope.STATES.SEARCH;
+    }
+    $scope.$watch('state', function (newVal) {
+      if (newVal === $scope.STATES.DELETE) {
+        $location.search('delete', true);
+      } else {
+        $location.search('delete', undefined);
+      }
+    });
 
     $scope.showReceivers = function(row, bool) {
         var name = "";
@@ -51,29 +163,323 @@ angular.module('hitsaOis')
         }
         return name;
     };
-    angular.element(document).ready(function() {
-        var scrollAmount = document.getElementsByName('message.automaticSent')[0].offsetLeft;
-        document.getElementById('scrolling_div').scrollLeft += scrollAmount;
+
+    $scope.formState = {
+      canSend: false,
+      canDelete: true
+    };
+
+    QueryUtils.createQueryForm($scope.deleteQueryForm, '/message/messagesForDelete',
+      {order: "-inserted", sent: true, automatic: true, size: 100}, undefined, false, true);
+
+    var ignore = ['page', 'size', 'sort', 'sent', 'automatic'];
+    function updateCriteria(source, destination) {
+      for (var key in destination) {
+        if (!destination.hasOwnProperty(key) || ignore.indexOf(key) !== -1) {
+          continue;
+        }
+        destination[key] = undefined;
+      }
+      for (key in source) {
+        if (!source.hasOwnProperty(key) || ignore.indexOf(key) !== -1) {
+          continue;
+        }
+        destination[key] = source[key];
+      }
+    }
+
+    $scope.deleteQueryForm._loadData = $scope.deleteQueryForm.loadData;
+    $scope.deleteQueryForm.loadData = function () {
+      $scope.deleteQueryForm._loadData();
+      updateCriteria($scope.deleteQueryForm.criteria, $scope.criteria);
+      $scope.updateStorage();
+    };
+
+    function unselectAll() {
+      $scope.selectAll = false;
+      $scope.updateAllCheckBoxes(false);
+    }
+
+    $scope.deleteForm = function () {
+      $scope.state = $scope.STATES.DELETE;
+      updateCriteria($scope.criteria, $scope.deleteQueryForm.criteria);
+      $scope.deleteQueryForm.loadData();
+    };
+
+    $scope.changeStateToSearch = function () {
+      $scope.state = $scope.STATES.SEARCH;
+      unselectAll();
+      $scope.loadData();
+    };
+
+    $scope.delete = function () {
+      if (!$scope.deleteQueryForm) {
+        return;
+      }
+      var ids = $scope.deleteQueryForm.tabledata.content.filter(function (it) {
+        return it.delete === true;
+      }).map(function (it) {
+        return it.id;
+      });
+      if (ids.length === 0) {
+        message.error("main.messages.error.atLeastOneMustBeSelected");
+        return;
+      }
+      dialogService.confirmDialog({prompt: 'message.confirmDelete'}, function () {
+        QueryUtils.endpoint('/message/messages').post({receiver: false, ids: ids}, function () {
+          $scope.deleteQueryForm.loadData();
+          message.info('main.messages.delete.success');
+        });
+      });
+    };
+
+    $scope.updateAllCheckBoxes = function (value) {
+      if (!$scope.deleteQueryForm) {
+        return;
+      }
+      $scope.deleteQueryForm.tabledata.content.forEach(function (it) {
+        it.delete = value;
+      });
+    };
+
+    if ($scope.state === $scope.STATES.DELETE) {
+      $scope.deleteForm();
+    } else {
+      $scope.loadData();
+    }
+}]).controller('messageReceivedController', ['$scope', 'QueryUtils', 'DataUtils', '$route', '$rootScope', "USER_ROLES", "AuthService", 'dialogService', 'message', '$location',
+  function ($scope, QueryUtils, DataUtils, $route, $rootScope, USER_ROLES, AuthService, dialogService, message, $location) {
+    $scope.STATES = Object.freeze({
+      SEARCH: 0,
+      DELETE: 1,
     });
 
-}]).controller('messageReceivedController', ['$scope', 'QueryUtils', 'DataUtils', '$route', '$rootScope', "USER_ROLES", "AuthService",
-  function ($scope, QueryUtils, DataUtils, $route, $rootScope, USER_ROLES, AuthService) {
     $scope.currentNavItem = 'message.received';
-    QueryUtils.createQueryForm($scope, '/message/received', {order: "-inserted"});
-    $scope.loadData();
-    DataUtils.convertStringToDates($scope.criteria, ['sentFrom', 'sentThru']);
+    $scope.deleteQueryForm = {};
     $scope.auth = $route.current.locals.auth;
     $scope.canSeeAutomatic = $scope.auth.isAdmin() && AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_AUTOTEADE);
+
+    // saved state for back btn
+    if ($location.search()['delete']) {
+      $scope.state = $scope.STATES.DELETE;
+    } else {
+      $scope.state = $scope.STATES.SEARCH;
+    }
+    $scope.$watch('state', function (newVal) {
+      if (newVal === $scope.STATES.DELETE) {
+        $location.search('delete', true);
+      } else {
+        $location.search('delete', undefined);
+      }
+    });
+
+    $scope.formState = {
+      canSend: AuthService.isAuthorized($route.routes["/message/new"].data.authorizedRoles),
+      canDelete: true
+    };
+
+    QueryUtils.createQueryForm($scope, '/message/received', {order: "-inserted"});
+    DataUtils.convertStringToDates($scope.criteria, ['sentFrom', 'sentThru']);
 
     QueryUtils.endpoint('/message/received/new').get().$promise.then(function (result) {
-        $rootScope.unreadMessages = result.unread;
+      $rootScope.unreadMessages = result.unread;
+    });
+
+    QueryUtils.createQueryForm($scope.deleteQueryForm, '/message/messagesForDelete',
+      {order: "-inserted", sent: false, automatic: false, size: 100}, undefined, false, true);
+
+    var ignore = ['page', 'size', 'sort', 'sent', 'automatic'];
+    function updateCriteria(source, destination) {
+      for (var key in destination) {
+        if (!destination.hasOwnProperty(key) || ignore.indexOf(key) !== -1) {
+          continue;
+        }
+        destination[key] = undefined;
+      }
+      for (key in source) {
+        if (!source.hasOwnProperty(key) || ignore.indexOf(key) !== -1) {
+          continue;
+        }
+        destination[key] = source[key];
+      }
+    }
+
+    $scope.deleteQueryForm._loadData = $scope.deleteQueryForm.loadData;
+    $scope.deleteQueryForm.loadData = function () {
+      $scope.deleteQueryForm._loadData();
+      updateCriteria($scope.deleteQueryForm.criteria, $scope.criteria);
+      $scope.updateStorage();
+    };
+
+    function unselectAll() {
+      $scope.selectAll = false;
+      $scope.updateAllCheckBoxes(false);
+    }
+
+    $scope.deleteForm = function () {
+      $scope.state = $scope.STATES.DELETE;
+      updateCriteria($scope.criteria, $scope.deleteQueryForm.criteria);
+      $scope.deleteQueryForm.loadData();
+    };
+
+    $scope.changeStateToSearch = function () {
+      $scope.state = $scope.STATES.SEARCH;
+      unselectAll();
+      $scope.loadData();
+    };
+
+    $scope.delete = function () {
+      if (!$scope.deleteQueryForm) {
+        return;
+      }
+      var ids = $scope.deleteQueryForm.tabledata.content.filter(function (it) {
+        return it.delete === true;
+      }).map(function (it) {
+        return it.id;
+      });
+      if (ids.length === 0) {
+        message.error("main.messages.error.atLeastOneMustBeSelected");
+        return;
+      }
+      dialogService.confirmDialog({prompt: 'message.confirmDeleteReceiver'}, function () {
+        QueryUtils.endpoint('/message/messages').post({receiver: true, ids: ids}, function () {
+          $scope.deleteQueryForm.loadData();
+          message.info('main.messages.delete.success');
+        });
+      });
+    };
+
+    $scope.updateAllCheckBoxes = function (value) {
+      if (!$scope.deleteQueryForm) {
+        return;
+      }
+      $scope.deleteQueryForm.tabledata.content.forEach(function (it) {
+        it.delete = value;
+      });
+    };
+
+    if ($scope.state === $scope.STATES.DELETE) {
+      $scope.deleteForm();
+    } else {
+      $scope.loadData();
+    }
+}]).controller('messageAutomaticReceivedController', ['$scope', 'QueryUtils', 'DataUtils', '$route', '$rootScope', "USER_ROLES", "AuthService", 'dialogService', 'message', '$location',
+  function ($scope, QueryUtils, DataUtils, $route, $rootScope, USER_ROLES, AuthService, dialogService, message, $location) {
+    $scope.STATES = Object.freeze({
+      SEARCH: 0,
+      DELETE: 1,
+    });
+
+    $scope.currentNavItem = 'message.automaticReceived';
+    $scope.deleteQueryForm = {};
+    QueryUtils.createQueryForm($scope, '/message/received/automatic', {order: "-inserted"});
+    DataUtils.convertStringToDates($scope.criteria, ['sentFrom', 'sentThru']);
+    $scope.auth = $route.current.locals.auth;
+    $scope.canSeeAutomatic = $scope.auth.isAdmin() && AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_AUTOTEADE);
+
+    // saved state for back btn
+    if ($location.search()['delete']) {
+      $scope.state = $scope.STATES.DELETE;
+    } else {
+      $scope.state = $scope.STATES.SEARCH;
+    }
+    $scope.$watch('state', function (newVal) {
+      if (newVal === $scope.STATES.DELETE) {
+        $location.search('delete', true);
+      } else {
+        $location.search('delete', undefined);
+      }
+    });
+
+    QueryUtils.endpoint('/message/received/new').get().$promise.then(function (result) {
+      $rootScope.unreadMessages = result.unread;
     });
 
     $scope.formState = {
-      canSend: AuthService.isAuthorized($route.routes["/message/new"].data.authorizedRoles)
+      canSend: false,
+      canDelete: true
     };
 
-}]).controller('messageViewController', ['$scope', '$route', 'QueryUtils', 'DataUtils', '$resource', 'config', '$rootScope', 'AuthService', function ($scope, $route, QueryUtils, DataUtils, $resource, config, $rootScope, AuthService) {
+    QueryUtils.createQueryForm($scope.deleteQueryForm, '/message/messagesForDelete',
+      {order: "-inserted", sent: false, automatic: true, size: 100}, undefined, false, true);
+
+    var ignore = ['page', 'size', 'sort', 'sent', 'automatic'];
+    function updateCriteria(source, destination) {
+      for (var key in destination) {
+        if (!destination.hasOwnProperty(key) || ignore.indexOf(key) !== -1) {
+          continue;
+        }
+        destination[key] = undefined;
+      }
+      for (key in source) {
+        if (!source.hasOwnProperty(key) || ignore.indexOf(key) !== -1) {
+          continue;
+        }
+        destination[key] = source[key];
+      }
+    }
+
+    $scope.deleteQueryForm._loadData = $scope.deleteQueryForm.loadData;
+    $scope.deleteQueryForm.loadData = function () {
+      $scope.deleteQueryForm._loadData();
+      updateCriteria($scope.deleteQueryForm.criteria, $scope.criteria);
+      $scope.updateStorage();
+    };
+
+    function unselectAll() {
+      $scope.selectAll = false;
+      $scope.updateAllCheckBoxes(false);
+    }
+
+    $scope.deleteForm = function () {
+      $scope.state = $scope.STATES.DELETE;
+      updateCriteria($scope.criteria, $scope.deleteQueryForm.criteria);
+      $scope.deleteQueryForm.loadData();
+    };
+
+    $scope.changeStateToSearch = function () {
+      $scope.state = $scope.STATES.SEARCH;
+      unselectAll();
+      $scope.loadData();
+    };
+
+    $scope.delete = function () {
+      if (!$scope.deleteQueryForm) {
+        return;
+      }
+      var ids = $scope.deleteQueryForm.tabledata.content.filter(function (it) {
+        return it.delete === true;
+      }).map(function (it) {
+        return it.id;
+      });
+      if (ids.length === 0) {
+        message.error("main.messages.error.atLeastOneMustBeSelected");
+        return;
+      }
+      dialogService.confirmDialog({prompt: 'message.confirmDeleteReceiver'}, function () {
+        QueryUtils.endpoint('/message/messages').post({receiver: true, ids: ids}, function () {
+          $scope.deleteQueryForm.loadData();
+          message.info('main.messages.delete.success');
+        });
+      });
+    };
+
+    $scope.updateAllCheckBoxes = function (value) {
+      if (!$scope.deleteQueryForm) {
+        return;
+      }
+      $scope.deleteQueryForm.tabledata.content.forEach(function (it) {
+        it.delete = value;
+      });
+    };
+
+    if ($scope.state === $scope.STATES.DELETE) {
+      $scope.deleteForm();
+    } else {
+      $scope.loadData();
+    }
+}]).controller('messageViewController', ['$scope', '$route', 'QueryUtils', 'DataUtils', '$resource', 'config', '$rootScope', 'AuthService',
+  function ($scope, $route, QueryUtils, DataUtils, $resource, config, $rootScope, AuthService) {
     var baseUrl = '/message';
     var Endpoint = QueryUtils.endpoint(baseUrl);
     var id = $route.current.params.id;
@@ -90,7 +496,7 @@ angular.module('hitsaOis')
 
     $scope.record = Endpoint.get({id: id}, afterLoad);
 
-    function setRead() { 
+    function setRead() {
         if (!$scope.isSent && !$scope.record.isRead) {
             QueryUtils.endpoint('/message/' + $scope.record.id).update().$promise.then(function () {
                 updateNewMessagesCount();
@@ -106,7 +512,8 @@ angular.module('hitsaOis')
         });
     }
 
-}]).controller('messageRespondController', ['$scope', 'QueryUtils', '$route', 'message', '$location', function ($scope, QueryUtils, $route, message, $location) {
+}]).controller('messageRespondController', ['$scope', 'QueryUtils', '$route', 'message', '$location',
+  function ($scope, QueryUtils, $route, message, $location) {
     var baseUrl = '/message';
     var Endpoint = QueryUtils.endpoint(baseUrl);
     var id = $route.current.params.id;
@@ -151,14 +558,14 @@ angular.module('hitsaOis')
         }
         $scope.record.$save(afterSend);
     };
-    
+
     function checkIfUserHasEmail() {
         QueryUtils.endpoint(baseUrl + '/hasEmail').get({}, function (response) {
             $scope.noEmail = !response.hasEmail;
         });
     }
-}]).controller('messageNewController', ['$scope', 'QueryUtils', '$route', 'message', 'ArrayUtils', '$resource', 'config', '$rootScope', '$q', '$translate', 
-function ($scope, QueryUtils, $route, message, ArrayUtils, $resource, config, $rootScope, $q, $translate) {
+}]).controller('messageNewController', ['$scope', 'QueryUtils', '$route', 'message', 'ArrayUtils', '$resource', 'config', '$rootScope', '$q', '$translate', 'dialogService',
+  function ($scope, QueryUtils, $route, message, ArrayUtils, $resource, config, $rootScope, $q, $translate, dialogService) {
 
     var baseUrl = '/message';
     var Endpoint = QueryUtils.endpoint(baseUrl);
@@ -167,36 +574,7 @@ function ($scope, QueryUtils, $route, message, ArrayUtils, $resource, config, $r
     $scope.formState = {};
     checkIfUserHasEmail();
 
-    if ($scope.auth.isAdmin()) {
-        $scope.targetGroups = ['ROLL_O', 'ROLL_T', 'ROLL_L', 'ROLL_P'];
-    } else if ($scope.auth.isLeadingTeacher()) {
-        $scope.targetGroups = ['ROLL_T', 'ROLL_L'];
-    } else if ($scope.auth.isTeacher()) {
-        $scope.targetGroups = ['ROLL_T', 'ROLL_L'];
-        $scope.groupSearchTypes = [{
-            code: 'SEARCH_STUDENT_GROUP',
-            name: $translate.instant("message.searchTypeByGroups")
-        }];
-        if ($scope.auth.school.vocational) {
-            $scope.groupSearchTypes.push({
-                code:'SEARCH_JOURNAL',
-                name: $translate.instant("message.searchTypeByJournals")
-            });
-        }
-        if ($scope.auth.school.higher) {
-            $scope.groupSearchTypes.push({
-                code:'SEARCH_SUBJECTS',
-                name: $translate.instant("message.searchTypeBySubjects")
-            });
-        }
-    } else if ($scope.auth.isParent() || $scope.auth.isStudent()) {
-        $scope.targetGroups = ['ROLL_O'];
-    } else {
-        $scope.targetGroups = [];
-    }
-    if($scope.targetGroups.length === 1) {
-        $scope.targetGroup = $scope.targetGroups[0];
-    }
+    setTargetGroups();
     $scope.receivers = [];
     $scope.studyForm = [];
     $scope.studentGroup = [];
@@ -204,46 +582,33 @@ function ($scope, QueryUtils, $route, message, ArrayUtils, $resource, config, $r
     $scope.studyGroupStudentsParents = [];
     $scope.journalStudent = [];
     $scope.journalStudentParent = [];
+    $scope.journalTeacher = [];
     $scope.subjectStudent = [];
     $scope.subjectStudentParent = [];
+    $scope.subjectTeacher = [];
+
+    $scope.distinctList = getUniqueElements;
+
+    $scope.groupSearchType = undefined;
+    $scope.groupSearchVal = [];
+    $scope.isRolePartOfGroupSearch = isRolePartOfGroupSearch;
+    $scope.autocompleteControllers = [];
+    $scope.groupSearchTypeUrl = 'x';
+    $scope.groupSearchLabel = '';
+    $scope.filterGroupSearchTypes = filterGroupSearchTypes;
+    $scope.updateGroupSearchTypeValues = updateGroupSearchTypeValues;
+    var groupSearchStorage = {};
+
+    var ignorePersonId = {};
 
     function getStudentGroups() {
       QueryUtils.endpoint(baseUrl + '/studentgroups').query({curriculums: $scope.curriculum, studyForm: $scope.studyForm}).$promise.then(function(response) {
         $scope.studentGroups = response.map(function(sg) {
-          return { id: sg.id, nameEt: sg.code, nameEn: sg.code, isHigher: sg.higher };
+          return { id: sg.id, nameEt: sg.nameEt, nameEn: sg.nameEn };
         });
         var studentGroupIds = response.map(function(sg){return sg.id;});
         $scope.studentGroup = $scope.studentGroup.filter(function(sg){return studentGroupIds.indexOf(sg) !== -1;});
      });
-    }
-
-    function getJournals() {
-        QueryUtils.endpoint(baseUrl + '/teacherjournals').query().$promise.then(function (response) {
-            $scope.journals = response.map(function (r) {
-                return {
-                    id: r.id,
-                    nameEt: r.nameEt,
-                    nameEn: r.nameEn
-                };
-            });
-        });
-    }
-
-    function getSubjects() {
-        QueryUtils.endpoint(baseUrl + '/teachersubjects').query().$promise.then(function (response) {
-            $scope.subjects = response.map(function (r) {
-                return {
-                    id: r.id,
-                    code: r.code,
-                    nameEt: r.nameEt,
-                    nameEn: r.nameEn
-                };
-            });
-        });
-    }
-
-    if($scope.targetGroups.indexOf('ROLL_T') !== -1) {
-        getStudentGroups();
     }
 
     $scope.addReceiver = function(receiver) {
@@ -292,15 +657,20 @@ function ($scope, QueryUtils, $route, message, ArrayUtils, $resource, config, $r
         if(isStudent(receiver)) {
             // student, remove also his/her representative(s)
             $scope.receivers = $scope.receivers.filter(function(r){return r.studentId !== receiver.studentId;});
+            if (anyFilterApplied()) {
+              ignorePersonId[receiver.personId] = true;
+            } else {
+              ignorePersonId = {};
+            }
         }
     };
 
     /**
      * Finds out if the target is a part of object.
-     * 
+     *
      * @param {Object} object
-     * @param {Object} target 
-     * @param {String} key 
+     * @param {Object} target
+     * @param {String} key
      */
     function isSamePartOfByKey(object, target, key) {
         var keyPath = key;
@@ -336,9 +706,9 @@ function ($scope, QueryUtils, $route, message, ArrayUtils, $resource, config, $r
     }
 
     /**
-     * 
-     * @param {Object} source 
-     * @param {Object} container 
+     *
+     * @param {Object} source
+     * @param {Object} container
      * @param {Function} fDuplicateCheck Function. Checks for existing values. Arguments: [element in container]; this: [element from source].
      * @param {Function} fExists Function. Executed when there is any existing value. Arguments: [existing item in container], [duplicate item from source].
      */
@@ -356,8 +726,8 @@ function ($scope, QueryUtils, $route, message, ArrayUtils, $resource, config, $r
     /**
      * Groups elements in array
      * Used mainly for students/parents
-     * 
-     * @param {Array} list 
+     *
+     * @param {Array} list
      */
     function groupRepeatsIntoReceivers(list) {
         groupItems(list, $scope.receivers,
@@ -382,18 +752,28 @@ function ($scope, QueryUtils, $route, message, ArrayUtils, $resource, config, $r
     }
 
     function getStudents(query) {
-        query.size = 1000;
-        $resource(config.apiUrl + baseUrl + "/students", query).query().$promise.then(function(response) {
-            // It returns their parents as well.
-            // HITSAOIS-54 8
-            // if there are repeated values in the current list then append new values to them and group
-            groupRepeatsIntoReceivers(studentAndParentListToReceiverOption(response).filter(function(r) {
-                if (r.higher && r.role[0] === 'ROLL_L') {
-                    return false;
-                }
-                return true;
-            }));
-        });
+      var hasParameters = false;
+      for (var k in query) {
+        if (query.hasOwnProperty(k)) {
+          hasParameters = true;
+          break;
+        }
+      }
+      if (!hasParameters) {
+        return;
+      }
+      query.size = 1000;
+      QueryUtils.endpoint(baseUrl + "/students").query(query, function (response) {
+        // It returns their parents as well.
+        // HITSAOIS-54 8
+        // if there are repeated values in the current list then append new values to them and group
+        groupRepeatsIntoReceivers(studentAndParentListToReceiverOption(response).filter(function(r) {
+          if (r.higher && r.role[0] === 'ROLL_L') {
+            return false;
+          }
+          return !ignorePersonId[r.personId];
+        }));
+      });
     }
 
     function studentAndParentListToReceiverOption(response) {
@@ -416,20 +796,35 @@ function ($scope, QueryUtils, $route, message, ArrayUtils, $resource, config, $r
         return list;
     }
 
-    function filterReceivers() {
+    function filterReceivers(role) {
         $scope.receivers = $scope.receivers.filter(function(r){
-            return (isStudentsParent(r) || includesOrEmpty(r.role, $scope.targetGroup)) &&
-            (r.addedWithAutocomplete ||
+            return (r.addedWithAutocomplete || !includesOrEmpty(r.role, role) ||
             includesOrEmpty($scope.curriculum, r.curriculum ? r.curriculum.id : null) &&
             includesOrEmpty($scope.studentGroup, r.studentGroup ? r.studentGroup.id : null) &&
             includesOrEmpty($scope.studyForm, r.studyForm) &&
             includesOrEmpty($scope.studyGroupStudentsParents, r.studentGroup ? r.studentGroup.id : null) &&
             includesOrEmpty($scope.journalStudent, r.journal ? r.journal.id : null) &&
             includesOrEmpty($scope.journalStudentParent, r.journal ? r.journal.id : null) &&
+            includesOrEmpty($scope.journalTeacher, r.journal ? r.journal.id : null) &&
             includesOrEmpty($scope.subjectStudent, r.subject ? r.subject.id : null) &&
-            includesOrEmpty($scope.subjectStudentParent, r.subject ? r.subject.id : null));
+            includesOrEmpty($scope.subjectStudentParent, r.subject ? r.subject.id : null) &&
+            includesOrEmpty($scope.subjectTeacher, r.subject ? r.subject.id : null));
         });
     }
+
+    function getUniqueElements(arr) {
+      var seen = {};
+      return (arr || []).filter(function(it) {
+        return !!it && !!it.id;
+      }).reduce(function (acc, it) {
+        if (!seen[it.id]) {
+          acc.push(it);
+        }
+        seen[it.id] = true;
+        return acc;
+      }, []);
+    }
+
     /**
      * do not remove student's parents, if student is added with autocomplete
      */
@@ -437,7 +832,7 @@ function ($scope, QueryUtils, $route, message, ArrayUtils, $resource, config, $r
         return $scope.targetGroup === 'ROLL_T' && includesOrEmpty(r.role, 'ROLL_L');
     }
 
-    $scope.targetGroupChanged = function() {
+    $scope.targetGroupChanged = function(newVal, oldVal) {
         /*
         filterReceivers() did not work in the following scenario:
         user adds a student which has representative and then selects Parents as target group.
@@ -445,62 +840,128 @@ function ($scope, QueryUtils, $route, message, ArrayUtils, $resource, config, $r
         So now list of receivers is just completely cleared.
         */
         // filterReceivers();
-        $scope.receivers = [];
-        $scope.curriculum = [];
-        $scope.studentGroup = [];
-        $scope.studyForm = [];
-        $scope.studyGroupStudentsParents = [];
-        $scope.journalStudent = [];
-        $scope.journalStudentParent = [];
-        $scope.subjectStudent = [];
-        $scope.subjectStudentParent = [];
+        // $scope.receivers = [];
+        // $scope.curriculum = [];
+        // $scope.studentGroup = [];
+        // $scope.studyForm = [];
+        // $scope.studyGroupStudentsParents = [];
+        // $scope.journalStudent = [];
+        // $scope.journalStudentParent = [];
+        // $scope.subjectStudent = [];
+        // $scope.subjectStudentParent = [];
+      getGroups();
+
+      var existingData = groupSearchStorage[newVal];
+      var existingSearchGroup;
+      for (var key in existingData) {
+        if (!existingData.hasOwnProperty(key)) {
+          continue;
+        }
+        if (angular.isArray(existingData[key]) && existingData[key].length > 0) {
+          existingSearchGroup = key;
+        }
+      }
+      existingSearchGroup = $scope.groupSearchTypes.find(function (it) {
+        return it.code === existingSearchGroup;
+      });
+      var oldType = $scope.groupSearchType;
+      if (existingSearchGroup) {
+        $scope.groupSearchType = existingSearchGroup;
+      }
+
+      $scope.groupSearchTypeUrl = getGroupSearchUrl();
+      $scope.groupSearchLabel = getGroupSearchLabel();
+      storeAndReceiveGroupSearchValues(oldVal, (oldType || {}).code,
+        newVal, ($scope.groupSearchType || {}).code);
+      $scope.autocompleteControllers.forEach(function (ctrl) {
+        ctrl.clearSearchText();
+      });
     };
 
-    $scope.searchTypeChanged = function() {
-        //$scope.receivers = $scope.receivers.filter(function (r) { return r.addedWithAutocomplete });
-        filterReceivers();
-        $scope.curriculum = [];
-        $scope.studentGroup = [];
-        $scope.studyForm = [];
-        $scope.studyGroupStudentsParents = [];
+    function hasAnyStorageValue(targetGroup) {
+      if (!targetGroup) {
+        return false;
+      }
+
+    }
+
+    $scope.searchTypeChanged = function(newVal, oldVal) {
+      //$scope.receivers = $scope.receivers.filter(function (r) { return r.addedWithAutocomplete });
+      // filterReceivers();
+      // $scope.curriculum = [];
+      // $scope.studyForm = [];
+      if ($scope.targetGroup === 'ROLL_T') {
+        if ($scope.auth.isTeacher()) {
+          $scope.studentGroup = [];
+          clearGroupSearchValues('ROLL_T', 'SEARCH_STUDENT_GROUP');
+        }
         $scope.journalStudent = [];
-        $scope.journalStudentParent = [];
         $scope.subjectStudent = [];
+        clearGroupSearchValues('ROLL_T', 'SEARCH_JOURNAL');
+        clearGroupSearchValues('ROLL_T', 'SEARCH_SUBJECTS');
+      }
+      if ($scope.targetGroup === 'ROLL_L') {
+        $scope.studyGroupStudentsParents = [];
+        $scope.journalStudentParent = [];
         $scope.subjectStudentParent = [];
+        clearGroupSearchValues('ROLL_L');
+      }
+      if ($scope.targetGroup === 'ROLL_O') {
+        $scope.journalTeacher = [];
+        $scope.subjectTeacher = [];
+        clearGroupSearchValues('ROLL_O');
+      }
+      getGroups();
+      $scope.groupSearchTypeUrl = getGroupSearchUrl();
+      $scope.groupSearchLabel = getGroupSearchLabel();
+      storeAndReceiveGroupSearchValues($scope.targetGroup, oldVal, $scope.targetGroup, newVal);
+      $scope.autocompleteControllers.forEach(function (ctrl) {
+        ctrl.clearSearchText();
+      });
     };
 
     function includesOrEmpty(array, item) {
+        if (angular.isArray(item)) {
+          return item.find(function (it) {
+            return includesOrEmpty(array, it);
+          });
+        }
         return array.length === 0 || array.indexOf(item) !== -1;
     }
 
     function anyFilterApplied() {
-        return $scope.studyForm.length > 0 || $scope.studentGroup.length > 0 || $scope.curriculum.length > 0 ||
-            $scope.studyGroupStudentsParents.length > 0 || $scope.journalStudent.length > 0 || $scope.journalStudentParent.length > 0 ||
-            $scope.subjectStudent.length > 0 || $scope.subjectStudentParent.length > 0;
+        return $scope.targetGroup === 'ROLL_T' &&
+          ($scope.studyForm.length > 0 || $scope.studentGroup.length > 0 || $scope.curriculum.length > 0 ||
+            $scope.journalStudent.length > 0 || $scope.subjectStudent.length > 0) ||
+          $scope.targetGroup === 'ROLL_L' && ($scope.studyGroupStudentsParents.length > 0 ||
+            $scope.journalStudentParent.length > 0 || $scope.subjectStudentParent.length > 0) ||
+          $scope.targetGroup === 'ROLL_O' && ($scope.journalTeacher.length > 0 || $scope.subjectTeacher.length > 0);
     }
 
-    var previousCurriculum = false;
-    $scope.$watch('curriculum', function() {
-            if(!previousCurriculum) {
-                previousCurriculum = true;
-            } else {
-                getGroups();
-                filterReceivers();
-                if(anyFilterApplied()) {
-                    getStudents({studyForm: $scope.studyForm, studentGroupId: $scope.studentGroup, curriculum: $scope.curriculum});
-                } else {
-                    removeAllStudents();
-                }
-            }
-        }
-    );
+    // $scope.$watchGroup([], function () {
+    //   getGroups();
+    //   filterReceivers(['ROLL_T', 'ROLL_L']);
+    //   if(anyFilterApplied()) {
+    //     getStudents({
+    //       studyForm: $scope.studyForm,
+    //       studentGroupId: $scope.studentGroup,
+    //       curriculum: $scope.curriculum,
+    //       journalId: $scope.journalStudent,
+    //       subjectId: $scope.subjectStudent
+    //     });
+    //   } else {
+    //     removeFilteredReceivers(['ROLL_T', 'ROLL_L']);
+    //   }
+    // });
 
-    function clearAndApply(fApply, oData) {
-        filterReceivers();
+    function clearAndApply(fApply, oData, role) {
+        filterReceivers(role);
         if(anyFilterApplied()) {
+          if (angular.isFunction(fApply)) {
             fApply(oData);
+          }
         } else {
-            removeAllStudents();
+          removeFilteredReceivers(role);
         }
     }
 
@@ -508,65 +969,81 @@ function ($scope, QueryUtils, $route, message, ArrayUtils, $resource, config, $r
      * We have to block the first run in $watch because when page is loaded then watch is fired.
      */
 
-    var blockLoadingJournalStudent = true;
-    $scope.$watch('journalStudent', function() {
-        if (blockLoadingJournalStudent) {
-            blockLoadingJournalStudent = false;
-        } else {
-            clearAndApply(getStudents, {journalId: $scope.journalStudent});
-        }
+    $scope.$watchGroup(['curriculum', 'studyForm', 'journalStudent', 'subjectStudent', 'studentGroup'], function(newValues) {
+      if ((!newValues[0] || !newValues[0].length) &&
+        (!newValues[1] || !newValues[1].length) &&
+        (!newValues[2] || !newValues[2].length) &&
+        (!newValues[3] || !newValues[3].length) &&
+        (!newValues[4] || !newValues[4].length)) {
+        clearAndApply(undefined, undefined, ["ROLL_T", "ROLL_L"]);
+        return;
+      }
+      clearAndApply(getStudents, {
+        studyForm: $scope.studyForm,
+        studentGroupId: $scope.studentGroup,
+        curriculum: $scope.curriculum,
+        journalId: $scope.journalStudent,
+        subjectId: $scope.subjectStudent
+      }, ['ROLL_T', 'ROLL_L']);
     });
 
-    var blockLoadingJournalStudentParent = true;
-    $scope.$watch('journalStudentParent', function() {
-        if (blockLoadingJournalStudentParent) {
-            blockLoadingJournalStudentParent = false;
-        } else {
-            clearAndApply(getParents, {journalId: $scope.journalStudentParent});
-        } 
-    });
-    
-    var blockLoadingSubjectStudent = true;
-    $scope.$watch('subjectStudent', function() {
-        if (blockLoadingSubjectStudent) {
-            blockLoadingSubjectStudent = false;
-        } else {
-            clearAndApply(getStudents, {subjectId: $scope.subjectStudent});
-        }
-    });
-    
-    var blockLoadingSubjectStudentParent = true;
-    $scope.$watch('subjectStudentParent', function() {
-        if (blockLoadingSubjectStudentParent) {
-            blockLoadingSubjectStudentParent = false;
-        } else {
-            clearAndApply(getParents, {subjectId: $scope.subjectStudentParent});
-        }
+    $scope.$watchGroup(['journalStudentParent', 'subjectStudentParent', 'studyGroupStudentsParents'], function (newValues) {
+      if ((!newValues[0] || !newValues[0].length) && (!newValues[1] || !newValues[1].length) && (!newValues[2] || !newValues[2].length)) {
+        clearAndApply(undefined, undefined, "ROLL_L");
+        return;
+      }
+      clearAndApply(getParents, {
+        journalId: $scope.journalStudentParent,
+        subjectId: $scope.subjectStudentParent,
+        studentGroupId: $scope.studyGroupStudentsParents
+      }, 'ROLL_L');
     });
 
-    var blockLoadingStudentGroup = true;
-    $scope.$watch('studentGroup', function() {
-        if (blockLoadingStudentGroup) {
-            blockLoadingStudentGroup = false;
-        } else {
-            clearAndApply(getStudents, {studyForm: $scope.studyForm, studentGroupId: $scope.studentGroup, curriculum: $scope.curriculum});
-        }
-    });
-
-    var blockLoadingStudentGroupStudentsParents = true;
-    $scope.$watch('studyGroupStudentsParents', function() {
-        if (blockLoadingStudentGroupStudentsParents) {
-            blockLoadingStudentGroupStudentsParents = false;
-        } else {
-            clearAndApply(getParents, {studentGroupId: $scope.studyGroupStudentsParents});
-        }
+    $scope.$watchGroup(['journalTeacher', 'subjectTeacher'], function (newValues) {
+      if ((!newValues[0] || !newValues[0].length) && (!newValues[1] || !newValues[1].length)) {
+        clearAndApply(undefined, undefined, "ROLL_O");
+        return;
+      }
+      clearAndApply(getTeachers, {
+        journalId: $scope.journalTeacher,
+        subjectId: $scope.subjectTeacher
+      }, 'ROLL_O');
     });
 
     function getParents(query) {
-        $resource(config.apiUrl + '/message/parents', query).query().$promise.then(function(response){
-            // HITSAOIS-54 8
-            groupRepeatsIntoReceivers(parentsPageToReceiverOptionList(response, false));
-        });
+      var hasParameters = false;
+      for (var k in query) {
+        if (query.hasOwnProperty(k)) {
+          hasParameters = true;
+          break;
+        }
+      }
+      if (!hasParameters) {
+        return;
+      }
+      query.size = 1000;
+      QueryUtils.endpoint(baseUrl + "/parents").query(query, function(response){
+        // HITSAOIS-54 8
+        groupRepeatsIntoReceivers(parentsPageToReceiverOptionList(response, false));
+      });
+    }
+
+    function getTeachers(query) {
+      var hasParameters = false;
+      for (var k in query) {
+        if (query.hasOwnProperty(k)) {
+          hasParameters = true;
+          break;
+        }
+      }
+      if (!hasParameters) {
+        return;
+      }
+      query.size = 1000;
+      QueryUtils.endpoint(baseUrl + "/teachers").query(query, function(response){
+        // HITSAOIS-54 8
+        groupRepeatsIntoReceivers(studentAndParentListToReceiverOption(response));
+      });
     }
 
     function parentsPageToReceiverOptionList(response, addedWithAutocomplete) {
@@ -587,46 +1064,27 @@ function ($scope, QueryUtils, $route, message, ArrayUtils, $resource, config, $r
         return list;
     }
 
-    var previousStudyForm = false;
-    $scope.$watch('studyForm', function() {
-            if(!previousStudyForm) {
-                previousStudyForm = true;
-            } else {
-                getGroups();
-                filterReceivers();
-                if(anyFilterApplied()) {
-                    getStudents({studyForm: $scope.studyForm, studentGroupId: $scope.studentGroup, curriculum: $scope.curriculum});
-                } else {
-                    removeAllStudents();
-                }
-            }
-        }
-    );
-
     function getGroups() {
-        if ($scope.auth.isTeacher()) {
-            if (angular.isDefined($scope.groupSearchType) && $scope.groupSearchType !== null) {
-                switch ($scope.groupSearchType) {
-                    case "SEARCH_STUDENT_GROUP":
-                        getStudentGroups();
-                        break;
-                    case "SEARCH_JOURNAL":
-                        getJournals();
-                        break;
-                    case "SEARCH_SUBJECTS":
-                        getSubjects();
-                        break;
-                    default:
-                        break;
-                }
-            }
+      if ($scope.auth.isTeacher() || $scope.auth.isLeadingTeacher() || $scope.auth.isAdmin()) {
+        if (angular.isDefined($scope.groupSearchType) && $scope.groupSearchType !== null) {
+          switch ($scope.groupSearchType) {
+            case "SEARCH_STUDENT_GROUP":
+              getStudentGroups();
+              break;
+            default:
+              break;
+          }
         } else {
-            getStudentGroups();
+          getStudentGroups();
         }
+      }
     }
 
-    function removeAllStudents() {
-        $scope.receivers = $scope.receivers.filter(function (r){return r.addedWithAutocomplete;});
+    function removeFilteredReceivers(role) {
+        ignorePersonId = {};
+        $scope.receivers = $scope.receivers.filter(function (r) {
+          return r.addedWithAutocomplete || !includesOrEmpty(r.role, role);
+        });
     }
 
     var lookup = QueryUtils.endpoint('/message/persons');
@@ -694,5 +1152,143 @@ function ($scope, QueryUtils, $route, message, ArrayUtils, $resource, config, $r
         QueryUtils.endpoint(baseUrl + '/hasEmail').get({}, function (response) {
             $scope.noEmail = !response.hasEmail;
         });
+    }
+
+    function setTargetGroups() {
+      QueryUtils.endpoint(baseUrl + '/new').search({}, function (response) {
+        $scope.targetGroups = response.targetGroups;
+        $scope.targetGroup = response.targetGroup;
+        $scope.groupSearchTypes = response.additionalGroup;
+      });
+    }
+
+    function isRolePartOfGroupSearch() {
+      if (!angular.isArray($scope.groupSearchTypes)) {
+        return false;
+      }
+      return $scope.groupSearchTypes.find(function (it) {
+        return it.roles.indexOf($scope.targetGroup) !== -1;
+      }) !== undefined;
+    }
+
+    function getGroupSearchLabel() {
+      if (!$scope.groupSearchType) {
+        return undefined;
+      }
+      if ($scope.groupSearchType.code === 'SEARCH_JOURNAL') {
+        if ($scope.targetGroup === 'ROLL_T') {
+          return 'message.journalStudent';
+        } else if ($scope.targetGroup === 'ROLL_L') {
+          return 'message.journalStudentParent';
+        } else if ($scope.targetGroup === 'ROLL_O') {
+          return 'message.journalTeacher';
+        }
+      } else if ($scope.groupSearchType.code === 'SEARCH_SUBJECTS') {
+        if ($scope.targetGroup === 'ROLL_T') {
+          return 'message.subjectStudent';
+        } else if ($scope.targetGroup === 'ROLL_L') {
+          return 'message.subjectStudentParent';
+        } else if ($scope.targetGroup === 'ROLL_O') {
+          return 'message.subjectTeacher';
+        }
+      } else if ($scope.groupSearchType.code === 'SEARCH_STUDENT_GROUP') {
+        if ($scope.targetGroup === 'ROLL_T') {
+          return 'message.studyGroupStudents';
+        } else if ($scope.targetGroup === 'ROLL_L') {
+          return 'message.studyGroupStudentsParents';
+        }
+      }
+      return undefined;
+    }
+
+    function getGroupSearchUrl() {
+      if (!$scope.groupSearchType) {
+        return 'x';
+      }
+      if ($scope.groupSearchType.code === 'SEARCH_JOURNAL') {
+        return '/message/journals';
+      } else if ($scope.groupSearchType.code === 'SEARCH_SUBJECTS') {
+        return '/message/subjects';
+      } else if ($scope.groupSearchType.code === 'SEARCH_STUDENT_GROUP') {
+        return '/message/studentgroups';
+      }
+      return 'x'; //cannot reach
+    }
+
+    function filterGroupSearchTypes(val) {
+      if (!val) {
+        return false;
+      }
+      return (val.roles || []).indexOf($scope.targetGroup) !== -1;
+    }
+
+    function storeAndReceiveGroupSearchValues(storeTargetGroup, storeGroupSearch, receiveTargetGroup, receiveGroupSearch) {
+      if (!!storeTargetGroup) {
+        if (!groupSearchStorage[storeTargetGroup]) {
+          groupSearchStorage[storeTargetGroup] = {};
+        }
+        groupSearchStorage[storeTargetGroup][storeGroupSearch] = angular.copy($scope.groupSearchVal, []);
+      }
+      if (!groupSearchStorage[receiveTargetGroup]) {
+        groupSearchStorage[receiveTargetGroup] = {};
+      }
+      if (!angular.isArray(groupSearchStorage[receiveTargetGroup][receiveGroupSearch])) {
+        groupSearchStorage[receiveTargetGroup][receiveGroupSearch] = [];
+      }
+      $scope.groupSearchVal = groupSearchStorage[receiveTargetGroup][receiveGroupSearch];
+    }
+
+    function clearGroupSearchValues(targetGroup, groupSearch) {
+      if (!groupSearchStorage[targetGroup]) {
+        return;
+      }
+      if (!groupSearch) {
+        groupSearchStorage[targetGroup] = {};
+        return;
+      }
+      groupSearchStorage[targetGroup][groupSearch] = {};
+    }
+
+    function getRepresentativeVariableForGroupSearchType(targetGroup, groupSearch) {
+      if (!groupSearch) {
+        return undefined;
+      }
+      if (groupSearch === 'SEARCH_JOURNAL') {
+        if (targetGroup === 'ROLL_T') {
+          return 'journalStudent';
+        } else if (targetGroup === 'ROLL_L') {
+          return 'journalStudentParent';
+        } else if (targetGroup === 'ROLL_O') {
+          return 'journalTeacher';
+        }
+        return '/message/teacherjournals';
+      } else if (groupSearch === 'SEARCH_SUBJECTS') {
+        if (targetGroup === 'ROLL_T') {
+          return 'subjectStudent';
+        } else if (targetGroup === 'ROLL_L') {
+          return 'subjectStudentParent';
+        } else if (targetGroup === 'ROLL_O') {
+          return 'subjectTeacher';
+        }
+      } else if (groupSearch === 'SEARCH_STUDENT_GROUP') {
+        if (targetGroup === 'ROLL_T') {
+          return 'studentGroup';
+        } else if (targetGroup === 'ROLL_L') {
+          return 'studyGroupStudentsParents';
+        }
+      }
+      return undefined;
+    }
+
+    $scope.$watchCollection('groupSearchVal', updateGroupSearchTypeValues);
+
+    function updateGroupSearchTypeValues() {
+      var ref = getRepresentativeVariableForGroupSearchType($scope.targetGroup, ($scope.groupSearchType || {}).code);
+      if (!ref) {
+        return;
+      }
+      $scope[ref] = ($scope.groupSearchVal || []).map(function (it) {
+        return it.id;
+      });
     }
 }]);

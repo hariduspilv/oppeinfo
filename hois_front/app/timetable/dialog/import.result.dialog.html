@@ -37,7 +37,7 @@
                         {{'timetable.importDialog.messages.notAdded' | translate}}
                       </span>
                       <span ng-repeat="row in msgs" style="display: block;">
-                        {{row.code | translate: {teachers: row.params.nfTeachers.join(', '),
+                        {{row.code | translate: {students: row.params.nfStudents.join(', '), teachers: row.params.nfTeachers.join(', '),
                         groups: row.params.nfGroups.join(', '), rooms: row.params.nfRooms.join(', ')} }}
                       </span>
                     </td>
@@ -48,7 +48,7 @@
         </div>
       </div>
     </md-dialog-content>
-    
+
     <md-dialog-actions layout="row" layout-align="start start">
         <md-button class="md-raised md-primary" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
     </md-dialog-actions>

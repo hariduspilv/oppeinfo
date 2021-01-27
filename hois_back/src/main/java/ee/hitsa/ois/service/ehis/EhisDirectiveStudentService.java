@@ -678,12 +678,14 @@ public class EhisDirectiveStudentService extends EhisService {
         khlOppeasutusList.getOppeasutus().get(0).getOppur().get(0).getMuutmine().setKorgharidus(khlKorgharidusMuuda);
 
         WsEhisStudentLog result = makeRequest(directive, khlOppeasutusList);
-        
-        Pattern pattern = Pattern.compile(".+Andmeid on edukalt laetud\\. Uus lyhiajaliselt valismaal id on (\\d+).+$",
-                Pattern.DOTALL);
-        Matcher matcher = pattern.matcher(result.getResponse());
-        if (matcher.matches()) {
-            originStudent.setEhisId(matcher.group(1));
+
+        if (result.getResponse() != null) {
+            Pattern pattern = Pattern.compile(".+Andmeid on edukalt laetud\\. Uus lyhiajaliselt valismaal id on (\\d+).+$",
+                    Pattern.DOTALL);
+            Matcher matcher = pattern.matcher(result.getResponse());
+            if (matcher.matches()) {
+                originStudent.setEhisId(matcher.group(1));
+            }
         }
         
         return result;

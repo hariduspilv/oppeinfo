@@ -37,7 +37,6 @@ import ee.hitsa.ois.enums.OccupationalGrade;
 import ee.hitsa.ois.enums.ProtocolStatus;
 import ee.hitsa.ois.web.dto.GradeDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumResult;
-import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -64,6 +63,8 @@ import ee.hitsa.ois.domain.student.StudentSpecialNeed;
 import ee.hitsa.ois.enums.ApelApplicationStatus;
 import ee.hitsa.ois.enums.ApplicationStatus;
 import ee.hitsa.ois.enums.ApplicationType;
+import ee.hitsa.ois.enums.ContractStatus;
+import ee.hitsa.ois.enums.CurriculumConsecution;
 import ee.hitsa.ois.enums.CurriculumModuleType;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
@@ -72,6 +73,8 @@ import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.enums.StudentType;
+import ee.hitsa.ois.enums.StudyForm;
+import ee.hitsa.ois.enums.StudyLevel;
 import ee.hitsa.ois.enums.SupportServiceType;
 import ee.hitsa.ois.message.StudentAbsenceCreated;
 import ee.hitsa.ois.repository.ClassifierRepository;
@@ -170,24 +173,24 @@ public class StudentService {
      * @param pageable
      * @return
      */
-    public Page<StudentSearchDto> search(HoisUserDetails user, StudentSearchCommand criteria, Pageable pageable) {
+    public Page<StudentSearchDto> search(HoisUserDetails user, StudentSearchCommand criteria, Pageable pageable, boolean addJournalSubjectData) {
         StringBuilder select = new StringBuilder(STUDENT_LIST_SELECT);
         StringBuilder from = new StringBuilder(STUDENT_LIST_FROM);
-        final boolean isJournalUsed = !CollectionUtils.isEmpty(criteria.getJournalId());
-        final boolean isSubjectUsed = !CollectionUtils.isEmpty(criteria.getSubjectId());
-        if (isJournalUsed) {
+        if (addJournalSubjectData) {
+            //journal
             select.append(", j.id as journal_id, j.name_et as journal_name");
+            Long yearId = studyYearService.getCurrentStudyYear(user.getSchoolId()).getId();
             from.append("left join journal_student js on js.student_id = s.id ");
-            from.append("left join journal j on j.id = js.journal_id ");
-        }
-        if (isSubjectUsed) {
+            from.append("left join journal j on j.id = js.journal_id ").append(yearId != null ? "and j.study_year_id = " + yearId.longValue() + " " : "");
+            // subject
             select.append(", sj.id as subject_id, sj.name_et as subject_name_et, sj.name_en as subject_name_en");
             Long studyPeriodId = studyYearService.getCurrentStudyPeriod(user.getSchoolId());
-            from.append("left join declaration d on d.student_id = s.id " + (studyPeriodId != null ? "and d.study_period_id = " + studyPeriodId.longValue() : ""));
+            from.append("left join declaration d on d.student_id = s.id ").append(studyPeriodId != null ? "and d.study_period_id = " + studyPeriodId.longValue() + " " : "");
             from.append("left join declaration_subject ds on ds.declaration_id = d.id ");
             from.append("left join subject_study_period ssp on ssp.id = ds.subject_study_period_id ");
             from.append("left join subject sj on sj.id = ssp.subject_id ");
         }
+
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from.toString()).sort(pageable);
 
         if (user.isLeadingTeacher()) {
@@ -208,7 +211,7 @@ public class StudentService {
         qb.optionalCriteria("s.study_form_code in (:studyForm)", "studyForm", criteria.getStudyForm());
         qb.optionalCriteria("s.status_code in (:status)", "status", criteria.getStatus());
         qb.optionalCriteria("j.id in (:journalIds)", "journalIds", criteria.getJournalId());
-        qb.optionalCriteria("sj.id in (:subjectIds)", "subjectIds", criteria.getSubjectId());
+        qb.optionalCriteria("ssp.id in (:sspIds)", "sspIds", criteria.getSubjectId());
 
         if (Boolean.TRUE.equals(criteria.getHigher())) {
             qb.filter("curriculum.is_higher = true");
@@ -240,13 +243,9 @@ public class StudentService {
             dto.setStatus(resultAsString(r, 12));
             dto.setPersonId(user.isStudent() ? null : resultAsLong(r, 13));
             dto.setRegNr(resultAsLong(r, 15));
-            if (isJournalUsed) {
+            if (addJournalSubjectData) {
                 dto.setJournal(new AutocompleteResult(resultAsLong(r, 16), resultAsString(r, 17), resultAsString(r, 17)));
-                if (isSubjectUsed) {
-                    dto.setSubject(new AutocompleteResult(resultAsLong(r, 18), resultAsString(r, 19), resultAsString(r, 20)));
-                }
-            } else if (isSubjectUsed) {
-                dto.setSubject(new AutocompleteResult(resultAsLong(r, 16), resultAsString(r, 17), resultAsString(r, 18)));
+                dto.setSubject(new AutocompleteResult(resultAsLong(r, 18), resultAsString(r, 19), resultAsString(r, 20)));
             }
             return dto;
         });
@@ -2071,6 +2070,59 @@ public class StudentService {
     public StudentViewDto saveAddInfo(HoisUserDetails user, Student student, StudentAddInfoForm form) {
         student.setAddInfo(form.getAddInfo());
         return getStudentView(user ,student, null);
+    }
+
+    public void disableStudentMealSupport() {
+        em.createNativeQuery("update student s set is_school_meal = false, school_meal_changed_by = 'TAHVEL', school_meal_changed = current_timestamp(3), "
+                + "changed = current_timestamp(3), changed_by = 'TAHVEL' "
+                + "where s.id not in ("
+                + "select s1.id from student s1 "
+                + "join curriculum_version cv on cv.id = s1.curriculum_version_id "
+                + "join curriculum c on cv.curriculum_id = c.id "
+                + "where s1.previous_study_level_code in (:studyLevels) "
+                + "and s1.status_code = :activeStatus "
+                + "and c.is_higher = false "
+                + "and s1.study_form_code in (:studyForms) "
+                + "and c.consecution_code = :consecutionCode "
+                + "and not exists(select c1.id from contract c1 "
+                    + "where c1.student_id = s1.id "
+                    + "and c1.status_code = :contractStatus "
+                    + "and c1.canceled is null) "
+                + "and s1.curriculum_version_id = cv.id "
+                + ") "
+                + "and s.is_school_meal = true", Student.class)
+        .setParameter("activeStatus", StudentStatus.OPPURSTAATUS_O.name())
+        .setParameter("studyLevels", EnumUtil.toNameList(StudyLevel.OPPEASTE_110, StudyLevel.OPPEASTE_210, 
+                StudyLevel.OPPEASTE_215, StudyLevel.OPPEASTE_216, StudyLevel.OPPEASTE_233))
+        .setParameter("studyForms", EnumUtil.toNameList(StudyForm.OPPEVORM_W, StudyForm.OPPEVORM_Z))
+        .setParameter("consecutionCode", CurriculumConsecution.OPPEKAVA_TYPE_E.name())
+        .setParameter("contractStatus", ContractStatus.LEPING_STAATUS_K.name())
+        .executeUpdate();
+    }
+    
+    public void enableStudentMealSupport() {
+        em.createNativeQuery("update student set is_school_meal = true, school_meal_changed_by = 'TAHVEL', school_meal_changed = current_timestamp(3), "
+                + "changed = current_timestamp(3), changed_by = 'TAHVEL' "
+                + "where id in (select s1.id from student s1 "
+                + "join curriculum_version cv on cv.id = s1.curriculum_version_id "
+                + "join curriculum c on c.id = cv.curriculum_id "
+                + "where s1.previous_study_level_code in (:studyLevels) "
+                + "and s1.status_code = :activeStatus "
+                + "and c.is_higher = false "
+                + "and s1.study_form_code in (:studyForms) "
+                + "and c.consecution_code = :consecutionCode "
+                + "and not exists(select c1.id from contract c1 "
+                    + "where c1.student_id = s1.id "
+                    + "and c1.status_code = :contractStatus "
+                    + "and c1.canceled is null)) "
+                + "and (is_school_meal is null or is_school_meal = false)")
+        .setParameter("activeStatus", StudentStatus.OPPURSTAATUS_O.name())
+        .setParameter("studyLevels", EnumUtil.toNameList(StudyLevel.OPPEASTE_110, StudyLevel.OPPEASTE_210, 
+                StudyLevel.OPPEASTE_215, StudyLevel.OPPEASTE_216, StudyLevel.OPPEASTE_233))
+        .setParameter("studyForms", EnumUtil.toNameList(StudyForm.OPPEVORM_W, StudyForm.OPPEVORM_Z))
+        .setParameter("consecutionCode", CurriculumConsecution.OPPEKAVA_TYPE_E.name())
+        .setParameter("contractStatus", ContractStatus.LEPING_STAATUS_K.name())
+        .executeUpdate();
     }
 
 }

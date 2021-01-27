@@ -29,7 +29,8 @@ import ee.hitsa.ois.validation.ClassifierRestriction;
     "language",
     "studyLevel",
     "startDate",
-    "endDate"})
+    "endDate",
+    "secondarySchoolCountry"})
 public class SaisApplicationCsvRow {
 
     private String code;
@@ -71,6 +72,9 @@ public class SaisApplicationCsvRow {
 
     @JsonDeserialize(using = SaisApplicationLocalDateDeserializer.class)
     private LocalDate endDate;
+
+    @ClassifierRestriction(value = { MainClassCode.RIIK }, useClassifierValue = true)
+    private String secondarySchoolCountry;
 
     public String getCode() {
         return code;
@@ -173,6 +177,12 @@ public class SaisApplicationCsvRow {
     }
     public void setEndDate(LocalDate endDate) {
         this.endDate = endDate;
+    }
+    public String getSecondarySchoolCountry() {
+        return secondarySchoolCountry;
+    }
+    public void setSecondarySchoolCountry(String secondarySchoolCountry) {
+        this.secondarySchoolCountry = secondarySchoolCountry;
     }
 }
 

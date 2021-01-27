@@ -195,23 +195,13 @@ public class StudentResultHigherService {
         return null;
     }
 
-    // algorithm in HITSAOIS-748
     public BigDecimal getConsideredCurriculumCompletion(Student student, BigDecimal collectedCredits) {
-        List<?> data = em.createNativeQuery("select case when jaak_sem > nom_sem then 0 else nom_sem - jaak_sem end * 30 from "
-                + "(select nom_sem, coalesce(round(extract (day from nominal_study_end - now()) / 30.5 / 6), 0) jaak_sem from "
-                + "(select round(c.study_period/6.0) nom_sem, coalesce(s.nominal_study_end, "
-                + "s.study_start + interval '1 month' * c.study_period - interval '1 day') nominal_study_end "
-                + "from student s "
-                + "join curriculum_version cv on cv.id = s.curriculum_version_id "
-                + "join curriculum c on c.id = cv.curriculum_id "
-                + "where s.id = :studentId) x) y")
+        List<?> data = em.createNativeQuery("select get_cumulative_credits(s.id, get_student_study_period_count(s.id), :collectedCredits)"
+                + "from student s where s.id = :studentId")
                 .setParameter("studentId", EntityUtil.getId(student))
+                .setParameter("collectedCredits", collectedCredits)
                 .setMaxResults(1).getResultList();
-        BigDecimal expectedCredits = !data.isEmpty() ? resultAsDecimal(data.get(0), 0) : BigDecimal.ZERO;
-        if (BigDecimal.ZERO.compareTo(expectedCredits) != 0) {
-            return collectedCredits.multiply(BigDecimal.valueOf(100)).divide(expectedCredits, 1, RoundingMode.DOWN);
-        }
-        return BigDecimal.valueOf(100);
+        return resultAsDecimal(data.get(0), 0).setScale(1, RoundingMode.DOWN);
     }
 
     public Long getTotalPositiveGradeCredits(Student student) {
@@ -543,7 +533,7 @@ public class StudentResultHigherService {
                 + "join declaration_subject ds on ds.declaration_id = d.id "
                 + "join subject_study_period ssp on ssp.id = ds.subject_study_period_id "
                 + "join subject s on ssp.subject_id = s.id "
-                + "join subject_study_period_teacher sspt on sspt.subject_study_period_id = ssp.id "
+                + "join subject_study_period_teacher sspt on sspt.subject_study_period_id = ssp.id and sspt.is_diploma_supplement "
                 + "join teacher t on sspt.teacher_id = t.id "
                 + "join person p on t.person_id = p.id");
         qb.optionalCriteria("s.id not in (:subjectIds)", "subjectIds", addedSubjectIds);
@@ -695,7 +685,7 @@ public class StudentResultHigherService {
             } else {
                 module.calculateIsOk();
                 if (Boolean.FALSE.equals(module.getIsOk()) && HigherModuleType.KORGMOODUL_V.name().equals(module.getType())) {
-                    module.setIsOk(Boolean.valueOf(BigDecimal.ZERO.setScale(1).equals(completion.getStudyOptionalBacklog())));
+                    module.setIsOk(Boolean.valueOf(BigDecimal.ZERO.compareTo(completion.getStudyOptionalBacklog()) == 0));
                 }
                 // if module is OK without marking it complete then there is no need for marking it complete
                 if (Boolean.TRUE.equals(module.getIsOk())) {

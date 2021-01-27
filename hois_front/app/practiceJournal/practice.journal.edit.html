@@ -56,7 +56,19 @@
 
         <md-input-container flex="10" flex-sm="100" flex-xs="100" flex-offset-gt-sm="5">
           <label class="textInput">{{'practiceJournal.creditsEKAP' | translate}}</label>
-          <input type="number" name="credits[{{$index}}]" ng-model="module.credits" min="0" max="999.9" ng-change="updateHours(module, $index)" ng-disabled="practiceJournal.contract" required>
+          <input type="number" name="credits[{{$index}}]" ng-model="module.credits" min="0" max="999.9" ng-change="updateHours(module, $index)" 
+            pattern="^\d+(\.\d{1,2})?$" ng-disabled="practiceJournal.contract" required>
+          <div ng-messages="practiceJournalForm['credits['+$index+']'].$error" ng-show="practiceJournalForm['credits['+$index+']'].$dirty">
+            <div ng-message="min">
+              {{'main.messages.error.positive' | translate}}
+            </div>
+            <div ng-message="max">
+              {{'curriculum.error.max999' | translate}}
+            </div>
+            <div ng-message="pattern">
+              {{'stateCurriculum.error.decimalPresision2' | translate}}
+            </div>
+          </div>
         </md-input-container>
 
         <md-input-container flex="10" flex-sm="100" flex-xs="100">
@@ -86,7 +98,19 @@
 
         <md-input-container flex="10" flex-sm="100" flex-xs="100" flex-offset-gt-sm="5">
           <label class="textInput">{{'practiceJournal.creditsEAP' | translate}}</label>
-          <input type="number" name="credits[{{$index}}]" ng-model="subject.credits" min="0" max="999.9" ng-change="updateHours(subject, $index)" ng-disabled="practiceJournal.contract" required>
+          <input type="number" name="credits[{{$index}}]" ng-model="subject.credits" min="0" max="999.9" pattern="^\d+(\.\d{1,2})?$"
+            ng-change="updateHours(subject, $index)" ng-disabled="practiceJournal.contract" required>
+          <div ng-messages="practiceJournalForm['credits['+$index+']'].$error" ng-show="practiceJournalForm['credits['+$index+']'].$dirty">
+            <div ng-message="min">
+              {{'main.messages.error.positive' | translate}}
+            </div>
+            <div ng-message="max">
+              {{'curriculum.error.max999' | translate}}
+            </div>
+            <div ng-message="pattern">
+              {{'stateCurriculum.error.decimalPresision2' | translate}}
+            </div>
+          </div>
         </md-input-container>
 
         <md-input-container flex="10" flex-sm="100" flex-xs="100">

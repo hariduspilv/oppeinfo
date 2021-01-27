@@ -17,6 +17,7 @@ public class CertificateSearchCommand {
     private LocalDate insertedThru;
     private Long student;
     private CertificateStatus status;
+    private List<Long> studentGroups;
 
     public List<String> getType() {
         return type;
@@ -71,5 +72,11 @@ public class CertificateSearchCommand {
     }
     public void setStatus(CertificateStatus status) {
         this.status = status;
+    }
+    public List<Long> getStudentGroups() {
+        return studentGroups;
+    }
+    public void setStudentGroups(List<Long> studentGroups) {
+        this.studentGroups = studentGroups;
     }
 }

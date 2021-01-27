@@ -1,14 +1,15 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .controller('HigherCurriculumVersionController', function ($scope, Curriculum, dialogService, ArrayUtils, message, $route, $location, QueryUtils, $translate, $rootScope, $routeParams, DataUtils, config) {
+  .controller('HigherCurriculumVersionController', function ($scope, Curriculum, dialogService, ArrayUtils, message,
+    $route, $location, QueryUtils, $translate, $rootScope, $routeParams, DataUtils, config) {
     $scope.auth = $route.current.locals.auth;
-
     var baseUrl = '/curriculum';
     $scope.curriculum = $route.current.locals.curriculum;
     $scope.formState = {
       readOnly: $route.current.$$route.originalPath.indexOf("view") !== -1,
-      strictValidation: false
+      strictValidation: false,
+      nominalCapacity: false
     };
     var SpecialityEndpoint = QueryUtils.endpoint('/curriculum/' + $scope.curriculum.id + '/speciality');
     var SubjectEndpoint = QueryUtils.endpoint('/higherModule/subject');
@@ -17,6 +18,52 @@ angular.module('hitsaOis')
     var Endpoint = QueryUtils.endpoint('/curriculumVersion');
     var id = $route.current.params.versionId;
 
+    function createList(start, end, specialityId) {
+      var list = [];
+      for (var i = start; i <= end; i++) {
+        if ($scope.version !== undefined && $scope.version.nominalCapacities !== undefined) {
+          // should find only one result max
+          var capacities = $scope.version.nominalCapacities.filter(function (capacity) {
+            return capacity.periodNr === i && capacity.specialityId === specialityId;
+          });
+          if (capacities.length !== 0) {
+            list.push(capacities[0]);
+          } else {
+            addNewCapacity(list, specialityId, i);
+          }
+        } else {
+          addNewCapacity(list, specialityId, i);
+        }
+      }
+      return list;
+    }
+
+    function addNewCapacity(list, specialityId, periodNr) {
+      var newCapacity = {periodNr: periodNr, credits: 30, specialityId: specialityId};
+      list.push(newCapacity);
+      if ($scope.version.nominalCapacities === undefined) {
+        $scope.version.nominalCapacities = [];
+      }
+      $scope.version.nominalCapacities.push(newCapacity);
+    }
+
+    $scope.filterSpecialities = function (spec) {
+      if (!$scope.curriculum || !$scope.version || !$scope.version.specialitiesReferenceNumbers) {
+        return false;
+      }
+      return ArrayUtils.includes($scope.version.specialitiesReferenceNumbers, spec.referenceNumber);
+    };
+
+    function setNominalCapacities() {
+      $scope.curriculum = $route.current.locals.curriculum;
+      $scope.curriculumPeriods = Math.ceil($scope.curriculum.studyPeriod / 6);
+      if ($scope.curriculum.specialities !== undefined) {
+        $scope.curriculum.specialities.filter($scope.filterSpecialities).forEach(function (speciality) {
+          speciality.capacities = ArrayUtils.partSplit(createList(1, $scope.curriculumPeriods, speciality.id), 2);
+        });
+      }
+    }
+
     $scope.moduleOrderBy = Curriculum.curriculumModuleOrder;
     $scope.typeOrder = function (module) {
       return Curriculum.higherModuleTypeOrder(module.type);
@@ -24,6 +71,34 @@ angular.module('hitsaOis')
     $scope.STATUS = Curriculum.STATUS;
     $scope.VERSION_STATUS = Curriculum.VERSION_STATUS;
     $scope.schoolModuleGrades = !!($scope.auth.school || {}).hmodules;
+
+    $scope.sumOfPeriods = function(periods) {
+      if (periods === undefined) {return 0;}
+      var sum = ArrayUtils.flatten(periods).reduce(function (p1, p2) {
+        return p1 + (p2.credits !== undefined ? p2.credits : 0);
+      }, 0);
+      return Math.round(sum * 100) / 100;
+    };
+
+    $scope.sumOfAutumnPeriods = function(periods) {
+      if (periods === undefined) {return 0;}
+      var sum = ArrayUtils.flatten(periods).filter(function (value, index) {
+        return index % 2 === 0;
+      }).reduce(function (p1, p2) {
+        return p1 + (p2.credits !== undefined ? p2.credits : 0);
+      }, 0);
+      return Math.round(sum * 100) / 100;
+    };
+
+    $scope.sumOfSpringPeriods = function(periods) {
+      if (periods === undefined) {return 0;}
+      var sum = ArrayUtils.flatten(periods).filter(function (value, index) {
+        return index % 2 !== 0;
+      }).reduce(function (p1, p2) {
+        return p1 + (p2.credits !== undefined ? p2.credits : 0);
+      }, 0);
+      return Math.round(sum * 100) / 100;
+    };
 
     var initialVersion = {
       status: $scope.VERSION_STATUS.S,
@@ -42,6 +117,7 @@ angular.module('hitsaOis')
       $scope.version = Endpoint.get({id: id}).$promise.then(function(response){
         $scope.version = response;
         dtoToModel();
+        setNominalCapacities();
         $rootScope.removeLastUrlFromHistory(function(lastUrl){
           return lastUrl && lastUrl.indexOf('#/higherCurriculum/' + $scope.version.curriculum + '/version/') !== -1;
         });
@@ -49,9 +125,11 @@ angular.module('hitsaOis')
       $scope.publicUrl = config.apiUrl + '/public/curriculum/' + $scope.curriculum.id + '/' + id +'?format=json';
     } else {
       $scope.version = angular.extend(initialVersion);
+      setNominalCapacities();
     }
 
     function dtoToModel() {
+
       DataUtils.convertStringToDates($scope.version, ["validFrom", "validThru"]);
 
       $scope.years = [];
@@ -118,10 +196,10 @@ angular.module('hitsaOis')
     };
 
 
-    function validationPassed(messages) {
+    function validationPassed(messages, dontCheckCapacities) {
       $scope.higherCurriculumVersionForm.$setSubmitted();
 
-      if (!versionFormIsValid()) {
+      if (!versionFormIsValid(dontCheckCapacities)) {
         var errorMessage = messages && messages.errorMessage ? messages.errorMessage : 'main.messages.form-has-errors';
         message.error(errorMessage);
         return false;
@@ -134,6 +212,7 @@ angular.module('hitsaOis')
       if (!validationPassed(messages)) {
         return;
       }
+
       var curriculumVersion = new Endpoint($scope.version);
 
       if (angular.isDefined($scope.version.id)) {
@@ -143,11 +222,13 @@ angular.module('hitsaOis')
           $scope.version = response;
           DataUtils.convertStringToDates($scope.version, ["validFrom", "validThru"]);
           $scope.higherCurriculumVersionForm.$setPristine();
+          setNominalCapacities();
         });
       } else {
         curriculumVersion.$save().then(function (response) {
           message.info('main.messages.create.success');
           $location.path('/higherCurriculum/' + $scope.version.curriculum + '/version/' + response.id + '/edit');
+          setNominalCapacities();
         });
       }
     }
@@ -158,7 +239,7 @@ angular.module('hitsaOis')
         updateSuccess: 'curriculum.statuschange.version.success.opened'
       };
       var setStatusEndpoint = QueryUtils.endpoint('/curriculumVersion/underrevision');
-      changeStatus(setStatusEndpoint, messages);
+      changeStatus(setStatusEndpoint, messages, true);
     };
 
     $scope.saveAndConfirm = function() {
@@ -189,11 +270,11 @@ angular.module('hitsaOis')
       };
       var ClosingEndpoint = QueryUtils.endpoint("/curriculumVersion/close");
       $scope.formState.strictValidation = false;
-      changeStatus(ClosingEndpoint, messages);
+      changeStatus(ClosingEndpoint, messages, true);
     };
 
-    function changeStatus(StatusChangeEndpoint, messages) {
-      if (!validationPassed(messages)) {
+    function changeStatus(StatusChangeEndpoint, messages, dontCheckCapacities) {
+      if (!validationPassed(messages, dontCheckCapacities)) {
         return;
       }
       setTimeout(function(){
@@ -233,8 +314,8 @@ angular.module('hitsaOis')
       }
     };
 
-    function versionFormIsValid() {
-      return $scope.higherCurriculumVersionForm.$valid && ($scope.versionIsValid() || !$scope.strictValidation());
+    function versionFormIsValid(dontCheckCapacities) {
+      return $scope.higherCurriculumVersionForm.$valid && ($scope.versionIsValid(dontCheckCapacities) || !$scope.strictValidation());
     }
 
     $scope.strictValidation = function () {
@@ -261,8 +342,8 @@ angular.module('hitsaOis')
 
     // version form validation
 
-    $scope.versionIsValid = function () {
-      return $scope.allSpecialitiesValid() && $scope.allMinorSpecialitiesValid();
+    $scope.versionIsValid = function (dontCheckCapacities) {
+      return $scope.allSpecialitiesValid() && $scope.allMinorSpecialitiesValid() && ($scope.allSpecialityCapacitiesValid() || dontCheckCapacities);
     };
 
     function getModulesBySpeciality(specialityId) {
@@ -309,6 +390,23 @@ angular.module('hitsaOis')
       return true;
     };
 
+    $scope.allSpecialityCapacitiesValid = function () {
+      var specialities = $scope.curriculum.specialities.filter($scope.filterSpecialities);
+      if (ArrayUtils.isEmpty(specialities)) {
+        return false;
+      }
+      for (var i = 0; i < specialities.length; i++) {
+        if (!$scope.specialityCapacityValid(specialities[i])) {
+          return false;
+        }
+      }
+      return true;
+    };
+
+    $scope.specialityCapacityValid = function(speciality) {
+      return $scope.sumOfPeriods(speciality.capacities) === $scope.curriculum.credits;
+    };
+
     $scope.moduleValid = function (module1) {
       return $scope.moduleHasSubjects(module1);
     };
@@ -338,11 +436,12 @@ angular.module('hitsaOis')
       };
     };
 
-    $scope.filterSpecialities = function (spec) {
+    $scope.filterNominalCapacities = function (spec) {
+      console.log(spec);
       if (!$scope.curriculum || !$scope.version || !$scope.version.specialitiesReferenceNumbers) {
         return false;
       }
-      return ArrayUtils.includes($scope.version.specialitiesReferenceNumbers, spec.referenceNumber);
+      return ArrayUtils.includes($scope.version.specialitiesReferenceNumbers, spec.name.id);
     };
 
     function updateModuleCredits(module1) {
@@ -373,7 +472,15 @@ angular.module('hitsaOis')
           }
         }
       }
+      if ($scope.version.nominalCapacities !== undefined) {
+        $scope.version.nominalCapacities = $scope.version.nominalCapacities.filter(function (capacity) {
+          return ArrayUtils.contains($scope.version.specialitiesReferenceNumbers, capacity.specialityId);
+        });
+      }
+      setNominalCapacities();
     });
+
+
 
     function specialityRemoved(newValues, oldValues) {
       return !angular.isDefined(newValues) && angular.isDefined(oldValues) ||

@@ -1,0 +1,24 @@
+<div layout="row">
+  <div flex layout-xs="column">
+    <span ng-show="version.status === VERSION_STATUS.S" layout-xs="column">
+      <md-button class="md-raised md-primary" ng-click="goToEditForm()" ng-if="version.canChange">{{'main.button.change' | translate}}</md-button>
+      <md-button class="md-raised" ng-click="confirm()" ng-if="version.canConfirm">{{'curriculum.statuschange.version.button.verify' | translate}}</md-button>
+      <md-button class="md-raised" ng-click="setStatusClosed()" ng-if="version.canClose">{{'curriculum.statuschange.version.button.close' | translate}}</md-button>
+      <md-button class="md-raised md-default" ng-click="copy()" ng-if="version.canChange">{{'main.button.copy' | translate}}</md-button>
+    </span>
+    <span ng-show="version.status === VERSION_STATUS.K" layout-xs="column">
+      <md-button class="md-raised md-primary" ng-if="version.canChange" ng-click="goToEditForm()">{{'main.button.change' | translate}}</md-button>
+      <md-button class="md-raised md-default" ng-click="changeStatusUnderRevision()" ng-if="version.canChange && version.canSetUnderRevision">{{'curriculum.statuschange.version.button.changeStatusUnderRevision' | translate}}</md-button>
+      <md-button class="md-raised" ng-click="setStatusClosed()" ng-if="version.canClose">{{'curriculum.statuschange.version.button.close' | translate}}</md-button>
+      <md-button class="md-raised md-default" ng-if="version.canChange" ng-click="copy()">{{'main.button.copy' | translate}}</md-button>
+    </span>
+    <span ng-show="version.status === VERSION_STATUS.C" layout-xs="column">
+      <md-button class="md-raised md-default" ng-if="version.canChange" ng-click="copy()">{{'main.button.copy' | translate}}</md-button>
+    </span>
+
+    <a ng-show="showPrintButton()" href="{{formState.curriculumPdfUrl}}" target="_blank" class="md-button md-raised">{{'main.button.print' | translate}}</a>
+    <a ng-show="showPrintButton()" href="{{formState.curriculumXmlUrl}}" target="_blank" class="md-button md-raised">XML</a>
+
+    <md-button class="md-raised md-default" ng-click="back('#/higherCurriculum/' + version.curriculum + '/view', higherCurriculumVersionForm)">{{'main.button.back' | translate}}</md-button>
+  </div>
+</div>

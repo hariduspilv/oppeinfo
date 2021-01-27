@@ -5,6 +5,10 @@ angular.module('hitsaOis').controller('MidtermTaskStudentResultsController',
 function ($q, $route, $scope, $timeout, GRADING_SCHEMA_TYPE, ArrayUtils, GradingSchema, MidtermTaskUtil, QueryUtils, dialogService, message) {
   $scope.auth = $route.current.locals.auth;
   $scope.updateSubgroupPlaces = updateSubgroupPlaces;
+  $scope.addResult = addResult;
+  $scope.removeResult = removeResult;
+  $scope.canAddResult = canAddResult;
+  $scope.canRemoveResult = canRemoveResult;
 
   $scope.subjectStudyPeriodId = $route.current.params.id;
   var Endpoint = QueryUtils.endpoint('/midtermTasks/studentResults');
@@ -162,6 +166,53 @@ function ($q, $route, $scope, $timeout, GRADING_SCHEMA_TYPE, ArrayUtils, Grading
       newSubgroup.declared++;
       student.previousSubgroup = newSubgroup.id;
     }
+  }
+
+  function addResult(result) {
+    if (!angular.isArray(result.history)) {
+      result.history = [];
+    }
+    result.history.push({
+      studentResult: result.id,
+      points: result.points,
+      pointsTxt: result.pointsTxt,
+      isText: result.isText,
+      changed: result.changed
+    });
+    result.points = null;
+    result.pointsTxt = null;
+    result.changed = null;
+  }
+
+  function removeResult(result) {
+    if (!angular.isArray(result.history)) {
+      result.history = [];
+    }
+    if (result.history.length === 0) {
+      return;
+    }
+    var last = result.history[result.history.length - 1];
+    result.points = last.points;
+    result.pointsTxt = last.pointsTxt;
+    result.changed = last.changed;
+    result.history.splice(result.history.length - 1, 1);
+  }
+
+  function canAddResult(result) {
+    if (!angular.isArray(result.history)) {
+      result.history = [];
+    }
+    return true;
+  }
+
+  function canRemoveResult(result) {
+    if (!angular.isArray(result.history)) {
+      result.history = [];
+    }
+    if (result.history.length === 0) {
+      return false;
+    }
+    return !result.history[result.history.length - 1].id;
   }
 
   $scope.subgroupChanged = function () {

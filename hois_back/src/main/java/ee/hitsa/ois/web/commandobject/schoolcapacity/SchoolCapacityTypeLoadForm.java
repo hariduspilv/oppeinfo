@@ -2,10 +2,12 @@ package ee.hitsa.ois.web.commandobject.schoolcapacity;
 
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
+import org.hibernate.validator.constraints.Range;
 
 public class SchoolCapacityTypeLoadForm {
 
     private Long studyYearId;
+    @Range(min = 0, max = 999)
     private Integer loadPercentage;
     @ClassifierRestriction(MainClassCode.KOEFITSIENT)
     private String coefficient;

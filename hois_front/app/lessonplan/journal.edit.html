@@ -29,6 +29,13 @@
           </div>
           <div flex>
             <md-input-container>
+              <md-checkbox ng-model="record.isFree" aria-label="{{'lessonplan.journal.notPaid' | translate}}">
+                {{'lessonplan.journal.notPaid' | translate}}
+              </md-checkbox>
+            </md-input-container>
+          </div>
+          <div flex>
+            <md-input-container>
               <md-checkbox ng-model="record.addStudents" aria-label="{{'lessonplan.journal.addStudents' | translate}}">
                 {{'lessonplan.journal.addStudents' | translate}}
               </md-checkbox>
@@ -42,7 +49,7 @@
             </md-input-container>
             <md-input-container ng-if="record.divideIntoGroups" flex="20" flex-md="25" flex-sm="50" flex-xs="50" flex-offset="5">
               <label>{{'lessonplan.journal.subgroupCount' | translate}}</label>
-              <hois-select ng-model="record.groupProportion" values="formState.groupProportions"
+              <hois-select ng-model="record.groupProportion" values="formState.groupProportions" sorted-query="true"
                 show-property="value" value-property="code" filter-values="['PAEVIK_GRUPI_JAOTUS_1']" required></hois-select>
             </md-input-container>
           </div>
@@ -112,8 +119,9 @@
 
             <md-input-container flex="50" flex-sm="100" flex-xs="100">
               <label class="textInput">{{'lessonplan.journal.groupProportion' | translate}}</label>
-              <hois-classifier-select ng-model="record.groupProportion" required main-classifier-code="PAEVIK_GRUPI_JAOTUS"
-                model-value-attr="code" ng-disabled="record.journalSubId || record.divideIntoGroups"></hois-classifier-select>
+              <hois-select ng-model="record.groupProportion" values="formState.groupProportions" sorted-query="true"
+                show-property="nameEt" value-property="code" ng-disabled="record.journalSubId || record.divideIntoGroups"
+                required></hois-select>
             </md-input-container>
           </div>
 

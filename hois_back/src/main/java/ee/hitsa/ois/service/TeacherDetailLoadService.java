@@ -16,6 +16,7 @@ import java.time.temporal.TemporalField;
 import java.time.temporal.WeekFields;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -36,7 +37,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -48,7 +48,7 @@ import ee.hitsa.ois.report.teacherdetailload.LoadTypeDto;
 import ee.hitsa.ois.report.teacherdetailload.PeriodDto;
 import ee.hitsa.ois.report.teacherdetailload.ResultRowDto;
 import ee.hitsa.ois.report.teacherdetailload.TeacherDetailLoadReport;
-import ee.hitsa.ois.report.teacherdetailload.TeacherDetailLoadSubjectJournalReport;
+import ee.hitsa.ois.report.teacherdetailload.TeacherResultRowDto;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
@@ -63,7 +63,6 @@ import ee.hitsa.ois.web.dto.report.teacherdetailload.PeriodDetailLoadDto;
 import ee.hitsa.ois.web.dto.report.teacherdetailload.TeacherDetailLoadDto;
 import ee.hitsa.ois.web.dto.report.teacherdetailload.TeacherDetailLoadJournalSubjectDto;
 import ee.hitsa.ois.web.dto.report.teacherdetailload.TeacherDetailLoadReportDataDto;
-import ee.hitsa.ois.xls.XlsDynamicColumnCommand;
 
 @Transactional
 @Service
@@ -173,7 +172,7 @@ public class TeacherDetailLoadService {
             Pageable pageable) {
         TeacherDetailLoadReportDataDto report = teacherDetailLoadReportData(criteria);
         Page<TeacherDetailLoadDto> teachers = teachers(schoolId, criteria, pageable);
-        List<Long> teacherIds = StreamUtil.toMappedList(t -> t.getTeacher().getId(), teachers.getContent());
+        Set<Long> teacherIds = StreamUtil.toMappedSet(t -> t.getTeacher().getId(), teachers.getContent());
         if (teacherIds.isEmpty()) {
             return teachers;
         }
@@ -234,7 +233,7 @@ public class TeacherDetailLoadService {
             Pageable pageable) {
         TeacherDetailLoadReportDataDto report = teacherDetailLoadReportData(criteria);
         Page<TeacherDetailLoadDto> teachers = teachers(schoolId, criteria, pageable);
-        List<Long> teacherIds = StreamUtil.toMappedList(t -> t.getTeacher().getId(), teachers.getContent());
+        Set<Long> teacherIds = StreamUtil.toMappedSet(t -> t.getTeacher().getId(), teachers.getContent());
         if (teacherIds.isEmpty()) {
             return teachers;
         }
@@ -541,37 +540,9 @@ public class TeacherDetailLoadService {
             return dto;
         });
     }
-    
-    private Map<Long, List<TeacherDetailLoadJournalSubjectDto>> teachersWithSubjectOrJournal(Long schoolId, TeacherDetailLoadCommand criteria, Pageable pageable) {
-        JpaNativeQueryBuilder qb = getTeacherQueryBuilder(schoolId, criteria, pageable);
-        if (Boolean.TRUE.equals(criteria.getIsHigher())) {
-        	List<?> data = qb.select("distinct t.id as teacherId, p.firstname, p.lastname, S1.id as subjectId, S1.name_et, S1.name_en, S1.code as subjectCode", em).getResultList();
-
-            Map<Long, List<TeacherDetailLoadJournalSubjectDto>> mappedTeachers = StreamUtil.nullSafeList(data).stream()
-            		.collect(Collectors.groupingBy(r -> resultAsLong(r, 0),
-                    Collectors.mapping(r -> {
-                    	TeacherDetailLoadJournalSubjectDto subjectJournal = new TeacherDetailLoadJournalSubjectDto();
-                    	subjectJournal.setJournalSubject(new AutocompleteResult(resultAsLong(r, 3), resultAsString(r, 4), resultAsString(r, 5)));
-                    	subjectJournal.setSubjectCode(resultAsString(r, 6));
-                    	return subjectJournal;
-                    }, Collectors.toList())));
-            return mappedTeachers;
-        } else {
-        	List<?> data = qb.select("distinct t.id as teacherId, p.firstname, p.lastname, J1.id as journalId, J1.name_et", em).getResultList();
-
-            Map<Long, List<TeacherDetailLoadJournalSubjectDto>> mappedTeachers = StreamUtil.nullSafeList(data).stream()
-            		.collect(Collectors.groupingBy(r -> resultAsLong(r, 0),
-                    Collectors.mapping(r -> {
-                    	TeacherDetailLoadJournalSubjectDto subjectJournal = new TeacherDetailLoadJournalSubjectDto();
-                    	subjectJournal.setJournalSubject(new AutocompleteResult(resultAsLong(r, 3), resultAsString(r, 4), resultAsString(r, 4)));
-                    	return subjectJournal;
-                    }, Collectors.toList())));
-            return mappedTeachers;
-        }
-    }
 
     private List<Classifier> getTeacherCapacities(Long schoolId, TeacherDetailLoadCommand criteria,
-            List<Long> teacherIds) {
+            Set<Long> teacherIds) {
         String capacitiesQuery = "select c.code from school_capacity_type sct"
                 + " join classifier c on sct.capacity_type_code = c.code"
                 + " where sct.school_id = :schoolId and sct.is_usable = true and sct.is_timetable = true";
@@ -583,7 +554,7 @@ public class TeacherDetailLoadService {
                         + " join subject_study_period ssp on ssp.id = sspc.subject_study_period_id"
                         + " join subject_study_period_teacher sspt on sspt.subject_study_period_id = ssp.id"
                         + " join study_period sp on sp.id = ssp.study_period_id"
-                        + " where sspt.teacher_id in (:teacherIds) and sp.study_year_id = :studyYearId";
+                        + " where sspt.teacher_id in (" + teacherIds.stream().map(p -> String.valueOf(p)).collect(Collectors.joining(", ")) + ") and sp.study_year_id = :studyYearId";
                 if (criteria.getStudyPeriod() != null) {
                     capacitiesQuery += " and sp.id = :studyPeriodId";
                 }
@@ -593,13 +564,13 @@ public class TeacherDetailLoadService {
                         + " join journal_entry je on j.id = je.journal_id"
                         + " join journal_teacher jt on j.id = jt.journal_id"
                         + " join journal_entry_capacity_type ject on je.id = ject.journal_entry_id"
-                        + " where jt.teacher_id in (:teacherIds) and j.study_year_id = :studyYearId";
+                        + " where jt.teacher_id in (" + teacherIds.stream().map(p -> String.valueOf(p)).collect(Collectors.joining(", ")) + ") and j.study_year_id = :studyYearId";
                 if (Boolean.TRUE.equals(criteria.getShowTimetableLoad())) {
                     capacitiesQuery += " union all"
                             + " select jct2.capacity_type_code from journal_teacher jt2"
                             + " join journal j2 on jt2.journal_id = j2.id"
                             + " join journal_capacity_type jct2 on j2.id = jct2.journal_id"
-                            + " where jt2.teacher_id in (:teacherIds) and j2.study_year_id = :studyYearId";
+                            + " where jt2.teacher_id in (" + teacherIds.stream().map(p -> String.valueOf(p)).collect(Collectors.joining(", ")) + ") and j2.study_year_id = :studyYearId";
                 }
             }
         }
@@ -607,7 +578,6 @@ public class TeacherDetailLoadService {
         Query capacacitiesQuery = em.createNativeQuery(capacitiesQuery);
         capacacitiesQuery.setParameter("schoolId", schoolId);
         if (!teacherIds.isEmpty()) {
-            capacacitiesQuery.setParameter("teacherIds", teacherIds);
             capacacitiesQuery.setParameter("studyYearId", criteria.getStudyYear());
             if (Boolean.TRUE.equals(criteria.getIsHigher()) && criteria.getStudyPeriod() != null) {
                 capacacitiesQuery.setParameter("studyPeriodId", criteria.getStudyPeriod());
@@ -625,7 +595,7 @@ public class TeacherDetailLoadService {
     }
 
     private Map<Long, List<PlannedLoad>> teacherVocationalPlannedLoads(TeacherDetailLoadCommand criteria,
-            List<Long> teacherIds, TeacherDetailLoadReportDataDto report, Long schoolId) {
+            Set<Long> teacherIds, TeacherDetailLoadReportDataDto report, Long schoolId) {
         StudyPeriodWithWeeksDto studyPeriod = null;
         if (criteria.getStudyPeriod() != null) {
             StudyPeriod sp = em.getReference(StudyPeriod.class, criteria.getStudyPeriod());
@@ -666,7 +636,7 @@ public class TeacherDetailLoadService {
     }
 
     private Map<Long, List<PlannedLoad>> teacherJournalPlannedLoads(TeacherDetailLoadCommand criteria,
-            StudyPeriodWithWeeksDto studyPeriod, List<Short> weeksBetweenFromAndThru, List<Long> teacherIds, Long schoolId) {
+            StudyPeriodWithWeeksDto studyPeriod, List<Short> weeksBetweenFromAndThru, Set<Long> teacherIds, Long schoolId) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from journal_teacher jt"
                 + " join journal j on jt.journal_id = j.id"
                 + " join journal_capacity jc on jc.journal_id = j.id and (j.is_capacity_diff is null or j.is_capacity_diff = false)"
@@ -681,7 +651,9 @@ public class TeacherDetailLoadService {
                     + " and coalesce(lp_coefficient.code, 'KOEFITSIENT_K1') = sctl.coefficient_code");
         
         qb.requiredCriteria("j.study_year_id = :studyYearId", "studyYearId", criteria.getStudyYear());
-        qb.optionalCriteria("jt.teacher_id in (:teacherIds)", "teacherIds", teacherIds);
+        if (teacherIds != null && !teacherIds.isEmpty()) {
+            qb.filter("jt.teacher_id in (" + teacherIds.stream().map(p -> String.valueOf(p)).collect(Collectors.joining(", ")) + ")");
+        }
         if (criteria.getStudyPeriod() != null) {
             qb.requiredCriteria("jc.week_nr in (:spWeekNrs)", "spWeekNrs", studyPeriod.getWeekNrs());
         }
@@ -708,13 +680,13 @@ public class TeacherDetailLoadService {
 
         List<?> data = qb.select("jt.teacher_id, jct.capacity_type_code, jc.week_nr, jc.hours,"
                 + " j.id journal_id, null study_period_id, null subject_study_period_id, sct.is_contact as isContact,"
-                + " coalesce(sctl.load_percentage, 100) * coalesce(jc.hours, 1) / 100.0 as hoursWithLoad", em).getResultList();
+                + " coalesce(case when j.is_free = true then 0 end, sctl.load_percentage, 100) * coalesce(jc.hours, 1) / 100.0 as hoursWithLoad", em).getResultList();
         return mapTeacherLoads(data);
     }
 
     private Map<Long, List<PlannedLoad>> teacherJournalSpecificPlannedLoads(
             TeacherDetailLoadCommand criteria, StudyPeriodWithWeeksDto studyPeriod, List<Short> weeksBetweenFromAndThru,
-            List<Long> teacherIds, Long schoolId) {
+            Set<Long> teacherIds, Long schoolId) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from journal_teacher jt"
                 + " join journal j on jt.journal_id = j.id"
                 + " join journal_teacher_capacity jtc on jt.id = jtc.journal_teacher_id and j.is_capacity_diff = true"
@@ -728,7 +700,9 @@ public class TeacherDetailLoadService {
                 + " left join school_capacity_type_load sctl on sctl.school_capacity_type_id = sct.id"
                     + " and sctl.study_year_id = j.study_year_id and coalesce(lp_coefficient.code, 'KOEFITSIENT_K1') = sctl.coefficient_code");
         qb.requiredCriteria("j.study_year_id = :studyYearId", "studyYearId", criteria.getStudyYear());
-        qb.optionalCriteria("jt.teacher_id in (:teacherIds)", "teacherIds", teacherIds);
+        if (teacherIds != null && !teacherIds.isEmpty()) {
+            qb.filter("jt.teacher_id in (" + teacherIds.stream().map(p -> String.valueOf(p)).collect(Collectors.joining(", ")) + ")");
+        }
         if (criteria.getStudyPeriod() != null) {
             qb.requiredCriteria("jtc.week_nr in (:spWeekNrs)", "spWeekNrs", studyPeriod.getWeekNrs());
         }
@@ -755,12 +729,12 @@ public class TeacherDetailLoadService {
 
         List<?> data = qb.select("jt.teacher_id, jct.capacity_type_code, jtc.week_nr, jtc.hours,"
                 + " j.id journal_id, null study_period_id, null subject_study_period_id, sct.is_contact as isContact,"
-                + " coalesce(sctl.load_percentage, 100) * coalesce(jtc.hours, 1) / 100.0 as hoursWithLoad", em).getResultList();
+                + " coalesce(case when j.is_free = true then 0 end, sctl.load_percentage, 100) * coalesce(jtc.hours, 1) / 100.0 as hoursWithLoad", em).getResultList();
         return mapTeacherLoads(data);
     }
 
     private Map<Long, List<PlannedLoad>> teacherHigherPlannedLoads(TeacherDetailLoadCommand criteria,
-            List<Long> teacherIds, Long schoolId) {
+            Set<Long> teacherIds, Long schoolId) {
         Map<Long, List<PlannedLoad>> plannedLoads = teacherSubjectStudyPeriodPlannedLoads(criteria, teacherIds, schoolId);
         Map<Long, List<PlannedLoad>> specificPlannedLoads = teacherSubjectStudyPeriodSpecificPlannedLoads(criteria,
                 teacherIds, schoolId);
@@ -769,7 +743,7 @@ public class TeacherDetailLoadService {
     }
 
     private Map<Long, List<PlannedLoad>> teacherSubjectStudyPeriodPlannedLoads(TeacherDetailLoadCommand criteria,
-            List<Long> teacherIds, Long schoolId) {
+            Set<Long> teacherIds, Long schoolId) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from subject_study_period_capacity sspc"
                 + " join subject_study_period ssp on ssp.id = sspc.subject_study_period_id"
                     + " and (ssp.is_capacity_diff is null or ssp.is_capacity_diff = false)"
@@ -786,7 +760,9 @@ public class TeacherDetailLoadService {
         qb.requiredCriteria("sp.study_year_id = :studyYearId", "studyYearId", criteria.getStudyYear());
         qb.optionalCriteria("sp.id = :studyPeriodId", "studyPeriodId", criteria.getStudyPeriod());
         qb.requiredCriteria("sct.school_id = :schoolId", "schoolId", schoolId);
-        qb.optionalCriteria("sspt.teacher_id in (:teacherIds)", "teacherIds", teacherIds);
+        if (teacherIds != null && !teacherIds.isEmpty()) {
+            qb.filter("sspt.teacher_id in (" + teacherIds.stream().map(p -> String.valueOf(p)).collect(Collectors.joining(", ")) + ")");
+        }
         qb.optionalCriteria("ssp.id in (select sspsg.subject_study_period_id from subject_study_period_student_group sspsg where sspsg.student_group_id in (:studentGroupIds))", 
         		"studentGroupIds", criteria.getStudentGroups());
         qb.optionalCriteria("(exists"
@@ -811,7 +787,7 @@ public class TeacherDetailLoadService {
     }
 
     private Map<Long, List<PlannedLoad>> teacherSubjectStudyPeriodSpecificPlannedLoads(
-            TeacherDetailLoadCommand criteria, List<Long> teacherIds, Long schoolId) {
+            TeacherDetailLoadCommand criteria, Set<Long> teacherIds, Long schoolId) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from subject_study_period_capacity sspc"
                 + " join subject_study_period ssp on ssp.id = sspc.subject_study_period_id and ssp.is_capacity_diff = true"
                 + " join subject_study_period_teacher sspt on sspt.subject_study_period_id = ssp.id"
@@ -828,7 +804,9 @@ public class TeacherDetailLoadService {
                     + " and coalesce(ssp.coefficient_code, 'KOEFITSIENT_K1') = sctl.coefficient_code");
         qb.requiredCriteria("sp.study_year_id = :studyYearId", "studyYearId", criteria.getStudyYear());
         qb.optionalCriteria("sp.id = :studyPeriodId", "studyPeriodId", criteria.getStudyPeriod());
-        qb.optionalCriteria("sspt.teacher_id in (:teacherIds)", "teacherIds", teacherIds);
+        if (teacherIds != null && !teacherIds.isEmpty()) {
+            qb.filter("sspt.teacher_id in (" + teacherIds.stream().map(p -> String.valueOf(p)).collect(Collectors.joining(", ")) + ")");
+        }
         qb.requiredCriteria("sct.school_id = :schoolId", "schoolId", schoolId);
         qb.optionalCriteria("ssp.id in (select sspsg.subject_study_period_id from subject_study_period_student_group sspsg where sspsg.student_group_id in (:studentGroupIds))", 
         		"studentGroupIds", criteria.getStudentGroups());
@@ -885,8 +863,13 @@ public class TeacherDetailLoadService {
             		Boolean.TRUE.equals(isHigher)
                     ? periodPlannedHoursSumByStudyPeriod(teacherPlannedHours, sp.getId())
                     : periodPlannedHoursSumByWeeks(teacherPlannedHours, sp.getWeekNrs()),
-            		periodPlannedContactHoursSumByStudyPeriod(teacherPlannedHours, sp.getId()),
-            		periodPlannedKoefHoursSumByStudyPeriod(teacherPlannedHours, sp.getId())));
+                    Boolean.TRUE.equals(isHigher) ?
+                            periodPlannedContactHoursSumByStudyPeriod(teacherPlannedHours, sp.getId()) :
+                            periodPlannedContactHoursSumByWeeks(teacherPlannedHours, sp.getWeekNrs()),
+                    Boolean.TRUE.equals(isHigher) ? 
+                            periodPlannedKoefHoursSumByStudyPeriod(teacherPlannedHours, sp.getId()) : 
+                            periodPlannedKoefHoursSumByWeeks(teacherPlannedHours, sp.getWeekNrs())
+                    ));
         }
         return plannedHoursBySp;
     }
@@ -1047,7 +1030,7 @@ public class TeacherDetailLoadService {
         return teacherTotalCapacityHours;
     }
 
-    private static JpaNativeQueryBuilder teacherEventsQb(TeacherDetailLoadCommand criteria, List<Long> teacherIds,
+    private static JpaNativeQueryBuilder teacherEventsQb(TeacherDetailLoadCommand criteria, Set<Long> teacherIds,
             boolean singleEvents, Long schoolId) {
         String from = "from timetable_event_time tem"
                 + " join timetable_event te on tem.timetable_event_id = te.id"
@@ -1059,6 +1042,7 @@ public class TeacherDetailLoadService {
                     + " join lesson_plan_module lpm on lpm.lesson_plan_id = lp.id"
                     + " join journal_omodule_theme jot on jot.lesson_plan_module_id = lpm.id"
                     + " where jot.journal_id = t_o.journal_id)"
+                + " left join journal j on j.id = t_o.journal_id "
                 + " left join subject_study_period ssp on ssp.id = t_o.subject_study_period_id"
                 + " left join subject s on ssp.subject_id = s.id"
                 + " left join (select sspp.ssp_id, ssppc.is_contact, ssppc.capacity_type_code"
@@ -1088,7 +1072,9 @@ public class TeacherDetailLoadService {
         qb.optionalCriteria("tem.start >= :from", "from", criteria.getFrom(), DateUtils::firstMomentOfDay);
         qb.optionalCriteria("tem.end <= :thru", "thru", criteria.getThru(), DateUtils::lastMomentOfDay);
         qb.parameter("schoolId", schoolId);
-        qb.optionalCriteria("tet.teacher_id in (:teacherIds)", "teacherIds", teacherIds);
+        if (teacherIds != null && !teacherIds.isEmpty()) {
+            qb.filter("tet.teacher_id in (" + teacherIds.stream().map(p -> String.valueOf(p)).collect(Collectors.joining(",")) + ")");
+        }
 
         if (singleEvents) {
             qb.filter("t_o.subject_study_period_id is null and t_o.journal_id is null");
@@ -1147,7 +1133,7 @@ public class TeacherDetailLoadService {
     }
 
     private Map<Long, List<TimetableEvent>> teacherTimetableOccurredLessons(Long schoolId,
-            TeacherDetailLoadCommand criteria, List<Long> teacherIds) {
+            TeacherDetailLoadCommand criteria, Set<Long> teacherIds) {
         JpaNativeQueryBuilder qb = teacherEventsQb(criteria, teacherIds, false, schoolId);
         qb.filter("(tet.is_substitute is null or tet.is_substitute = false)");
 
@@ -1155,13 +1141,13 @@ public class TeacherDetailLoadService {
                 + "get_lessons(tem.start, tem.end) lessons, get_study_period(date(tem.start), " + schoolId + ") sp_id, "
                 + "t_o.journal_id, t_o.subject_study_period_id, "
                 + (Boolean.TRUE.equals(criteria.getIsHigher()) ? "coalesce(plan.is_contact, true)" : "sct.is_contact")
-                + ", coalesce(sctl.load_percentage, 100) * get_lessons(tem.start, tem.end) / 100.0 as hoursWithLoad", em)
+                + ", coalesce(case when j.is_free = true then 0 end, sctl.load_percentage, 100) * get_lessons(tem.start, tem.end) / 100.0 as hoursWithLoad", em)
                 .getResultList();
         return resultAsEvents(data);
     }
 
     private Map<Long, List<TimetableEvent>> teacherLessonsAsSubstitute(Long schoolId, TeacherDetailLoadCommand criteria,
-            List<Long> teacherIds) {
+            Set<Long> teacherIds) {
         JpaNativeQueryBuilder qb = teacherEventsQb(criteria, teacherIds, false, schoolId);
         qb.filter("tet.is_substitute = true");
 
@@ -1172,7 +1158,7 @@ public class TeacherDetailLoadService {
     }
 
     private Map<Long, List<TimetableEvent>> teacherSingleEvents(Long schoolId, TeacherDetailLoadCommand criteria,
-            List<Long> teacherIds) {
+            Set<Long> teacherIds) {
         JpaNativeQueryBuilder qb = teacherEventsQb(criteria, teacherIds, true, schoolId);
 
         List<?> data = qb.select("tet.teacher_id, tem.id tem_id, te.capacity_type_code, te.start, "
@@ -1182,7 +1168,7 @@ public class TeacherDetailLoadService {
     }
 
     private Map<Long, List<JournalEntry>> teacherJournalOccurredLessons(Long schoolId, TeacherDetailLoadCommand criteria,
-            List<Long> teacherIds) {
+            Set<Long> teacherIds) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from journal j"
                 + " join journal_entry je on j.id = je.journal_id"
                 + " join journal_entry_teacher jt on je.id = jt.journal_entry_id"
@@ -1197,7 +1183,9 @@ public class TeacherDetailLoadService {
                     + " and sctl.study_year_id = j.study_year_id and coalesce(lp_coefficient.code, 'KOEFITSIENT_K1') = sctl.coefficient_code");
 
         qb.requiredCriteria("j.study_year_id = :studyYearId", "studyYearId", criteria.getStudyYear());
-        qb.optionalCriteria("jt.teacher_id in (:teacherIds)", "teacherIds", teacherIds);
+        if (teacherIds != null && !teacherIds.isEmpty()) {
+            qb.filter("jt.teacher_id in (" + teacherIds.stream().map(p -> String.valueOf(p)).collect(Collectors.joining(", ")) + ")");
+        }
         qb.filter("je.lessons is not null");
 
         if (criteria.getStudyPeriod() != null) {
@@ -1227,7 +1215,7 @@ public class TeacherDetailLoadService {
         List<?> data = qb.select("jt.teacher_id, ject.capacity_type_code, " + entryDate + ","
                 + " je.lessons, get_study_period(date(" + entryDate + "), " + schoolId + ") sp_id,"
                 + " j.id journal_id, je.id journal_entry_id, sct.is_contact as isContact,"
-                + " coalesce(sctl.load_percentage, 100) * coalesce(je.lessons, 1) / 100.0 as hoursWithLoad", em).getResultList();
+                + " coalesce(case when j.is_free = true then 0 end, sctl.load_percentage, 100) * coalesce(je.lessons, 1) / 100.0 as hoursWithLoad", em).getResultList();
 
         Map<Long, List<JournalEntry>> journalEntries = new HashMap<>();
         if (!data.isEmpty()) {
@@ -1516,71 +1504,94 @@ public class TeacherDetailLoadService {
         return capacityLessons;
     }
 
-    public TeacherDetailLoadDto teacherDetailLoadJournals(Long schoolId, TeacherDetailLoadCommand criteria,
-            Teacher teacher) {
+    public Map<Long, TeacherDetailLoadDto> teacherDetailLoadJournals(Long schoolId, TeacherDetailLoadCommand criteria,
+            Set<Long> teacherIds) {
         TeacherDetailLoadReportDataDto report = teacherDetailLoadReportData(criteria);
 
-        Long teacherId = EntityUtil.getId(teacher);
-        List<Long> teacherIds = Collections.singletonList(teacherId);
         List<Classifier> capacities = getTeacherCapacities(schoolId, criteria, teacherIds);
-        List<PlannedLoad> plannedLoads = new ArrayList<>();
+        Map<Long, List<PlannedLoad>> plannedLoads = new HashMap<>();
         if (Boolean.TRUE.equals(criteria.getShowPlannedLessons())) {
-            plannedLoads = teacherVocationalPlannedLoads(criteria, teacherIds, report, schoolId).get(teacherId);
+            plannedLoads = teacherVocationalPlannedLoads(criteria, teacherIds, report, schoolId);
         }
 
-        List<JournalEntry> journalOccurredLessons = teacherJournalOccurredLessons(schoolId, criteria, teacherIds)
-                .get(teacherId);
-        List<TimetableEvent> timetableOccurredLessons = new ArrayList<>();
-        List<TimetableEvent> substitutedLessons = new ArrayList<>();
+        Map<Long, List<JournalEntry>> journalOccurredLessons = teacherJournalOccurredLessons(schoolId, criteria, teacherIds);
+        Map<Long, List<TimetableEvent>> timetableOccurredLessons = new HashMap<>();
+        Map<Long, List<TimetableEvent>> substitutedLessons = new HashMap<>();
         if (Boolean.TRUE.equals(criteria.getShowTimetableLoad())) {
-            timetableOccurredLessons = teacherTimetableOccurredLessons(schoolId, criteria, teacherIds).get(teacherId);
-            substitutedLessons = teacherLessonsAsSubstitute(schoolId, criteria, teacherIds).get(teacherId);
+            timetableOccurredLessons = teacherTimetableOccurredLessons(schoolId, criteria, teacherIds);
+            substitutedLessons = teacherLessonsAsSubstitute(schoolId, criteria, teacherIds);
         }
-
-        Set<Long> journalIds = StreamUtil.toMappedSet(e -> e.getJournalId(), journalOccurredLessons);
+        Map<Long, String> teacherNames = teacherNames(teacherIds);
+        Map<Long, TeacherDetailLoadDto> result = new HashMap<>();
+        Set<Long> journalIds = StreamUtil.toMappedSet(e -> e.getJournalId(), journalOccurredLessons.values().stream().flatMap(Collection::stream)
+                .collect(Collectors.toList()));
         if (Boolean.TRUE.equals(criteria.getShowTimetableLoad())) {
-            journalIds.addAll(StreamUtil.toMappedSet(e -> e.getJournalId(), timetableOccurredLessons));
-            journalIds.addAll(StreamUtil.toMappedSet(e -> e.getJournalId(), substitutedLessons));
+            journalIds.addAll(StreamUtil.toMappedSet(e -> e.getJournalId(), timetableOccurredLessons.values().stream().flatMap(Collection::stream)
+                    .collect(Collectors.toList())));
+            journalIds.addAll(StreamUtil.toMappedSet(e -> e.getJournalId(), substitutedLessons.values().stream().flatMap(Collection::stream)
+                    .collect(Collectors.toList())));
         }
         if (Boolean.TRUE.equals(criteria.getShowPlannedLessons())) {
-            journalIds.addAll(StreamUtil.toMappedSet(p -> p.getJournalId(), plannedLoads));
+            journalIds.addAll(StreamUtil.toMappedSet(p -> p.getJournalId(), plannedLoads.values().stream().flatMap(Collection::stream)
+                    .collect(Collectors.toList())));
         }
-        List<TeacherDetailLoadJournalSubjectDto> journals = teacherJournals(journalIds, criteria);
-
-        TeacherDetailLoadDto dto = new TeacherDetailLoadDto();
-        String name = PersonUtil.fullname(teacher.getPerson());
-        dto.setTeacher(new AutocompleteResult(teacherId, name, name));
-
-        for (TeacherDetailLoadJournalSubjectDto journal : journals) {
-            Long journalId = journal.getJournalSubject().getId();
-            if (Boolean.TRUE.equals(criteria.getShowPlannedLessons())) {
-                List<PlannedLoad> journalPlannedLoads = StreamUtil
-                        .toFilteredList(l -> journalId.equals(l.getJournalId()), plannedLoads);
-                setTeacherDetailLoadPlannedHours(journal, criteria, journalPlannedLoads, capacities, report);
-            }
-
-            List<JournalEntry> journalOccurredLessonsOfJournal = StreamUtil
-                    .toFilteredList(l -> journalId.equals(l.getJournalId()), journalOccurredLessons);
-            setTeacherDetailLoadJournalOccurredLessons(journal, criteria, journalOccurredLessonsOfJournal, capacities,
-                    report);
-
+        List<TeacherDetailLoadJournalSubjectDto> allJournals = teacherJournals(journalIds, criteria);
+        for (Long teacherId : teacherIds) {
+            journalIds = StreamUtil.toMappedSet(e -> e.getJournalId(), journalOccurredLessons.get(teacherId));
             if (Boolean.TRUE.equals(criteria.getShowTimetableLoad())) {
-                List<TimetableEvent> timetableOccurredLessonsOfJournal = StreamUtil
-                        .toFilteredList(l -> journalId.equals(l.getJournalId()), timetableOccurredLessons);
-                setTeacherDetailLoadTimetableOccurredHours(journal, criteria, timetableOccurredLessonsOfJournal,
-                        capacities, report);
+                journalIds.addAll(StreamUtil.toMappedSet(e -> e.getJournalId(), timetableOccurredLessons.get(teacherId)));
+                journalIds.addAll(StreamUtil.toMappedSet(e -> e.getJournalId(), substitutedLessons.get(teacherId)));
             }
-
-            if (Boolean.TRUE.equals(criteria.getByCapacities())) {
-                dto.getTeacherCapacities().addAll(getTeacherPeriodCapacities(journal));
+            if (Boolean.TRUE.equals(criteria.getShowPlannedLessons())) {
+                journalIds.addAll(StreamUtil.toMappedSet(p -> p.getJournalId(), plannedLoads.get(teacherId)));
             }
+            Set<Long> journalIdsForLambda = journalIds;
+            List<TeacherDetailLoadJournalSubjectDto> journals = allJournals.stream()
+                    .filter(p -> journalIdsForLambda.contains(p.getJournalSubject().getId()))
+                    .map(p -> {
+                        try {
+                            return p.clone();
+                        } catch (CloneNotSupportedException e1) {
+                            return p;
+                        }
+                    }).collect(Collectors.toList());
 
-            List<TimetableEvent> journalSubstitutedLessons = StreamUtil
-                    .toFilteredList(l -> journalId.equals(l.getJournalId()), substitutedLessons);
-            setTeacherDetailLoadSubstitutedLessons(journal, criteria, journalSubstitutedLessons, report);
+            TeacherDetailLoadDto dto = new TeacherDetailLoadDto();
+            String name = teacherNames.get(teacherId);
+            dto.setTeacher(new AutocompleteResult(teacherId, name, name));
+
+            for (TeacherDetailLoadJournalSubjectDto journal : journals) {
+                Long journalId = journal.getJournalSubject().getId();
+                if (Boolean.TRUE.equals(criteria.getShowPlannedLessons())) {
+                    List<PlannedLoad> journalPlannedLoads = StreamUtil
+                            .toFilteredList(l -> journalId.equals(l.getJournalId()), plannedLoads.get(teacherId));
+                    setTeacherDetailLoadPlannedHours(journal, criteria, journalPlannedLoads, capacities, report);
+                }
+
+                List<JournalEntry> journalOccurredLessonsOfJournal = StreamUtil
+                        .toFilteredList(l -> journalId.equals(l.getJournalId()), journalOccurredLessons.get(teacherId));
+                setTeacherDetailLoadJournalOccurredLessons(journal, criteria, journalOccurredLessonsOfJournal, capacities,
+                        report);
+
+                if (Boolean.TRUE.equals(criteria.getShowTimetableLoad())) {
+                    List<TimetableEvent> timetableOccurredLessonsOfJournal = StreamUtil
+                            .toFilteredList(l -> journalId.equals(l.getJournalId()), timetableOccurredLessons.get(teacherId));
+                    setTeacherDetailLoadTimetableOccurredHours(journal, criteria, timetableOccurredLessonsOfJournal,
+                            capacities, report);
+                }
+
+                if (Boolean.TRUE.equals(criteria.getByCapacities())) {
+                    dto.getTeacherCapacities().addAll(getTeacherPeriodCapacities(journal));
+                }
+
+                List<TimetableEvent> journalSubstitutedLessons = StreamUtil
+                        .toFilteredList(l -> journalId.equals(l.getJournalId()), substitutedLessons.get(teacherId));
+                setTeacherDetailLoadSubstitutedLessons(journal, criteria, journalSubstitutedLessons, report);
+            }
+            dto.setJournalSubjects(journals);
+            result.put(teacherId, dto);
         }
-        dto.setJournalSubjects(journals);
-        return dto;
+        return result;
     }
 
     private List<TeacherDetailLoadJournalSubjectDto> teacherJournals(Set<Long> journalIds, TeacherDetailLoadCommand criteria) {
@@ -1589,8 +1600,7 @@ public class TeacherDetailLoadService {
             Map<Long, List<String>> studentGroups = journalStudentGroups(journalIds, criteria);
 
             List<?> data = em.createNativeQuery("select distinct j.id, j.name_et from journal j"
-                    + " where j.id in (:journalIds) order by j.name_et")
-                    .setParameter("journalIds", journalIds).getResultList();
+                    + " where j.id in (" + journalIds.stream().map(p -> String.valueOf(p)).collect(Collectors.joining(",")) + ") order by j.name_et").getResultList();
             journals = StreamUtil.toMappedList(r -> {
                 Long journalId = resultAsLong(r, 0);
                 TeacherDetailLoadJournalSubjectDto dto = new TeacherDetailLoadJournalSubjectDto();
@@ -1610,7 +1620,7 @@ public class TeacherDetailLoadService {
                 + " join student_group sg on lp.student_group_id = sg.id"
                 + " left join curriculum_version cv on lp.curriculum_version_id = cv.id");
     	
-        qb.requiredCriteria("j.id in (:journalIds)", "journalIds", journalIds);
+        qb.filter("j.id in (" + journalIds.stream().map(p -> String.valueOf(p)).collect(Collectors.joining(",")) + ")");
         qb.optionalCriteria("sg.id in (:studentGroupIds)", "studentGroupIds", criteria.getStudentGroups());
         qb.optionalCriteria("cv.curriculum_id = :curriculumId", "curriculumId", criteria.getCurriculum());
         qb.sort("sg.code");
@@ -1621,55 +1631,85 @@ public class TeacherDetailLoadService {
                 Collectors.mapping(r -> resultAsString(r, 1), Collectors.toList())));
     }
 
-    public TeacherDetailLoadDto teacherDetailLoadSubjects(Long schoolId, TeacherDetailLoadCommand criteria,
-            Teacher teacher) {
+    public Map<Long, TeacherDetailLoadDto> teacherDetailLoadSubjects(Long schoolId, TeacherDetailLoadCommand criteria,
+            Set<Long> teacherIds) {
         TeacherDetailLoadReportDataDto report = teacherDetailLoadReportData(criteria);
-
-        Long teacherId = EntityUtil.getId(teacher);
-        List<Long> teacherIds = Collections.singletonList(teacherId);
         List<Classifier> capacities = getTeacherCapacities(schoolId, criteria, teacherIds);
-        List<PlannedLoad> plannedLoads = new ArrayList<>();
+        Map<Long, List<PlannedLoad>> plannedLoads = new HashMap<>();
         if (Boolean.TRUE.equals(criteria.getShowPlannedLessons())) {
-            plannedLoads = teacherHigherPlannedLoads(criteria, teacherIds, schoolId).get(teacherId);
+            plannedLoads = teacherHigherPlannedLoads(criteria, teacherIds, schoolId);
         }
-        List<TimetableEvent> occurredLessons = teacherTimetableOccurredLessons(schoolId, criteria, teacherIds)
-                .get(teacherId);
-        List<TimetableEvent> substitutedLessons = teacherLessonsAsSubstitute(schoolId, criteria, teacherIds)
-                .get(teacherId);
-
-        Set<Long> subjectStudyPeriodIds = StreamUtil.toMappedSet(e -> e.getSubjectStudyPeriodId(), occurredLessons);
-        subjectStudyPeriodIds.addAll(StreamUtil.toMappedSet(e -> e.getSubjectStudyPeriodId(), substitutedLessons));
+        Map<Long, List<TimetableEvent>> occurredLessons = teacherTimetableOccurredLessons(schoolId, criteria, teacherIds);
+        Map<Long, List<TimetableEvent>> substitutedLessons = teacherLessonsAsSubstitute(schoolId, criteria, teacherIds);
+        Map<Long, TeacherDetailLoadDto> result = new HashMap<>();
+        Map<Long, String> teacherNames = teacherNames(teacherIds);
+        Set<Long> subjectStudyPeriodIds = StreamUtil.toMappedSet(e -> e.getSubjectStudyPeriodId(), occurredLessons.values().stream().flatMap(Collection::stream)
+                .collect(Collectors.toList()));
+        subjectStudyPeriodIds.addAll(StreamUtil.toMappedSet(e -> e.getSubjectStudyPeriodId(), substitutedLessons.values().stream().flatMap(Collection::stream)
+                .collect(Collectors.toList())));
         if (Boolean.TRUE.equals(criteria.getShowPlannedLessons())) {
-            subjectStudyPeriodIds.addAll(StreamUtil.toMappedSet(p -> p.getSubjectStudyPeriodId(), plannedLoads));
+            subjectStudyPeriodIds.addAll(StreamUtil.toMappedSet(p -> p.getSubjectStudyPeriodId(), plannedLoads.values().stream().flatMap(Collection::stream)
+                    .collect(Collectors.toList())));
         }
         subjectStudyPeriodIds = subjectStudyPeriodIds.stream().filter(s -> s != null).collect(Collectors.toSet());
-        List<TeacherDetailLoadJournalSubjectDto> subjectStudyPeriods = teacherSubjectStudyPeriods(subjectStudyPeriodIds, criteria);
-
-        TeacherDetailLoadDto dto = new TeacherDetailLoadDto();
-        String name = PersonUtil.fullname(teacher.getPerson());
-        dto.setTeacher(new AutocompleteResult(teacherId, name, name));
-
-        for (TeacherDetailLoadJournalSubjectDto subject : subjectStudyPeriods) {
-            Long sspId = subject.getJournalSubject().getId();
+        List<TeacherDetailLoadJournalSubjectDto> subjectStudyPeriodDtos = teacherSubjectStudyPeriods(subjectStudyPeriodIds, criteria);
+        for (Long teacherId : teacherIds) {
+            Set<Long> filteredSubjectStudyPeriodIds = StreamUtil.toMappedSet(e -> e.getSubjectStudyPeriodId(), occurredLessons.get(teacherId));
+            filteredSubjectStudyPeriodIds.addAll(StreamUtil.toMappedSet(e -> e.getSubjectStudyPeriodId(), substitutedLessons.get(teacherId)));
             if (Boolean.TRUE.equals(criteria.getShowPlannedLessons())) {
-                List<PlannedLoad> subjectPlannedLoads = StreamUtil
-                        .toFilteredList(l -> sspId.equals(l.getSubjectStudyPeriodId()), plannedLoads);
-                setTeacherDetailLoadPlannedHours(subject, criteria, subjectPlannedLoads, capacities, report);
+                filteredSubjectStudyPeriodIds.addAll(StreamUtil.toMappedSet(p -> p.getSubjectStudyPeriodId(), plannedLoads.get(teacherId)));
             }
-            List<TimetableEvent> subjectOccurredLessons = StreamUtil
-                    .toFilteredList(l -> sspId.equals(l.getSubjectStudyPeriodId()), occurredLessons);
-            setTeacherDetailLoadTimetableOccurredHours(subject, criteria, subjectOccurredLessons, capacities, report);
+            filteredSubjectStudyPeriodIds = filteredSubjectStudyPeriodIds.stream().filter(s -> s != null).collect(Collectors.toSet());
+            Set<Long> filteredSubjectStudyPeriodForLambda = filteredSubjectStudyPeriodIds;
+            List<TeacherDetailLoadJournalSubjectDto> subjectStudyPeriods = subjectStudyPeriodDtos.stream()
+                    .filter(p -> filteredSubjectStudyPeriodForLambda.contains(p.getJournalSubject().getId()))
+                    .map(p -> {
+                        try {
+                            return p.clone();
+                        } catch (CloneNotSupportedException e1) {
+                            return p;
+                        }
+                    }).collect(Collectors.toList());
 
-            if (Boolean.TRUE.equals(criteria.getByCapacities())) {
-                dto.getTeacherCapacities().addAll(getTeacherPeriodCapacities(subject));
+            TeacherDetailLoadDto dto = new TeacherDetailLoadDto();
+            String name = teacherNames.get(teacherId);
+            dto.setTeacher(new AutocompleteResult(teacherId, name, name));
+            for (TeacherDetailLoadJournalSubjectDto subject : subjectStudyPeriods) {
+                Long sspId = subject.getJournalSubject().getId();
+                if (Boolean.TRUE.equals(criteria.getShowPlannedLessons())) {
+                    List<PlannedLoad> subjectPlannedLoads = StreamUtil
+                            .toFilteredList(l -> sspId.equals(l.getSubjectStudyPeriodId()), plannedLoads.get(teacherId));
+                    setTeacherDetailLoadPlannedHours(subject, criteria, subjectPlannedLoads, capacities, report);
+                }
+                List<TimetableEvent> subjectOccurredLessons = StreamUtil
+                        .toFilteredList(l -> sspId.equals(l.getSubjectStudyPeriodId()), occurredLessons.get(teacherId));
+                setTeacherDetailLoadTimetableOccurredHours(subject, criteria, subjectOccurredLessons, capacities, report);
+
+                if (Boolean.TRUE.equals(criteria.getByCapacities())) {
+                    dto.getTeacherCapacities().addAll(getTeacherPeriodCapacities(subject));
+                }
+
+                List<TimetableEvent> subjectSubstitutedLessons = StreamUtil
+                        .toFilteredList(l -> sspId.equals(l.getSubjectStudyPeriodId()), substitutedLessons.get(teacherId));
+                setTeacherDetailLoadSubstitutedLessons(subject, criteria, subjectSubstitutedLessons, report);
             }
-
-            List<TimetableEvent> subjectSubstitutedLessons = StreamUtil
-                    .toFilteredList(l -> sspId.equals(l.getSubjectStudyPeriodId()), substitutedLessons);
-            setTeacherDetailLoadSubstitutedLessons(subject, criteria, subjectSubstitutedLessons, report);
+            dto.setJournalSubjects(subjectStudyPeriods);
+            result.put(teacherId, dto);
         }
-        dto.setJournalSubjects(subjectStudyPeriods);
-        return dto;
+        return result;
+    }
+
+    private Map<Long, String> teacherNames(Set<Long> teacherIds) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from teacher t"
+                + " join person p on p.id = t.person_id");
+        qb.requiredCriteria("t.id in (:teacherIds)", "teacherIds", teacherIds);
+        List<?> data = qb.select("t.id, p.firstname, p.lastname", em).getResultList();
+        Map<Long, String> teacherNames = new HashMap<>();
+        if (!data.isEmpty()) {
+            teacherNames = data.stream().collect(Collectors.toMap(r -> resultAsLong(r, 0),
+                    r -> PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)), (o, n) -> o));
+        }
+        return teacherNames;
     }
 
     private List<TeacherDetailLoadJournalSubjectDto> teacherSubjectStudyPeriods(Set<Long> subjectStudyPeriodIds, TeacherDetailLoadCommand criteria) {
@@ -1677,7 +1717,8 @@ public class TeacherDetailLoadService {
         if (!subjectStudyPeriodIds.isEmpty()) {
             Map<Long, List<String>> studentGroups = studyPeriodStudentGroups(subjectStudyPeriodIds, criteria);
 
-            List<?> data = em.createNativeQuery("select ssp.id, s.name_et, s.name_en, s.code, s.credits from subject_study_period ssp"
+            List<?> data = em.createNativeQuery("select ssp.id, s.name_et, s.name_en, s.code, s.credits"
+                    + " from subject_study_period ssp"
                     + " join subject s on s.id = ssp.subject_id"
                     + " where ssp.id in (:sspIds) order by s.name_et")
                     .setParameter("sspIds", subjectStudyPeriodIds).getResultList();
@@ -1742,7 +1783,7 @@ public class TeacherDetailLoadService {
         }
         report.setRows(resultRows);
         report.setJournalSubjectReport(Boolean.FALSE);
-        return xlsService.generate("teachersdetailload" + ".xlsx", Collections.singletonMap("report", report), null, new XlsDynamicColumnCommand("Sheet1", 2));
+        return xlsService.generate("teachersdetailload" + ".xlsx", Collections.singletonMap("report", report));
     }
 
     private List<Classifier> excelTeacherCapacities(List<TeacherDetailLoadDto> teachers) {
@@ -1761,34 +1802,48 @@ public class TeacherDetailLoadService {
     }
     
     public byte[] teacherDetailLoadSubjectJournalAsExcel(Long schoolId, TeacherDetailLoadCommand criteria) {
-    	TeacherDetailLoadSubjectJournalReport report = new TeacherDetailLoadSubjectJournalReport();
-    	report.setIsHigher(criteria.getIsHigher());
-        report.setIsHigherSchool(Boolean.valueOf(schoolService.schoolType(schoolId).isHigher()));
-        report.setStudyYear(EntityUtil.getOptionalOne(StudyYear.class, criteria.getStudyYear(), em));
-        report.setStudyPeriod(EntityUtil.getOptionalOne(StudyPeriod.class, criteria.getStudyPeriod(), em));
-    	report.setTeachers(getTeachers(criteria, schoolId));
+        List<TeacherDetailLoadDto> teachers = Boolean.TRUE.equals(criteria.getIsHigher())
+                ? teacherHigherDetailLoad(schoolId, criteria, new PageRequest(0, Integer.MAX_VALUE)).getContent()
+                : teacherVocationalDetailLoad(schoolId, criteria, new PageRequest(0, Integer.MAX_VALUE)).getContent();
+        List<Classifier> capacities = Boolean.TRUE.equals(criteria.getByCapacities()) 
+                ? excelTeacherCapacities(teachers) : new ArrayList<>();
+        boolean entriesWithoutCapacity = Boolean.TRUE.equals(criteria.getByCapacities())
+                && existsEntriesWithoutCapacity(teachers);
+        TeacherDetailLoadReport report = detailLoadExcelReportDto(schoolId, criteria, capacities,
+                entriesWithoutCapacity);
+        if (Boolean.TRUE.equals(criteria.getIsHigher())) {
+            report.setTeacherReport(Boolean.TRUE);
+        }
+        List<TeacherResultRowDto> teachersReports = new ArrayList<>();
+        Map<Long, TeacherDetailLoadDto> map = Boolean.TRUE.equals(criteria.getIsHigher())
+                ? teacherDetailLoadSubjects(schoolId, criteria, teachers.stream().map(p -> p.getTeacher().getId()).collect(Collectors.toSet()))
+                : teacherDetailLoadJournals(schoolId, criteria, teachers.stream().map(p -> p.getTeacher().getId()).collect(Collectors.toSet()));
+        for (TeacherDetailLoadDto teacherDto: teachers) {
+            TeacherDetailLoadDto teacherLoad = map.get(teacherDto.getTeacher().getId());
+            List<ResultRowDto> resultRows = new ArrayList<>();
+            for (TeacherDetailLoadJournalSubjectDto journalSubject : teacherLoad.getJournalSubjects()) {
+                ResultRowDto row = getResultRow(criteria, journalSubject, report.getLoadTypesRow());
+                row.setName(journalSubject.getJournalSubject());
+                row.setStudentGroups(journalSubject.getStudentGroups() != null ?
+                        String.join(", ", journalSubject.getStudentGroups()) : null);
+                row.setSubjectCode(journalSubject.getSubjectCode());
+                row.setEap(journalSubject.getCredits());
+                resultRows.add(row);
+            }
+            TeacherResultRowDto dto = new TeacherResultRowDto();
+            dto.setRows(resultRows);
+            dto.setTeacher(teacherLoad.getTeacher());
+            teachersReports.add(dto);
+        }
+        report.setTeachers(teachersReports);
 		return xlsService.generate("teachersdetailloadjournalsubject.xlsx", Collections.singletonMap("report", report));
-	}
-
-    private List<TeacherDetailLoadDto> getTeachers(TeacherDetailLoadCommand criteria, Long schoolId) {
-    	Page<TeacherDetailLoadDto> teachers = teachers(schoolId, criteria, new PageRequest(0, Integer.MAX_VALUE, new Sort("p.lastname, p.firstname")));
-    	List<Long> teacherIds = StreamUtil.toMappedList(t -> t.getTeacher().getId(), teachers.getContent());
-		if (teacherIds.isEmpty()) return new ArrayList<>();
-    	Map<Long, List<TeacherDetailLoadJournalSubjectDto>> teacherJournalSubjects = teachersWithSubjectOrJournal(schoolId, criteria, new PageRequest(0, Integer.MAX_VALUE));
-    	for (TeacherDetailLoadDto teacher : teachers) {
-    		List<TeacherDetailLoadJournalSubjectDto> journalSubjects = teacherJournalSubjects.get(teacher.getTeacher().getId());
-    		if (journalSubjects != null) {
-    			teacher.setJournalSubjects(journalSubjects);
-    		}
-    	}
-		return teachers.getContent();
 	}
     
 	public byte[] teacherDetailLoadJournalSubjectsAsExcel(Long schoolId, TeacherDetailLoadCommand criteria,
             Teacher teacher) {
         TeacherDetailLoadDto teacherLoad = Boolean.TRUE.equals(criteria.getIsHigher())
-                ? teacherDetailLoadSubjects(schoolId, criteria, teacher)
-                : teacherDetailLoadJournals(schoolId, criteria, teacher);
+                ? teacherDetailLoadSubjects(schoolId, criteria, Collections.singleton(EntityUtil.getId(teacher))).get(EntityUtil.getId(teacher))
+                : teacherDetailLoadJournals(schoolId, criteria, Collections.singleton(EntityUtil.getId(teacher))).get(EntityUtil.getId(teacher));
 
         List<Classifier> capacities = Boolean.TRUE.equals(criteria.getByCapacities()) 
                 ? excelTeacherCapacities(Collections.singletonList(teacherLoad)) : new ArrayList<>();
@@ -1813,8 +1868,7 @@ public class TeacherDetailLoadService {
         if (Boolean.TRUE.equals(criteria.getIsHigher())) {
         	report.setTeacherReport(Boolean.TRUE);
         }
-        return xlsService.generate("teachersdetailload" + ".xlsx", Collections.singletonMap("report", report), null, 
-        		new XlsDynamicColumnCommand("Sheet1", Boolean.TRUE.equals(criteria.getIsHigher()) ? 4 : 2));
+        return xlsService.generate("teachersdetailload" + ".xlsx", Collections.singletonMap("report", report));
     }
 
     private TeacherDetailLoadReport detailLoadExcelReportDto(Long schoolId, TeacherDetailLoadCommand criteria,
@@ -2139,19 +2193,19 @@ public class TeacherDetailLoadService {
                 }
             } else {
                 if (Boolean.TRUE.equals(type.getPlannedLessons())) {
-                	if (Boolean.TRUE.equals(type.getContactLesson()) && !Boolean.TRUE.equals(type.getKoefLesson())) {
+                	if (!Boolean.TRUE.equals(type.getContactLesson()) && !Boolean.TRUE.equals(type.getKoefLesson())) {
                 		row.getLoads().add(data.getTotalPlannedHours());
                 	}
                     if (Boolean.TRUE.equals(type.getContactLesson())) row.getLoads().add(data.getTotalPlannedContactHours());
                     if (Boolean.TRUE.equals(type.getKoefLesson())) row.getLoads().add(data.getTotalPlannedKoefHours());
                 } else if (Boolean.TRUE.equals(type.getJournalOccurredLessons())) {
-                	if (Boolean.TRUE.equals(type.getContactLesson()) && !Boolean.TRUE.equals(type.getKoefLesson())) {
+                	if (!Boolean.TRUE.equals(type.getContactLesson()) && !Boolean.TRUE.equals(type.getKoefLesson())) {
                 		row.getLoads().add(data.getJournalTotalOccurredLessons());
                 	}
                     if (Boolean.TRUE.equals(type.getContactLesson())) row.getLoads().add(data.getJournalTotalOccurredContactLessons());
                     if (Boolean.TRUE.equals(type.getKoefLesson())) row.getLoads().add(data.getJournalTotalOccurredKoefLessons());
                 } else if (Boolean.TRUE.equals(type.getTimetableOccurredLessons())) {
-                	if (Boolean.TRUE.equals(type.getContactLesson()) && !Boolean.TRUE.equals(type.getKoefLesson())) {
+                	if (!Boolean.TRUE.equals(type.getContactLesson()) && !Boolean.TRUE.equals(type.getKoefLesson())) {
                 		row.getLoads().add(data.getTimetableTotalOccurredLessons());
                 	}
                     if (Boolean.TRUE.equals(type.getContactLesson())) row.getLoads().add(data.getTimetableTotalOccurredContactLessons());

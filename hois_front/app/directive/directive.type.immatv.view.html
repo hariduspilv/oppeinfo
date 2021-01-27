@@ -13,6 +13,7 @@
         <th md-column>{{'directive.student.fin' | translate}}</th>
         <th md-column>{{'directive.student.finSpecific' | translate}}</th>
         <th md-column>{{'directive.student.studentGroup' | translate}}</th>
+        <th md-column>{{'directive.student.secondarySchoolCountry' | translate}}</th>
         <th md-column ng-if="formState.school.vocational">{{'directive.student.dormitory' | translate}}</th>
       </tr>
     </thead>
@@ -44,6 +45,9 @@
           <hois-classifier-value ng-model="row.finSpecific" main-classifier-code="FINTAPSUSTUS"></hois-classifier-value>
         </td>
         <td md-cell>{{::row.newStudentGroup}}</td>
+        <td md-cell>
+          <hois-classifier-value ng-model="row.secondarySchoolCountry" main-classifier-code="RIIK"></hois-classifier-value>
+        </td>
         <td md-cell ng-if="formState.school.vocational">
           <hois-classifier-value ng-model="row.dormitory" main-classifier-code="YHISELAMU"></hois-classifier-value>
         </td>

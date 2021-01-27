@@ -21,8 +21,12 @@
                         <input ng-model="criteria.idcode" type="text" minlength="11" md-maxlength="11">
                     </md-input-container>
                 </div>
-                <div layout="row">
-                    <md-input-container>
+                <div layout-gt-sm="row" layout="column">
+                    <hois-autocomplete flex-gt-sm="45" flex="100" ng-model="criteria.studentGroups" 
+                      ha-attribute="id"  ha-controller="directiveControllers"
+                      method="studentgroups" name="studentGroups" label="{{'application.studentGroup'}}" multiple
+                      additional-query-params="{userId: auth.isLeadingTeacher() ? auth.user : null}" ></hois-autocomplete>
+                    <md-input-container flex-offset-gt-sm="5" flex-offset="0">
                         <label>{{'certificate.insertedFrom' | translate}}</label>
                         <md-datepicker ng-model="criteria.insertedFrom" md-max-date="criteria.insertedThru" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
                     </md-input-container>

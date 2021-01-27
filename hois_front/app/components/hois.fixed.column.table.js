@@ -12,6 +12,7 @@ angular.module('hitsaOis').directive('fixedColumnTable', function ($timeout, $wi
       tableClass: '@'
     },
     link: function (scope, element) {
+      var SCROLLBAR_WIDTH = 17;
       var container = element[0];
 
       if (angular.isDefined(scope.resizeTable)) {
@@ -44,7 +45,7 @@ angular.module('hitsaOis').directive('fixedColumnTable', function ($timeout, $wi
         var currentTableHeight = angular.isDefined(table[0]) ? table[0].offsetHeight : 0;
 
         var newTableHeight = currentTableHeight > 0 && currentTableHeight < tableMaxHeight ? currentTableHeight : tableMaxHeight;
-        newTableHeight += 17; // scrollbar width
+        newTableHeight += SCROLLBAR_WIDTH;
         element.css('height', newTableHeight + 'px');
       }
 
@@ -75,6 +76,7 @@ angular.module('hitsaOis').directive('fixedColumnTable', function ($timeout, $wi
         var tableClassQuery = angular.isDefined(scope.tableClass) ? 'table.' + scope.tableClass + ' > ' : '';
         applyClasses(tableClassQuery + 'thead > tr', 'cross', 'th');
         applyClasses(tableClassQuery + 'tbody > tr', 'fixed-cell', 'td');
+        applyClasses(tableClassQuery + 'tfoot > tr', 'fixed-cell', 'td');
 
         function updateHeaders() {
           var x = container.scrollLeft;
@@ -83,6 +85,8 @@ angular.module('hitsaOis').directive('fixedColumnTable', function ($timeout, $wi
           var leftHeaders = [].concat.apply([], container.querySelectorAll(tableClassQuery + 'tbody > tr td.fixed-cell'));
           var crossHeaders = [].concat.apply([], container.querySelectorAll(tableClassQuery + 'thead > tr th.cross'));
           var topHeaders = [].concat.apply([], container.querySelectorAll(tableClassQuery + 'thead > tr th'));
+          var footerCrossColumns = [].concat.apply([], container.querySelectorAll(tableClassQuery + 'tfoot > tr td.cross'));
+          var footerColumns = [].concat.apply([], container.querySelectorAll(tableClassQuery + 'tfoot > tr td'));
 
           //Update the left header positions when the container is scrolled
           leftHeaders.forEach(function (leftHeader) {
@@ -97,6 +101,20 @@ angular.module('hitsaOis').directive('fixedColumnTable', function ($timeout, $wi
           //Update headers that are part of the header and the left column
           crossHeaders.forEach(function (crossHeader) {
             crossHeader.style.transform = translate(x, y);
+          });
+
+          var table = container.querySelectorAll('table');
+          var currentTableHeight = angular.isDefined(table[0]) ? table[0].offsetHeight : 0;
+          var footerY = y - currentTableHeight + container.offsetHeight - SCROLLBAR_WIDTH;
+
+          //Update the footer column positions when the container is scrolled
+          footerColumns.forEach(function (footerColumn) {
+            footerColumn.style.transform = translate(0, footerY);
+          });
+
+          //Update columns that are part of the footer and the left column
+          footerCrossColumns.forEach(function (crossColumn) {
+            crossColumn.style.transform = translate(x, footerY);
           });
         }
 

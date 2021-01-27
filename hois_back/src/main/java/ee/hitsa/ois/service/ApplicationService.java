@@ -151,7 +151,7 @@ public class ApplicationService {
                     + "or exists(select 1 from committee_member cm where cm.committee_id = a.committee_id "
                     + "and cm.person_id = :personId))", "userId", user.getUserId());
         }
-
+        qb.optionalCriteria("sg.id in (:studentGroups)", "studentGroups", criteria.getStudentGroups());
         qb.optionalCriteria("a.type_code in (:type)", "type", criteria.getType());
         qb.optionalCriteria("a.inserted >= :insertedFrom", "insertedFrom", criteria.getInsertedFrom(), DateUtils::firstMomentOfDay);
         qb.optionalCriteria("a.inserted <= :insertedThru", "insertedThru", criteria.getInsertedThru(), DateUtils::lastMomentOfDay);

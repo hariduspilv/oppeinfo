@@ -5,6 +5,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 
 import java.lang.invoke.MethodHandles;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -198,21 +199,16 @@ public class DirectiveConfirmService {
                     }
                 }
             } else if(DirectiveType.KASKKIRI_AKADK.equals(directiveType)) {
-                // check that cancel date is inside academic leave period
-                DirectiveStudent academicLeave = academicLeaves.get(EntityUtil.getId(ds.getStudent()));
-                LocalDate leaveCancel = ds.getStartDate();
-                // missing value is catched above, here we match only range from academic leave directive
-                if(leaveCancel != null) {
-                    String msg = null;
-                    if(academicLeave == null) {
-                        msg = "directive.academicLeaveApplicationNotfound";
-                    } else if(leaveCancel.isBefore(DateUtils.periodStart(academicLeave))) {
-                        msg = "directive.revocationStartDateBeforeAcademicLeaveStartDate";
-                    } else if(leaveCancel.isAfter(DateUtils.periodEnd(academicLeave))) {
-                        msg = "directive.revocationStartDateAfterAcademicLeaveEndDate";
-                    }
-                    if(msg != null) {
-                        allErrors.add(new ErrorForField(msg, propertyPath(rowNum, "startDate")));
+                DirectiveStudent formAcademicLeave = ds.getDirectiveStudent();
+                if (formAcademicLeave != null) {
+                    if (ds.getStartDate() != null) {
+                        if (ds.getStartDate().isBefore(formAcademicLeave.getStartDate())
+                                || ds.getStartDate().isAfter(formAcademicLeave.getEndDate())) {
+                            allErrors.add(new ErrorForField("directive.notInAcademicLeaveDateRange",
+                                    propertyPath(rowNum, "startDate")));
+                        }
+                    } else {
+                        allErrors.add(new ErrorForField(Required.MESSAGE, propertyPath(rowNum, "startDate")));
                     }
                 }
             } else if(DirectiveType.KASKKIRI_EKSMAT.equals(directiveType)) {
@@ -270,6 +266,10 @@ public class DirectiveConfirmService {
                     if(ds.getDormitory() == null && CurriculumUtil.isVocational(curriculum)) {
                         allErrors.add(new ErrorForField(Required.MESSAGE, propertyPath(rowNum, "dormitory")));
                     }
+                    // check by hand because it is required only in higher study
+                    if(ds.getSecondarySchoolCountry() == null && CurriculumUtil.isHigher(curriculum)) {
+                        allErrors.add(new ErrorForField(Required.MESSAGE, propertyPath(rowNum, "secondarySchoolCountry")));
+                    }
                     Set<Long> uniqueRows = new LinkedHashSet<>();
                     if (directiveService.studentExists(EntityUtil.getId(directive.getSchool()), EntityUtil.getId(ds.getPerson()), 
                             EntityUtil.getId(curriculum))) {
@@ -294,6 +294,10 @@ public class DirectiveConfirmService {
                     // check by hand because it is required only in vocational study
                     if(ds.getDormitory() == null && CurriculumUtil.isVocational(curriculum)) {
                         allErrors.add(new ErrorForField(Required.MESSAGE, propertyPath(rowNum, "dormitory")));
+                    }
+                    // check by hand because it is required only in higher study
+                    if(ds.getSecondarySchoolCountry() == null && CurriculumUtil.isHigher(curriculum)) {
+                        allErrors.add(new ErrorForField(Required.MESSAGE, propertyPath(rowNum, "secondarySchoolCountry")));
                     }
                 }
             } else if (DirectiveType.KASKKIRI_INDOK.equals(directiveType)) {
@@ -643,15 +647,13 @@ public class DirectiveConfirmService {
         } else {
             Classifier studentStatus = directiveType.studentStatus() != null ? em.getReference(Classifier.class, directiveType.studentStatus().name()) : null;
             Classifier applicationStatus = em.getReference(Classifier.class, ApplicationStatus.AVALDUS_STAATUS_KINNITATUD.name());
-            Map<Long, DirectiveStudent> academicLeaves = findAcademicLeaves(directive);
             SchoolStudentRegNr schoolStudentRegNr = lockSchoolStudentRegNr(directive, directiveType);
             for(DirectiveStudent ds : directive.getStudents()) {
                 Student student = ds.getStudent();
                 // store student version for undo
                 ds.setStudentHistory(student != null ? student.getStudentHistory() : null);
                 updateApplicationStatus(ds, applicationStatus);
-                DirectiveStudent academicLeave = student != null ? academicLeaves.get(student.getId()) : null;
-                updateStudentData(directiveType, ds, studentStatus, academicLeave, schoolStudentRegNr);
+                updateStudentData(directiveType, ds, studentStatus, schoolStudentRegNr, confirmer);
             }
         }
 
@@ -723,9 +725,10 @@ public class DirectiveConfirmService {
     }
 
     private void updateStudentData(DirectiveType directiveType, DirectiveStudent directiveStudent,
-            Classifier studentStatus, DirectiveStudent academicLeave, SchoolStudentRegNr schoolStudentRegNr) {
+            Classifier studentStatus, SchoolStudentRegNr schoolStudentRegNr, String confirmer) {
         Student student = directiveStudent.getStudent();
         boolean newStudent = false;
+        boolean setSchoolMeal = false;
         if(DirectiveType.KASKKIRI_IMMAT.equals(directiveType) || DirectiveType.KASKKIRI_IMMATV.equals(directiveType) 
                 || DirectiveType.KASKKIRI_KYLALIS.equals(directiveType)
                 || (EntityUtil.getNullableId(student) == null && DirectiveType.KASKKIRI_EKSTERN.equals(directiveType))) {
@@ -753,7 +756,7 @@ public class DirectiveConfirmService {
             cancelScholarships(directiveStudent);
             break;
         case KASKKIRI_AKADK:
-            duration = ChronoUnit.DAYS.between(DateUtils.periodStart(academicLeave), directiveStudent.getStartDate());
+            duration = ChronoUnit.DAYS.between(DateUtils.periodStart(directiveStudent.getDirectiveStudent()), directiveStudent.getStartDate());
             student.setNominalStudyEnd(student.getNominalStudyEnd().minusDays(duration));
             break;
         case KASKKIRI_DUPLIKAAT:
@@ -860,6 +863,7 @@ public class DirectiveConfirmService {
         case KASKKIRI_ENNIST:
             student.setStudyStart(confirmDate);
             student.setStudyEnd(null);
+            setSchoolMeal = true;
             if (student.getRegNr() == null) {
                 setStudentRegNr(student, schoolStudentRegNr);
             }
@@ -873,6 +877,7 @@ public class DirectiveConfirmService {
             // fall thru
         case KASKKIRI_IMMAT:
             student.setStudyStart(confirmDate);
+            setSchoolMeal = true;
             break;
         case KASKKIRI_LOPET:
             student.setStudyEnd(confirmDate);
@@ -899,6 +904,9 @@ public class DirectiveConfirmService {
         }
 
         student = studentService.saveWithHistory(student);
+        if (EntityUtil.getNullableId(student) != null && setSchoolMeal) {
+            setSchoolMeal(student, confirmer);
+        }
         if(DirectiveType.KASKKIRI_IMMAT.equals(directiveType) || DirectiveType.KASKKIRI_IMMATV.equals(directiveType) 
                 || DirectiveType.KASKKIRI_KYLALIS.equals(directiveType) || (newStudent && DirectiveType.KASKKIRI_EKSTERN.equals(directiveType))) {
             // store reference to created student also into directive_student
@@ -915,6 +923,25 @@ public class DirectiveConfirmService {
                 StudentScholarshipEnding scholarshipData = new StudentScholarshipEnding(scholarshipApplication);
                 automaticMessageService.sendMessageToStudent(MessageType.TEATE_LIIK_TOET_KATK, student, scholarshipData);
             }
+        }
+    }
+
+    /**
+     * Set student eligible for school meal support
+     * @param student
+     */
+    private void setSchoolMeal(Student student, String confirmer) {
+        if (ClassifierUtil.oneOf(student.getPreviousStudyLevel(), StudyLevel.OPPEASTE_110, StudyLevel.OPPEASTE_210, 
+                StudyLevel.OPPEASTE_215, StudyLevel.OPPEASTE_216, StudyLevel.OPPEASTE_233) &&
+            ClassifierUtil.oneOf(student.getStudyForm(), StudyForm.OPPEVORM_W, StudyForm.OPPEVORM_Z) &&
+            student.getCurriculumVersion() != null &&
+            ClassifierUtil.equals(CurriculumConsecution.OPPEKAVA_TYPE_E, student.getCurriculumVersion().getCurriculum().getConsecution()) &&
+            !hasConfirmedContract(student)) {
+            em.createNativeQuery("update student s set is_school_meal = true, school_meal_changed = current_timestamp(3), school_meal_changed_by=:changer, "
+                    + "changed = current_timestamp(3), changed_by = :changer "
+                    + "where s.id = :studentId")
+            .setParameter("studentId", EntityUtil.getId(student))
+            .setParameter("changer", confirmer).executeUpdate();
         }
     }
 
@@ -1057,7 +1084,7 @@ public class DirectiveConfirmService {
     }
 
     Map<Long, DirectiveStudent> findAcademicLeaves(Directive directive) {
-        if(!ClassifierUtil.oneOf(directive.getType(), DirectiveType.KASKKIRI_AKADK, DirectiveType.KASKKIRI_STIPTOET) || directive.getStudents().isEmpty()) {
+        if(!ClassifierUtil.oneOf(directive.getType(), DirectiveType.KASKKIRI_STIPTOET) || directive.getStudents().isEmpty()) {
             return Collections.emptyMap();
         }
 
@@ -1076,12 +1103,15 @@ public class DirectiveConfirmService {
         qb.requiredCriteria("d.status_code = :directiveStatus", "directiveStatus", DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD);
         qb.requiredCriteria("d.type_code = :directiveType", "directiveType", DirectiveType.KASKKIRI_AKAD);
         qb.parameter("katkDirectiveType", DirectiveType.KASKKIRI_AKADK.name());
+        /*
         if(ClassifierUtil.equals(DirectiveType.KASKKIRI_AKADK, directive.getType())) {
             qb.requiredCriteria("ds.directive_id in (select a.directive_id"
                     + " from directive_student ds2"
                     + " join application a on ds2.application_id = a.id"
                     + " where ds2.directive_id = :directiveId)", "directiveId", directive.getId());
         } else {
+        */
+        if (ClassifierUtil.equals(DirectiveType.KASKKIRI_STIPTOET, directive.getType())) {
             // student isn't studying or matches academic leave period in the future
             qb.requiredCriteria("(s.status_code not in (:studentStatus) "
                     + "or exists(select 1 from directive_student ds2 where ds2.directive_id = :directiveId "
@@ -1162,6 +1192,18 @@ public class DirectiveConfirmService {
                 + "where d.id = ?1 and ass.support_service_code = ?2")
                 .setParameter(1, EntityUtil.getId(directive))
                 .setParameter(2, SupportServiceType.TUGITEENUS_1.name())
+                .setMaxResults(1).getResultList();
+        return !data.isEmpty();
+    }
+    
+    private boolean hasConfirmedContract(Student student) {
+        if (EntityUtil.getId(student) == null) return false;
+        List<?> data = em.createNativeQuery("select c.id from contract c "
+                + "where c.student_id = ?1 "
+                + "and c.status_code = ?2 "
+                + "and c.canceled is null")
+                .setParameter(1, EntityUtil.getId(student))
+                .setParameter(2, ContractStatus.LEPING_STAATUS_K.name())
                 .setMaxResults(1).getResultList();
         return !data.isEmpty();
     }

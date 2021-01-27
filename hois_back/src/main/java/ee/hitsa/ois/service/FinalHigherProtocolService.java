@@ -111,6 +111,10 @@ public class FinalHigherProtocolService extends AbstractProtocolService {
         qb.optionalCriteria("p.inserted <= :insertedThru", "insertedThru", criteria.getInsertedThru(), DateUtils::lastMomentOfDay);
         qb.optionalCriteria("p.confirm_date >= :confirmedFrom", "confirmedFrom", criteria.getConfirmDateFrom(), DateUtils::firstMomentOfDay);
         qb.optionalCriteria("p.confirm_date <= :confirmedThru", "confirmedThru", criteria.getConfirmDateThru(), DateUtils::lastMomentOfDay);
+        qb.optionalCriteria("p.id in (select p.id from protocol p "
+                + "join protocol_student ps on p.id = ps.protocol_id "
+                + "join student s on ps.student_id = s.id "
+                + "where s.student_group_id in (:studentGroups))", "studentGroups", criteria.getStudentGroups());
 
         if (criteria.getStudentName() != null) {
             qb.filter("p.id in (select p.id from protocol p "
@@ -316,7 +320,7 @@ public class FinalHigherProtocolService extends AbstractProtocolService {
 
     public List<AutocompleteResult> subjectsForSelection(HoisUserDetails user, Long studyPeriodId, Long curriculumVersionId, Boolean isFinalThesis) {
         String from = "from subject s"
-                + " join subject_study_period ssp on ssp.subject_id = s.id"
+                + " left join subject_study_period ssp on ssp.subject_id = s.id"
                 + " join curriculum_version_hmodule_subject cvhs on cvhs.subject_id = s.id"
                 + " join curriculum_version_hmodule cvh on cvhs.curriculum_version_hmodule_id = cvh.id"
                 + " join curriculum_version cv on cvh.curriculum_version_id = cv.id"
@@ -331,13 +335,13 @@ public class FinalHigherProtocolService extends AbstractProtocolService {
                 Boolean.TRUE.equals(isFinalThesis) ? HigherModuleType.KORGMOODUL_L : HigherModuleType.KORGMOODUL_F);
         qb.optionalCriteria("sspt.teacher_id = :teacherId", "teacherId", user.getTeacherId());
 
-        String select = isFinalThesis.booleanValue() ? "distinct s.id as subject_id, s.code, s.name_et, s.name_en, s.credits"
+        String select = Boolean.TRUE.equals(isFinalThesis) ? "distinct s.id as subject_id, s.code, s.name_et, s.name_en, s.credits"
                 : "distinct ssp.id as subject_study_period_id, s.code, s.name_et, s.name_en, s.credits";
         List<?> data = qb.select(select, em).getResultList();
         
         List<AutocompleteResult> results = new ArrayList<>();
 
-        if (isFinalThesis.booleanValue()) {
+        if (Boolean.TRUE.equals(isFinalThesis)) {
             for (Object r : data) {
                 results.add(new AutocompleteResult(resultAsLong(r, 0),
                         SubjectUtil.subjectName(resultAsString(r, 1), resultAsString(r, 2), resultAsDecimal(r, 4)),

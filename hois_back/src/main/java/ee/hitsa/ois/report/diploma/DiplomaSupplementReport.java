@@ -12,7 +12,8 @@ import ee.hitsa.ois.enums.Language;
 public class DiplomaSupplementReport extends DiplomaSupplementResultReport {
 
     private final Language lang;
-    private final Boolean duplicate; 
+    private final Boolean duplicate;
+    private final Long paddingChange;
     
     private final String diplomaNr;
     private final List<String> additionalNrs;
@@ -57,13 +58,14 @@ public class DiplomaSupplementReport extends DiplomaSupplementResultReport {
     private final LocalDate printed;
 
     public DiplomaSupplementReport(DiplomaSupplement diplomaSupplement, List<String> additionalNrs) {
-        this(diplomaSupplement, additionalNrs, Boolean.FALSE, Boolean.FALSE, Boolean.FALSE, Boolean.FALSE, Language.ET);
+        this(diplomaSupplement, additionalNrs, Boolean.FALSE, Boolean.FALSE, Boolean.FALSE, Boolean.FALSE, Long.valueOf(0), Language.ET);
     }
 
     public DiplomaSupplementReport(DiplomaSupplement diplomaSupplement, List<String> additionalNrs, 
             Boolean showSubjectCode, Boolean showTeacher, Boolean isLetterGrades, Boolean modulesGraded,
-            Language lang) {
+            Long paddingChange, Language lang) {
         this.lang = lang;
+        this.paddingChange = paddingChange;
         
         Diploma diploma = diplomaSupplement.getDiploma();
         Form diplomaForm = diploma != null ? diploma.getForm() : null;
@@ -139,6 +141,10 @@ public class DiplomaSupplementReport extends DiplomaSupplementResultReport {
 
     public Boolean getDuplicate() {
         return duplicate;
+    }
+
+    public Long getPaddingChange() {
+        return paddingChange;
     }
 
     public String getDiplomaNr() {

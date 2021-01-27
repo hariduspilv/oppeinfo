@@ -76,7 +76,7 @@
           <label>{{'main.programmeOfStudies' | translate}}</label>
           <hois-classifier-select ng-model="application.abroadProgramme" main-classifier-code="VALISKOOL_PROGRAMM"
             criteria="{higher: auth.school.higher ? true : undefined, vocational: auth.school.vocational ? true : undefined}" only-valid
-            model-value-attr="code" ng-required="!student.curriculumVersion.isVocational"></hois-classifier-select>
+            model-value-attr="code" required></hois-classifier-select>
         </md-input-container>
       </div>
     </div>

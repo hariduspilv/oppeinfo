@@ -105,11 +105,11 @@ public class StateCurriculumCopyService {
         return ClassifierUtil.mainClassCodeEquals(MainClassCode.KUTSE, c);
     }
 
-    public static int calculateStudyPeriod(Long credits) {
-        if(credits.equals(Long.valueOf(0))) {
+    public static int calculateStudyPeriod(BigDecimal credits) {
+        if(credits.equals(BigDecimal.valueOf(0))) {
             return 0;
         }
-        return BigDecimal.valueOf(credits.longValue()).multiply(BigDecimal.valueOf(MONTHS_PER_TERM))
+        return credits.multiply(BigDecimal.valueOf(MONTHS_PER_TERM))
                 .divide(BigDecimal.valueOf(CREDITS_PER_TERM), 0, BigDecimal.ROUND_HALF_UP).intValue();
     }
 

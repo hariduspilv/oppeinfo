@@ -5,9 +5,10 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
+import ee.hitsa.ois.util.Translatable;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
-public class TimetableEventSearchDto {
+public class TimetableEventSearchDto implements Translatable {
 
     private Long id;
     private Long journalId;
@@ -23,7 +24,6 @@ public class TimetableEventSearchDto {
     private List<TimetableEventSearchSubgroupDto> subgroups;
     private List<TimetableEventSearchStudentDto> students;
     private String addInfo;
-    private Boolean considerBreak;
     private Boolean singleEvent;
     private Boolean publicEvent;
     private Long timetableId;
@@ -31,32 +31,29 @@ public class TimetableEventSearchDto {
     private String capacityType;
     private Boolean isPersonal;
     private AutocompleteResult person;
-    private Boolean isImported;
     private Boolean isJuhanEvent;
     private Boolean isExam;
     private Boolean isOngoing;
     private Boolean includesEventStudents;
-    private Boolean isPublic;
     private Long insertedTeacherId;
     private LocalDateTime changed;
 
     public TimetableEventSearchDto(Long id, Long journalId, Long subjectStudyPeriodId, String nameEt, String nameEn,
-            LocalDate date, LocalTime timeStart, LocalTime timeEnd, Boolean considerBreak, Boolean singleEvent,
-            Long timetableId, String capacityType, Boolean isPersonal) {
+            LocalDateTime start, LocalDateTime end, Boolean singleEvent, Long timetableId, String capacityType,
+            Long juhanEventId, Boolean isPublicEvent) {
         this.id = id;
         this.journalId = journalId;
         this.subjectStudyPeriodId = subjectStudyPeriodId;
         this.nameEt = nameEt;
         this.nameEn = nameEn;
-        this.date = date;
-        this.timeStart = timeStart;
-        this.timeEnd = timeEnd;
-        this.considerBreak = considerBreak;
+        this.date = start.toLocalDate();
+        this.timeStart = start.toLocalTime();
+        this.timeEnd = end.toLocalTime();
         this.singleEvent = singleEvent;
-        this.publicEvent = Boolean.TRUE;
         this.timetableId = timetableId;
         this.capacityType = capacityType;
-        this.isPersonal = isPersonal;
+        this.isJuhanEvent = Boolean.valueOf(juhanEventId != null);
+        this.publicEvent = Boolean.TRUE.equals(isPublicEvent);
     }
 
     public Long getId() {
@@ -171,14 +168,6 @@ public class TimetableEventSearchDto {
         this.addInfo = addInfo;
     }
 
-    public Boolean getConsiderBreak() {
-        return considerBreak;
-    }
-
-    public void setConsiderBreak(Boolean considerBreak) {
-        this.considerBreak = considerBreak;
-    }
-
     public Boolean getSingleEvent() {
         return singleEvent;
     }
@@ -227,14 +216,6 @@ public class TimetableEventSearchDto {
         this.isPersonal = isPersonal;
     }
 
-    public Boolean getIsImported() {
-        return isImported;
-    }
-
-    public void setIsImported(Boolean isImported) {
-        this.isImported = isImported;
-    }
-
     public AutocompleteResult getPerson() {
         return person;
     }
@@ -273,14 +254,6 @@ public class TimetableEventSearchDto {
 
     public void setIncludesEventStudents(Boolean includesEventStudents) {
         this.includesEventStudents = includesEventStudents;
-    }
-
-    public Boolean getIsPublic() {
-        return isPublic;
-    }
-
-    public void setIsPublic(Boolean isPublic) {
-        this.isPublic = isPublic;
     }
 
     public Long getInsertedTeacherId() {

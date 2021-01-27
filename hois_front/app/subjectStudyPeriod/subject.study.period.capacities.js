@@ -88,7 +88,7 @@ angular.module('hitsaOis').factory('SspCapacities', ['DataUtils', function (Data
           return this.capacitiesSumBySsp(ssp.teachers.find(function (sspTeacher) {
             return sspTeacher.teacherId === teacherId;
           }), null, ignoreSubgroup);
-        }
+        };
 
         this.capacityBySsp = function(ssp, type) {
             return ssp.capacities.filter(filterByCapacityType(type)).reduce(countHours, 0);
@@ -298,7 +298,7 @@ angular.module('hitsaOis').factory('SspCapacities', ['DataUtils', function (Data
             sum += capacitiesMap[key];
           }
           return sum;
-        }
+        };
 
     };
     return SspCapacity;

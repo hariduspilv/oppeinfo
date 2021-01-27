@@ -21,6 +21,13 @@ angular.module('hitsaOis')
       });
 
       sections.push({
+        name: 'message.messages',
+        type: 'link',
+        url: "/messages/received",
+        icon: "email"
+      });
+
+      sections.push({
         name: 'main.menu.curriculum.label', // todo curricula-vs-curriculums
         type: 'toggle',
         icon: "format_list_bulleted",
@@ -508,6 +515,14 @@ angular.module('hitsaOis')
             name: 'main.menu.scholarshipStatistics.label',
             url: '/reports/scholarships?_menu',
             icon: 'euro_symbol'
+          },
+          {
+            name: 'main.menu.reports.lunchSupport',
+            url: "/reports/lunchSupport?_menu",
+            icon:"local_dining",
+            studyLevel: {
+              vocational: true
+            }
           }
         ]
       });
@@ -832,6 +847,13 @@ angular.module('hitsaOis')
       });
 
       sections.push({
+        name: 'message.messages',
+        type: 'link',
+        url: "/messages/received",
+        icon: "email"
+      });
+
+      sections.push({
         name: 'main.menu.myData.label',
         url: "/teachers/myData",
         type: 'link',
@@ -1149,6 +1171,13 @@ angular.module('hitsaOis')
         url: '/timetables?_menu',
         icon: "access_time"
       });
+
+      sections.push({
+        name: 'message.messages',
+        type: 'link',
+        url: "/messages/received",
+        icon: "email"
+      });
     }
 
     function getLeadingTeacherSections(authenticatedUser) {
@@ -1164,6 +1193,13 @@ angular.module('hitsaOis')
         type: 'link',
         url: "/timetable/generalTimetable/group",
         icon: "access_time"
+      });
+
+      sections.push({
+        name: 'message.messages',
+        type: 'link',
+        url: "/messages/received",
+        icon: "email"
       });
 
       sections.push({
@@ -1534,6 +1570,14 @@ angular.module('hitsaOis')
             name: 'main.menu.scholarshipStatistics.label',
             url: '/reports/scholarships?_menu',
             icon: 'euro_symbol'
+          },
+          {
+            name: 'main.menu.reports.lunchSupport',
+            url: "/reports/lunchSupport?_menu",
+            icon:"local_dining",
+            studyLevel: {
+              vocational: true
+            }
           }
         ]
       });
@@ -1666,6 +1710,13 @@ angular.module('hitsaOis')
         type: 'link',
         url: '/timetable/personalGeneralTimetable?_menu',
         icon: "access_time"
+      });
+
+      sections.push({
+        name: 'message.messages',
+        type: 'link',
+        url: "/messages/received",
+        icon: "email"
       });
 
       sections.push({
@@ -1823,6 +1874,13 @@ angular.module('hitsaOis')
         url: '/timetables?_menu',
         icon: "access_time"
       });
+
+      sections.push({
+        name: 'message.messages',
+        type: 'link',
+        url: "/messages/received",
+        icon: "email"
+      });
     }
 
     function getParentSections() {
@@ -1848,6 +1906,13 @@ angular.module('hitsaOis')
         type: 'link',
         url: '/timetable/personalGeneralTimetable?_menu',
         icon: "access_time"
+      });
+
+      sections.push({
+        name: 'message.messages',
+        type: 'link',
+        url: "/messages/received",
+        icon: "email"
       });
 
       sections.push({
@@ -1993,7 +2058,7 @@ angular.module('hitsaOis')
 
 
     function onLocationChange() {
-		
+
 		var dataLayer = window.dataLayer || [];
 dataLayer.push({
         'event': 'Pageview',

@@ -1,0 +1,5 @@
+<div layout="row" layout-xs="column">
+  <md-button class="md-raised md-primary" ng-click="save()">{{"main.button.save" | translate}}</md-button>
+  <md-button class="md-raised" ng-if="baseModule.id && baseModule.curriculums.length == 0" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
+  <md-button class="md-raised" ng-click="back('#/basemodule', baseModuleForm)">{{"main.button.back" | translate}}</md-button>
+</div>

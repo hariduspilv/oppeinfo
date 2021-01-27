@@ -1,6 +1,8 @@
 <div class="ois-form-layout-padding form-readonly" ng-cloak>
   <div>
     <form name="subjectForm" layout="column">
+      <ng-include src="'subject/subject.view.action.buttons.html'"></ng-include>
+      <div>&nbsp;</div>
       <md-input-container flex>
         <label>{{'subject.code' | translate}}</label>
         <hois-value value="subject.code"></hois-value>
@@ -78,7 +80,7 @@
         <hois-value value="subject.additionalInfo"></hois-value>
       </md-input-container>
       <div flex layout="column" ng-show="subject.mandatoryPrerequisiteSubjects.length > 0 || subject.recommendedPrerequisiteSubjects.length > 0 || subject.substituteSubjects.length > 0">
-        <fieldset tabindex="1">        
+        <fieldset tabindex="1">
           <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'subject.prerequisiteAndSubstituteSubjects' | translate}}</legend>
           <div ng-show="subject.mandatoryPrerequisiteSubjects.length > 0">
             <h3>{{'subject.mandatoryPrerequisiteSubjects' | translate}}</h3>
@@ -171,10 +173,7 @@
       </div>
       <div>&nbsp;</div>
       <hois-created-modified object="subject" ng-if="!isPublic"></hois-created-modified>
-      <div layout="row">
-        <md-button ng-if="subject.canEdit" ng-href="#/subject/{{subject.id}}/edit" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
-        <md-button ng-click="back(formState.backUrl)" class="md-raised">{{'main.button.back' | translate}}</md-button>
-      </div>
+      <ng-include src="'subject/subject.view.action.buttons.html'"></ng-include>
     </form>
   </div>
 </div>

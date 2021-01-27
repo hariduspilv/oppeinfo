@@ -118,6 +118,13 @@
         </md-input-container>
 
         <md-input-container class="md-block">
+          <label>{{'student.secondarySchoolCountry' | translate}}</label>
+          <hois-classifier-select ng-model="student.secondarySchoolCountry" name="secondarySchoolCountry"
+                                  main-classifier-code="RIIK" ng-required="!student.isVocational"
+                                  model-value-attr="code"></hois-classifier-select>
+        </md-input-container>
+
+        <md-input-container class="md-block">
           <label>{{'student.dormitory' | translate}}</label>
           <hois-classifier-select ng-model="student.dormitory" name="dormitory" main-classifier-code="YHISELAMU" required model-value-attr="code"></hois-classifier-select>
         </md-input-container>
@@ -204,7 +211,7 @@
           lf-placeholder="{{!student.photo ? ('student.photo.notSelected' | translate) :  ('student.photo.selectNewPhoto' | translate)}}"
           lf-browse-label="{{'student.photo.selectPhoto' | translate}}"
           lf-remove-label="{{'main.button.clear' | translate}}"></lf-ng-md-file-input>
-    
+
         <div ng-messages="studentEditForm.photoFiles.$error" style="color:red;">
           <div ng-message="filesize">{{'main.messages.error.fileTooLarge' | translate}} 3MB!</div>
           <div ng-message="mimetype">{{'main.messages.error.wrongExtension' | translate}} png, jpg, jpeg</div>

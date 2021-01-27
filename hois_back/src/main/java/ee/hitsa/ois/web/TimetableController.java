@@ -11,6 +11,7 @@ import javax.validation.Valid;
 import javax.xml.bind.JAXBException;
 
 import ee.hitsa.ois.domain.school.School;
+import ee.hitsa.ois.web.dto.timetable.SubjectTeacherPairDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -99,6 +100,13 @@ public class TimetableController {
     public HigherTimetablePlanDto createHigherPlan(HoisUserDetails user, @WithEntity Timetable timetable) {
         UserUtil.assertIsSchoolAdmin(user, timetable.getSchool());
         return timetableService.getHigherPlan(timetable);
+    }
+
+    @GetMapping("/{id:\\d+}/teacherSubjectStudyPeriods")
+    public List<SubjectTeacherPairDto> teacherSubjectStudyPeriods(HoisUserDetails user, @WithEntity Timetable timetable,
+            @RequestParam("teacherId") Long teacherId) {
+        UserUtil.assertIsSchoolAdmin(user, timetable.getSchool());
+        return timetableService.teacherSubjectStudyPeriods(timetable, teacherId);
     }
 
     @GetMapping("/managementSearchFormData")
@@ -202,6 +210,12 @@ public class TimetableController {
     public TimetableDto publicize(HoisUserDetails user, @WithEntity Timetable timetable) {
         UserUtil.assertIsSchoolAdmin(user, timetable.getSchool());
         return get(user, timetableService.publicize(timetable));
+    }
+
+    @PutMapping("/{id:\\d+}/backToInserted")
+    public TimetableDto backToInserted(HoisUserDetails user, @WithEntity Timetable timetable) {
+        UserUtil.assertIsSchoolAdmin(user, timetable.getSchool());
+        return get(user, timetableService.backToInserted(timetable));
     }
 
     @GetMapping("/timetableStudyYears/{school:\\d+}")

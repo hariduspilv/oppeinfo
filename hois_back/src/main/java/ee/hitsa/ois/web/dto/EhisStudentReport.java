@@ -254,7 +254,7 @@ public class EhisStudentReport {
                     ? (originalDirectiveStudent.getAbroadSchool() != null ? originalDirectiveStudent.getAbroadSchool()
                     : EhisService.name(originalDirectiveStudent.getApelSchool())) : originalDirectiveStudent.getEhisSchool().getNameEt();
             country = EntityUtil.getCode(originalDirectiveStudent.getCountry());
-            abroadProgramme = EntityUtil.getCode(originalDirectiveStudent.getAbroadProgramme());
+            abroadProgramme = EntityUtil.getNullableCode(originalDirectiveStudent.getAbroadProgramme());
         }
 
         public LocalDate getFromDate() {

@@ -11,6 +11,7 @@
                     <hois-value value="subject.nameEt"></hois-value>
                 </md-input-container>
             </div>
+            <ng-include src="'subjectStudyPeriod/subject/subject.study.period.subject.view.action.buttons.html'"></ng-include>
             <div flex="70" layout="row" class="common-label" md-colors="{color: 'background-400'}">
               <span ng-repeat="capacity in capacityTypes">
                 <span ng-if="!$first">|</span>
@@ -19,7 +20,7 @@
             </div>
             <div>&nbsp;</div>
             <md-table-container fixed-column-table fixed-columns="1" resize-table search-criteria-height="250">
-                <table class="subject-study-period pre-last-col-wide">
+                <table class="subject-study-period pre-last-col-wide load-plan">
                     <thead>
                     <tr>
                         <th>
@@ -81,26 +82,6 @@
             </md-table-container>
             <div>&nbsp;</div>
         </div>
-        <div layout="row">
-            <md-button ng-if="!readOnly && canEdit" class="md-raised md-primary" ng-href="#/subjectStudyPeriods/subjects/{{subject.id}}/{{studyPeriod.id}}/edit?_noback">{{'main.button.change' | translate}}</md-button>
-            <a ng-if="auth.isAdmin() || auth.isTeacher()" ng-href="{{excel(formState.xlsUrl, container)}}"
-                target="_blank" class="md-button md-raised">{{'main.button.printXls' | translate}}</a>
-            <md-button class="md-raised" ng-click="back('#/subjectStudyPeriods/subjects')">{{'main.button.back' | translate}}</md-button>
-        </div>
+        <ng-include src="'subjectStudyPeriod/subject/subject.study.period.subject.view.action.buttons.html'"></ng-include>
     </form>
 </div>
-
-<style>
-    tr.bold-top-line,
-    tr.bold-top-line td {
-        border-top: #525252 2px solid !important;
-    }
-    .subject-study-period td,
-    .subject-study-period th {
-        border-bottom: none !important;
-    }
-    .subject-study-period.pre-last-col-wide td:nth-last-child(2),
-    .subject-study-period.pre-last-col-wide th:nth-last-child(2) {
-      min-width: 120px;
-    }
-</style>

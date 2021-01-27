@@ -481,7 +481,7 @@ angular.module('hitsaOis')
           dialogScope.assessments = Classifier.queryForDropdown({ mainClassCode: 'KUTSEHINDAMISVIIS'});
 
           dialogScope.setDefaultCredits = function () {
-            dialogScope.occupationModuleTheme.credits = Math.round((dialogScope.occupationModuleTheme.hours / HOURS_PER_EKAP) * 10) / 10;
+            dialogScope.occupationModuleTheme.credits = Math.round((dialogScope.occupationModuleTheme.hours / HOURS_PER_EKAP) * 100) / 100;
             dialogScope.dialogForm.credits.$setDirty();
             var proportion = Math.round((dialogScope.occupationModuleTheme.credits / occupationModule.credits) * 100);
             if (!dialogScope.occupationModuleTheme.proportion || oldCalculatedProportion === dialogScope.occupationModuleTheme.proportion) {

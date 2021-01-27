@@ -6,6 +6,7 @@
         <th md-column>{{'directive.student.fullname' | translate}}</th>
         <th md-column>{{'directive.student.idcode' | translate}}</th>
         <th md-column>{{'directive.student.akadCancelDate' | translate}}</th>
+        <th md-column>{{'directive.student.directive' | translate}}</th>
       </tr>
     </thead>
     <tbody md-body>
@@ -17,6 +18,11 @@
         <td md-cell>{{::row.idcode}}</td>
         <td md-cell>
           <hois-value value="row.startDate | hoisDate"></hois-value>
+        </td>
+        <td md-cell>
+          <span ng-if="row.directiveStudentObject">
+            {{::row.directiveStudentObject.directiveNr}} ({{::row.directiveStudentObject.startDate | hoisDate}} - {{::row.directiveStudentObject.endDate | hoisDate}})
+          </span>
         </td>
       </tr>
     </tbody>

@@ -7,7 +7,9 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       controller: 'FinalThesisListController',
       controllerAs: 'controller',
       resolve: { translationLoaded: function($translate) { return $translate.onReady(); },
-        auth: function (AuthResolver) { return AuthResolver.resolve(); }},
+        auth: function (AuthResolver) { return AuthResolver.resolve(); },
+        params: function() { return {isEdit: false}; }
+        },
       data: {authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_LOPTEEMA]}
     })
     .when('/finalThesis/new', {

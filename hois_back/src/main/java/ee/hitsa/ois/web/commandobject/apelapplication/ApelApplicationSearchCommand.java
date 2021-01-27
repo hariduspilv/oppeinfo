@@ -19,6 +19,7 @@ public class ApelApplicationSearchCommand extends SearchCommand {
     private LocalDate submittedFrom;
     private LocalDate submittedThru;
     private Long committee;
+    private List<Long> studentGroups;
 
     public Long getStudent() {
         return student;
@@ -90,6 +91,14 @@ public class ApelApplicationSearchCommand extends SearchCommand {
 
     public void setSubmittedThru(LocalDate submittedThru) {
         this.submittedThru = submittedThru;
+    }
+
+    public List<Long> getStudentGroups() {
+        return studentGroups;
+    }
+
+    public void setStudentGroups(List<Long> studentGroups) {
+        this.studentGroups = studentGroups;
     }
 
 }

@@ -35,6 +35,15 @@ public class ExistingDirectiveStudentDto {
         return dto; 
     }
 
+    public ExistingDirectiveStudentDto() { }
+
+    public ExistingDirectiveStudentDto(Long id, String directiveNr, LocalDate startDate, LocalDate endDate) {
+        this.id = id;
+        this.directiveNr = directiveNr;
+        this.startDate = startDate;
+        this.endDate = endDate;
+    }
+
     public Long getId() {
         return id;
     }

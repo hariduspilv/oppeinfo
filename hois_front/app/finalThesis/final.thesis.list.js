@@ -1,9 +1,8 @@
 'use strict';
 
-angular.module('hitsaOis').controller('FinalThesisListController', function ($scope, $route, $location, $q, QueryUtils, DataUtils, Classifier) {
+angular.module('hitsaOis').controller('FinalThesisListController', function ($location, $route, $scope, $q, Classifier, QueryUtils) {
   $scope.auth = $route.current.locals.auth;
   $scope.criteria = {};
-  $scope.noFinalThesisModule = false;
   var endpoint = '/finalThesis';
 
   var clMapper = Classifier.valuemapper({ status: 'LOPUTOO_STAATUS' });
@@ -20,17 +19,5 @@ angular.module('hitsaOis').controller('FinalThesisListController', function ($sc
 
   if ($scope.auth.isAdmin() || $scope.auth.isLeadingTeacher() || $scope.auth.isTeacher()) {
     $q.all(clMapper.promises).then($scope.loadData);
-  } else if ($scope.auth.isStudent()) {
-    QueryUtils.endpoint(endpoint + '/studentFinalThesis').get().$promise.then(function (result) {
-      if (result.finalThesisRequired) {
-        if (result.finalThesis) {
-          $location.url(endpoint + '/' + result.finalThesis + '/view?_noback');
-        } else {
-          $location.url(endpoint + '/new');
-        }
-      } else {
-        $scope.noFinalThesisModule = true;
-      }
-    });
   }
 });

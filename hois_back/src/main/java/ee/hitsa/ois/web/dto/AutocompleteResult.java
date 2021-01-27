@@ -39,7 +39,10 @@ import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.studymaterial.StudyMaterial;
 import ee.hitsa.ois.domain.subject.Subject;
+import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
+import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodTeacher;
 import ee.hitsa.ois.domain.subject.subjectprogram.SubjectProgram;
+import ee.hitsa.ois.domain.subject.subjectprogram.SubjectProgramTeacher;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.domain.teacher.TeacherOccupation;
 import ee.hitsa.ois.domain.timetable.Journal;
@@ -57,6 +60,7 @@ import ee.hitsa.ois.web.dto.curriculum.CurriculumModuleOutcomeResult;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumResult;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleResult;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
+import ee.hitsa.ois.web.dto.subject.subjectprogram.SubjectProgramResult;
 
 public class AutocompleteResult extends EntityConnectionCommand implements Translatable {
 
@@ -307,8 +311,16 @@ public class AutocompleteResult extends EntityConnectionCommand implements Trans
     }
 
     public static AutocompleteResult of(SubjectProgram program) {
-        return new SubjectProgramResult(program.getId(), null, null, program.getSubjectStudyPeriodTeacher().getTeacher().getPerson().getFullname(),
-                program.getSubjectStudyPeriodTeacher().getSubjectStudyPeriod().getStudyPeriod(), program.getStatus().getCode());
+        return new SubjectProgramResult(program.getId(), null, null,
+                program.getTeachers().stream()
+                        .map(SubjectProgramTeacher::getSubjectStudyPeriodTeacher)
+                        .map(SubjectStudyPeriodTeacher::getTeacher)
+                        .map(Teacher::getPerson)
+                        .sorted(PersonUtil.SORT)
+                        .map(Person::getFullname)
+                        .collect(Collectors.joining(", ")),
+                program.getSubjectStudyPeriod().getStudyPeriod(),
+                program.getStatus().getCode());
     }
 
     public static AutocompleteResult of(SubjectStudyPeriodSubgroup subgroup) {

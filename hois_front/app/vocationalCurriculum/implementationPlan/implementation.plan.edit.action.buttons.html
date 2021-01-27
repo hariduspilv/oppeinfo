@@ -1,0 +1,42 @@
+<div layout="row">
+  <div flex layout-xs="column">
+    <span ng-show="implementationPlan.status === VERSION_STATUS.S" layout-xs="column">
+      <span ng-show="!implementationPlan.id" layout-xs="column">
+        <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
+      </span>
+      <span ng-show="!formState.readOnly && implementationPlan.id" layout-xs="column">
+        <md-button class="md-raised md-primary" ng-click="save()" ng-if="implementationPlan.canChange">{{'main.button.save' | translate}}</md-button>
+        <md-button ng-click="saveAndConfirm()" class="md-raised" ng-if="implementationPlan.canChange && implementationPlan.canConfirm">{{'curriculum.statuschange.implementationPlan.button.verify' | translate}}</md-button>
+        <md-button ng-click="setStatusClosed()" class="md-raised" ng-if="implementationPlan.canChange && implementationPlan.canClose">{{'curriculum.statuschange.implementationPlan.button.close' | translate}}</md-button>
+        <md-button class="md-raised md-default" ng-if="implementationPlan.canChange" ng-click="copy()">{{'main.button.copy' | translate}}</md-button>
+        <md-button class="md-raised md-default" ng-click="delete()" ng-if="implementationPlan.canDelete">{{'main.button.delete' | translate}}</md-button>
+      </span>
+      <span ng-show="formState.readOnly" layout-xs="column">
+        <md-button class="md-raised md-primary" ng-click="goToEditForm()" ng-if="implementationPlan.canChange">{{'main.button.change' | translate}}</md-button>
+        <md-button ng-click="confirm()" class="md-raised" ng-if="implementationPlan.canConfirm">{{'curriculum.statuschange.implementationPlan.button.verify' | translate}}</md-button>
+        <md-button ng-click="setStatusClosed()" class="md-raised" ng-if="implementationPlan.canClose">{{'curriculum.statuschange.implementationPlan.button.close' | translate}}</md-button>
+        <md-button class="md-raised md-default" ng-click="copy()" ng-if="implementationPlan.canChange">{{'main.button.copy' | translate}}</md-button>
+      </span>
+    </span>
+    <span ng-show="implementationPlan.status === VERSION_STATUS.K" layout-xs="column">
+      <span ng-show="!formState.readOnly" layout-xs="column">
+        <md-button class="md-raised md-primary" ng-click="save()" ng-if="implementationPlan.canChange">{{'main.button.save' | translate}}</md-button>
+        <md-button class="md-raised md-default" ng-click="changeStatusUnderRevision()" ng-if="implementationPlan.canChange && implementationPlan.canSetUnderRevision">{{'curriculum.statuschange.implementationPlan.button.changeStatusUnderRevision' | translate}}</md-button>
+      </span>
+      <span ng-show="formState.readOnly" layout-xs="column">
+        <md-button class="md-raised md-primary" ng-click="goToEditForm()" ng-if="implementationPlan.canChange">{{'main.button.change' | translate}}</md-button>
+        <md-button class="md-raised md-default" ng-click="changeStatusUnderRevision()" ng-if="implementationPlan.canChange && implementationPlan.canSetUnderRevision">{{'curriculum.statuschange.implementationPlan.button.changeStatusUnderRevision' | translate}}</md-button>
+        <md-button ng-click="setStatusClosed()" class="md-raised" ng-if="implementationPlan.canClose">{{'curriculum.statuschange.implementationPlan.button.close' | translate}}</md-button>
+        <md-button class="md-raised md-default" ng-click="copy()" ng-if="implementationPlan.canChange">{{'main.button.copy' | translate}}</md-button>
+      </span>
+    </span>
+    <span ng-show="implementationPlan.status === VERSION_STATUS.C" layout-xs="column">
+      <md-button class="md-raised md-default" ng-click="copy()" ng-if="implementationPlan.canChange">{{'main.button.copy' | translate}}</md-button>
+    </span>
+    <a href="{{curriculumVersionPdfUrl}}" target="_blank" class="md-button md-raised" ng-if="showPrintButton()">{{'module.implementationPlan.print' | translate}}</a>
+    <a href="{{curriculumVersionModulesPdfUrl}}" target="_blank" class="md-button md-raised" ng-if="showPrintButton()">{{'module.implementationPlan.printModules' | translate}}</a>
+    <a href="{{curriculumVersionSummaryRtfUrl}}" target="_blank" class="md-button md-raised" ng-if="showPrintButton()">
+      {{'module.implementationPlan.printAll' | translate}}</a>
+    <md-button class="md-raised md-default" ng-click="back('#/vocationalCurriculum/' + curriculumId + '/view', vocationalCurriculumModuleImplementationPlanForm)">{{'main.button.back' | translate}}</md-button>
+  </div>
+</div>

@@ -15,6 +15,7 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanJournalForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.StudyYearDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleThemeResult;
 
 public class LessonPlanJournalDto extends LessonPlanJournalForm {
@@ -22,6 +23,7 @@ public class LessonPlanJournalDto extends LessonPlanJournalForm {
     private Long id;
     private Long studentGroupId;
     private String studentGroupCode;
+    private StudyYearDto studyYear;
     private List<CurriculumVersionOccupationModuleThemeResult> themes;
     private String moduleNameEt;
     private Long journalSubId;
@@ -52,6 +54,7 @@ public class LessonPlanJournalDto extends LessonPlanJournalForm {
         LessonPlanJournalDto dto = EntityUtil.bindToDto(journal, new LessonPlanJournalDto(), "journalRooms");
         dto.setStudentGroupCode(lessonPlan.getStudentGroup().getCode());
         dto.setStudentGroupId(EntityUtil.getId(lessonPlan.getStudentGroup()));
+        dto.setStudyYear(StudyYearDto.ofMin(lessonPlan.getStudyYear()));
         dto.setJournalCapacityTypes(StreamUtil.toMappedList(r -> EntityUtil.getCode(r.getCapacityType()), journal.getJournalCapacityTypes()));
         dto.setJournalTeachers(StreamUtil.nullSafeList(journal.getJournalTeachers()).stream()
                 .map(LessonPlanJournalForm.LessonPlanJournalTeacherForm::of)
@@ -97,6 +100,14 @@ public class LessonPlanJournalDto extends LessonPlanJournalForm {
 
     public void setStudentGroupCode(String studentGroupCode) {
         this.studentGroupCode = studentGroupCode;
+    }
+
+    public StudyYearDto getStudyYear() {
+        return studyYear;
+    }
+
+    public void setStudyYear(StudyYearDto studyYear) {
+        this.studyYear = studyYear;
     }
 
     public List<CurriculumVersionOccupationModuleThemeResult> getThemes() {

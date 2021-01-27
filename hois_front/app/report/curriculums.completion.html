@@ -3,29 +3,36 @@
     <fieldset>
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
       <form name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate ng-model-options="{allowInvalid: true}">
-        <div layout="row">
+        <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="45" flex-sm="100" flex-xs="100">
             <label class="textInput">{{'report.curriculumscompletion.name' | translate}}</label>
             <input ng-model="criteria.name" name="name" type="text" md-maxlength="255" autofocus>
           </md-input-container>
 
-          <div flex="50" flex-offset="5">
-            <hois-autocomplete ha-controller="directiveControllers" ng-model="criteria.curriculumVersion" method="curriculumversions"
-              label="report.curriculumscompletion.curriculum" additional-query-params="{userId: auth.isLeadingTeacher() ? auth.user : null}"></hois-autocomplete>
-          </div>
-        </div>
-
-        <div layout="row" layout-sm="column" layout-xs="column">
-          <hois-autocomplete flex="45" ng-model="criteria.studentGroup" ha-attribute="id" ha-controller="directiveControllers" method="studentgroups"
-            label="{{'report.curriculumscompletion.studentgroup'}}" additional-query-params="{userId: auth.isLeadingTeacher() ? auth.user : null}"></hois-autocomplete>
-          <md-input-container flex="45" flex-offset="5" flex-sm="100" flex-xs="100">
-            <label>{{'report.curriculumscompletion.studyForm' | translate}}</label>
-            <hois-classifier-select ng-model="criteria.studyForm" model-value-attr="code" main-classifier-code="OPPEVORM"></hois-classifier-select>
+          <md-input-container flex="50" flex-offset="5" flex-sm="100" flex-xs="100" flex-offset-sm="0" flex-offset-xs="0">
+            <label class="textInput">{{'report.curriculumscompletion.status' | translate}}</label>
+            <hois-classifier-select ng-model="criteria.status" name="status" model-value-attr="code" main-classifier-code="OPPURSTAATUS"
+              filter-values="['OPPURSTAATUS_K', 'OPPURSTAATUS_L']" multiple></hois-classifier-select>
           </md-input-container>
         </div>
 
         <div layout="row" layout-sm="column" layout-xs="column">
-          <md-input-container flex="45" ng-if="auth.higher">
+          <hois-autocomplete flex="45" flex-sm="100" flex-xs="100" ha-controller="directiveControllers"
+            ng-model="criteria.curriculumVersion" method="curriculumversions" label="report.curriculumscompletion.curriculum"
+            additional-query-params="{userId: auth.isLeadingTeacher() ? auth.user : null}"></hois-autocomplete>
+
+          <hois-autocomplete flex="50" flex-offset="5" flex-sm="100" flex-xs="100" flex-offset-sm="0" flex-offset-xs="0"
+            ng-model="criteria.studentGroup" ha-attribute="id" ha-controller="directiveControllers" method="studentgroups"
+            label="{{'report.curriculumscompletion.studentgroup'}}" additional-query-params="{userId: auth.isLeadingTeacher() ? auth.user : null}"></hois-autocomplete>
+        </div>
+
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label>{{'report.curriculumscompletion.studyForm' | translate}}</label>
+            <hois-classifier-select ng-model="criteria.studyForm" model-value-attr="code" main-classifier-code="OPPEVORM"></hois-classifier-select>
+          </md-input-container>
+
+          <md-input-container ng-if="auth.higher" flex="50" flex-offset="5" flex-sm="100" flex-xs="100" flex-offset-sm="0" flex-offset-xs="0">
             <label>{{'report.curriculumscompletion.studyLoad' | translate}}</label>
             <hois-classifier-select ng-model="criteria.studyLoad" model-value-attr="code" main-classifier-code="OPPEKOORMUS"></hois-classifier-select>
           </md-input-container>
@@ -43,38 +50,62 @@
 </div>
 <div layout-padding>
   <div flex>
-    <md-table-container>
+    <md-table-container fixed-column-table fixed-columns="2" resize-table search-criteria-height="450" class="fixed-md-table-container">
       <table md-table md-progress="tabledata.$promise">
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
           <tr md-row>
             <th md-column md-order-by="p.lastname,p.firstname">{{'report.curriculumscompletion.name' | translate}}</th>
-            <th md-column md-order-by="cv.code">{{'report.curriculumscompletion.curriculum' | translate}}</th>
             <th md-column md-order-by="sg.code">{{'report.curriculumscompletion.studentgroup' | translate}}</th>
-            <th md-column>{{'report.curriculumscompletion.studyPeriodCount' | translate}}</th>
-            <th md-column>{{'report.curriculumscompletion.studyYearCount' | translate}}</th>
+            <th md-column md-order-by="p.idcode">{{'report.curriculumscompletion.idcode' | translate}}</th>
+            <th md-column md-order-by="cv.code">{{'report.curriculumscompletion.curriculum' | translate}}</th>
+            <th md-column title="{{'report.curriculumscompletion.participatedInStudyPeriodCountTitle' | translate}}"><span translate="report.curriculumscompletion.participatedInStudyPeriodCount"></span></th>
+            <th md-column title="{{'report.curriculumscompletion.studyPeriodCountTitle' | translate}}">{{'report.curriculumscompletion.studyPeriodCount' | translate}}</th>
+            <th md-column title="{{'report.curriculumscompletion.academicLeaveStudyPeriodCountTitle' | translate}}"><span translate="report.curriculumscompletion.academicLeaveStudyPeriodCount"></span></th>
+            <th md-column title="{{'report.curriculumscompletion.abroadStudiesStudyPeriodCountTitle' | translate}}"><span translate="report.curriculumscompletion.abroadStudiesStudyPeriodCount"></span></th>
+            <th md-column title="{{'report.curriculumscompletion.studyYearCountTitle' | translate}}">{{'report.curriculumscompletion.studyYearCount' | translate}}</th>
             <th md-column><span translate="report.curriculumscompletion.creditsLastStudyPeriod"></span></th>
+            <th md-column title="{{'report.curriculumscompletion.beforeCurrentPeriodConsideredCreditsTitle' | translate}}"><span translate="report.curriculumscompletion.beforeCurrentPeriodConsideredCredits"></span></th>
+            <th md-column title="{{'report.curriculumscompletion.consideredCreditsTitle' | translate}}"><span translate="report.curriculumscompletion.consideredCredits"></span></th>
             <th md-column><span translate="report.curriculumscompletion.credits"></span></th>
-            <th md-column><span translate="report.curriculumscompletion.curriculumCompletion"></span></th>
+            <th md-column title="{{'report.curriculumscompletion.beforeCurrentPeriodCumulativeCurriculumCompletionTitle' | translate}}" ng-if="auth.higher">
+              <span translate="report.curriculumscompletion.beforeCurrentPeriodCumulativeCurriculumCompletion"></span>
+            </th>
+            <th md-column title="{{'report.curriculumscompletion.cumulativeCurriculumCompletionTitle' | translate}}" ng-if="auth.higher">
+              <span translate="report.curriculumscompletion.cumulativeCurriculumCompletion"></span>
+            </th>
+            <th md-column title="{{'report.curriculumscompletion.curriculumCompletionTitle' | translate}}"><span translate="report.curriculumscompletion.curriculumCompletion"></span></th>
             <th md-column ng-if="auth.higher">{{'report.curriculumscompletion.studyLoad' | translate}}</th>
             <th md-column>{{'report.curriculumscompletion.studyForm' | translate}}</th>
             <th md-column>{{'report.curriculumscompletion.status' | translate}}</th>
+            <th title="{{'report.curriculumscompletion.lastStudyPeriodTitle' | translate}}" md-column>{{'report.curriculumscompletion.lastStudyPeriod' | translate}}</th>
+            <th md-column>{{'report.curriculumscompletion.nominalStudyEnd' | translate}}</th>
           </tr>
         </thead>
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td md-cell>
+            <td md-cell class="fixed-cell">
               <a md-no-ink class="md-primary" ng-href="#/students/{{::row.id}}/main">{{::row.fullName}}</a>
             </td>
+            <td md-cell class="fixed-cell">{{::row.studentGroup}}</td>
+            <td md-cell>{{::row.idcode}}</td>
             <td md-cell>{{currentLanguageNameField(row.curriculumVersion)}}</td>
-            <td md-cell>{{::row.studentGroup}}</td>
             <td md-cell>{{::row.studyPeriodCount}}</td>
+            <td md-cell>{{::row.participatedInStudyPeriodCount}}</td>
+            <td md-cell>{{::row.academicLeaveStudyPeriodCount}}</td>
+            <td md-cell>{{::row.abroadStudiesStudyPeriodCount}}</td>
             <td md-cell>{{::row.studyYearCount}}</td>
             <td md-cell>{{::row.creditsLastStudyPeriod}}</td>
+            <td md-cell>{{::row.beforeCurrentPeriodConsideredCredits}}</td>
+            <td md-cell>{{::row.consideredCredits}}</td>
             <td md-cell>{{::row.credits}}</td>
+            <td md-cell ng-if="auth.higher">{{::row.beforeCurrentPeriodCumulativeCurriculumCompletion}}</td>
+            <td md-cell ng-if="auth.higher">{{::row.cumulativeCurriculumCompletion}}</td>
             <td md-cell>{{::row.curriculumCompletion}}</td>
             <td md-cell ng-if="auth.higher">{{currentLanguageNameField(row.studyLoad)}}</td>
             <td md-cell>{{currentLanguageNameField(row.studyForm)}}</td>
             <td md-cell>{{currentLanguageNameField(row.status)}}</td>
+            <td md-cell>{{currentLanguageNameField(row.lastStudyPeriod)}}</td>
+            <td md-cell>{{::row.nominalStudyEnd | hoisDate}}</td>
           </tr>
         </tbody>
       </table>

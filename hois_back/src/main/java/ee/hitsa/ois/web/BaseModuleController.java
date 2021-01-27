@@ -36,7 +36,6 @@ import ee.hitsa.ois.web.commandobject.basemodule.BaseModuleReplaceCommand;
 import ee.hitsa.ois.web.commandobject.basemodule.BaseModuleReplaceForm;
 import ee.hitsa.ois.web.commandobject.basemodule.BaseModuleSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
-import ee.hitsa.ois.web.dto.OccupiedAutocompleteResult;
 import ee.hitsa.ois.web.dto.basemodule.BaseModuleCapacityDto;
 import ee.hitsa.ois.web.dto.basemodule.BaseModuleDto;
 import ee.hitsa.ois.web.dto.basemodule.BaseModuleSearchDto;

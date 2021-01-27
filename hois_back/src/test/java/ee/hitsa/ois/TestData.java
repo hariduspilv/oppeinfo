@@ -82,7 +82,7 @@ public class TestData {
         sc.setAdmissionRequirementsEn(STRING);
         sc.setAdmissionRequirementsEt(STRING);
         sc.setChanged(LocalDateTime.now());
-        sc.setCredits(Long.valueOf(100));
+        sc.setCredits(BigDecimal.valueOf(100));
         sc.setIscedClass(getClassifier());
         return sc;
     }

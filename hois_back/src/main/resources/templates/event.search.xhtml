@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <title>Sündmused</title>
+        <style type="text/css">
+            {% include "styles.css" %}
+
+            @page {
+                size: A4;
+                margin: 60px;
+            }
+
+            tr {
+                page-break-inside:avoid;
+                page-break-after:auto
+            }
+        </style>
+    </head>
+
+    <body>
+        <p class="reporttableheader">{{ "event.search.title" | translate }}</p>
+        <table class="reporttable">
+            <tr>
+                <td class="label" width="20%">{{ "event.search.time" | translate }}</td>
+                <td class="label">{{ "event.search.event" | translate }}</td>
+                <td class="label" width="20%">{{ "event.search.rooms" | translate }}</td>
+            </tr>
+            {% for event in content %}
+                <tr>
+                    <td>{{ event.date | hoisDate }} {{ event.timeStart }}-{{ event.timeEnd }}</td>
+                    <td>
+                        <b>{{ event | name }}</b>
+                        {% for teacher in event.teachers %}
+                            {% if loop.index == 0 %}<br/>{% endif %}
+                            {{ teacher.name }}{% if loop.index != loop.length - 1 %}, {% endif %}
+                        {% endfor %}
+                        {% for studentGroup in event.studentGroups %}
+                            {% if loop.index == 0 %}<br/>{% endif %}
+                            {{ studentGroup.code }}{% if loop.index != loop.length - 1 %}, {% endif %}
+                        {% endfor %}
+                    </td>
+                    <td>
+                        {% for room in event.rooms %}
+                            {% if room.buildingCode != null %}{{ room.buildingCode }}- {% endif %}{{ room.roomCode }}{% if loop.index != loop.length - 1 %}, {% endif %}
+                        {% endfor %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+    </body>
+</html>

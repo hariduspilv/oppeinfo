@@ -1,0 +1,8 @@
+<md-content>
+  <md-nav-bar md-selected-nav-item="currentNavItem" aria-label="message type" hois-navbar-overflowed>
+    <md-nav-item md-nav-href="#/messages/received?_menu" name="message.received">{{'message.received' | translate}}</md-nav-item>
+    <md-nav-item md-nav-href="#/messages/sent?_menu" name="message.sent">{{'message.sent' | translate}}</md-nav-item>
+    <md-nav-item md-nav-href="#/messages/automatic/received?_menu" name="message.automaticReceived">{{'message.automaticReceived' | translate}}</md-nav-item>
+    <md-nav-item md-nav-href="#/messages/automatic/sent?_menu" name="message.automaticSent" ng-if="canSeeAutomatic">{{'message.automaticSent' | translate}}</md-nav-item>
+  </md-nav-bar>
+</md-content>

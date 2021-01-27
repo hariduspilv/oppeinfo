@@ -1,0 +1,6 @@
+<div layout="row" layout-xs="column">
+  <md-button ng-if="auth.isAdmin() && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_TUGITEENUS') && student.id && ['OPPURSTAATUS_K', 'OPPURSTAATUS_L'].indexOf(student.status) === -1" ng-click="editService()" class="md-primary md-raised">{{'student.supportService.operation.addService.label' | translate}}</md-button>
+  <md-button ng-if="student.userCanViewPrivateStudentSupportServices && supportServices.totalElements > 0" ng-click="printServices()" class="md-raised">{{'student.supportService.operation.printServices.label' | translate}}</md-button>
+  <md-button ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_TUGITEENUS') && student.id && ['OPPURSTAATUS_K', 'OPPURSTAATUS_L'].indexOf(student.status) === -1" ng-click="innoveHistory()" class="md-raised">{{'student.supportService.operation.innoveHistory.label' | translate}}</md-button>
+  <md-button ng-if="!auth.isStudent() && !auth.isParent()" ng-click="back('#/students')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+</div>

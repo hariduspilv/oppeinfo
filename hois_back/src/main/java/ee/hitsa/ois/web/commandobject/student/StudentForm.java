@@ -39,6 +39,8 @@ public class StudentForm extends VersionedCommand {
     private LocalDate previousSchoolEndDate;
     @ClassifierRestriction(MainClassCode.YHISELAMU)
     private String dormitory;
+    @ClassifierRestriction(MainClassCode.RIIK)
+    private String secondarySchoolCountry;
     private Boolean isGuestStudent;
     // special needs
     private Boolean isSpecialNeed;
@@ -192,7 +194,13 @@ public class StudentForm extends VersionedCommand {
         this.deleteCurrentPhoto = deleteCurrentPhoto;
     }
 
+    public String getSecondarySchoolCountry() {
+        return secondarySchoolCountry;
+    }
 
+    public void setSecondarySchoolCountry(String secondarySchoolCountry) {
+        this.secondarySchoolCountry = secondarySchoolCountry;
+    }
 
     public static class StudentPersonForm {
 

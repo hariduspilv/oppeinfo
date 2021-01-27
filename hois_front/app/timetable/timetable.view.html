@@ -7,7 +7,13 @@
             <hois-value value="(timetable.startDate | hoisDate) + '-'+(timetable.endDate | hoisDate)"/>
           </md-input-container>
       </div>
-      <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+      <div>&nbsp;</div>
+
+      <div ng-if="timetable.teachers">
+        <hois-autocomplete flex ng-model="formState.teacher" name="teacher" label="timetable.timetablePlan.teacherHigher"
+          ha-search="searchTimetableTeachers" ha-controller="directiveControllers" no-paging="true"
+          md-selected-item-change="teacherChanged()"></hois-autocomplete>
+      </div>
 
       <div id="tt" ng-repeat="curriculum in timetable.curriculums | orderBy: currentLanguageNameField()" layout="column" flex>
         <div class="hois-collapse-header even">{{currentLanguageNameField(curriculum)}}{{curriculum.curriculumCode}}, {{currentLanguageNameField(curriculum.curriculumStudyLevelCode)}}</div>
@@ -53,6 +59,9 @@
     </md-button>
     <md-button ng-if="timetable.status === 'TUNNIPLAAN_STAATUS_K'" ng-click="publicize()"
                class="md-raised">{{'timetable.view.publicize' | translate}}
+    </md-button>
+    <md-button ng-if="timetable.status === 'TUNNIPLAAN_STAATUS_P'" ng-click="backToInserted()"
+               class="md-raised">{{'timetable.view.backToInserted' | translate}}
     </md-button>
     <md-button ng-href="#/timetable/timetableManagement" class="md-raised">{{'main.button.back' | translate}}
     </md-button>

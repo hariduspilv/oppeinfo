@@ -32,6 +32,6 @@ public class MockSaisClient extends SaisClient {
     public SaisApplicationResponse applicationsExport(XRoadHeaderV4 xRoadHeader, AllAppsExportRequest requestValue) {
         LogContext log = xRoadHeader.logContext();
         log.setOutgoingXml("Test - päringut ei koostatud");
-        return new SaisApplicationResponse(log, new AppExportResponse());
+        return null;//new SaisApplicationResponse(log, new AppExportResponse());
     }
 }

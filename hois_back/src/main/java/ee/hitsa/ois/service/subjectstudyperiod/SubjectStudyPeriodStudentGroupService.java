@@ -492,6 +492,7 @@ public class SubjectStudyPeriodStudentGroupService {
                 nsspt.setSubjectStudyPeriod(nssp);
                 nsspt.setTeacher(sspt.getTeacher());
                 nsspt.setIsSignatory(sspt.getIsSignatory());
+                nsspt.setIsDiplomaSupplement(sspt.getIsDiplomaSupplement());
                 // copy capacities
                 if (Boolean.TRUE.equals(nssp.getCapacityDiff())) {
                     nsspt.setCapacities(StreamUtil.nullSafeSet(sspt.getCapacities()).stream()

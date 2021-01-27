@@ -53,9 +53,13 @@
                 <tbody md-body>
                     <tr md-row ng-repeat="teacher in record.teachers" ng-class-odd="'odd'" ng-class-even="'even'">
                         <td md-cell width="45%">{{teacher.name}}</td>
-                        <td md-cell ng-hide="record.teachers.length === 1" width="45%">
-                            <md-checkbox ng-model="teacher.isSignatory" aria-label="{{'subjectStudyPeriodTeacher.isSignatory' | translate}}"
-                                ng-disabled="!auth.isAdmin()">{{'subjectStudyPeriodTeacher.isSignatory' | translate}}</md-checkbox>
+                        <td md-cell ng-hide="record.teachers.length === 1" width="30%">
+                          <md-checkbox ng-model="teacher.isSignatory" aria-label="{{'subjectStudyPeriodTeacher.isSignatory' | translate}}"
+                                       ng-disabled="!auth.isAdmin()">{{'subjectStudyPeriodTeacher.isSignatory' | translate}}</md-checkbox>
+                        </td>
+                        <td md-cell ng-hide="record.teachers.length === 1" width="30%">
+                          <md-checkbox ng-model="teacher.isDiplomaSupplement" aria-label="{{'subjectStudyPeriodTeacher.isDiplomaSupplement' | translate}}"
+                                       ng-disabled="!auth.isAdmin()">{{'subjectStudyPeriodTeacher.isDiplomaSupplement' | translate}}</md-checkbox>
                         </td>
                         <td ng-if="auth.isAdmin()" md-cell width="10%">
                             <md-button class="remove nomargin" ng-click="removeTeacher(teacher)" ng-show="obligatoryTeacher !== teacher.teacherId">&times;</md-button>

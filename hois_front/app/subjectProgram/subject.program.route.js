@@ -2,7 +2,7 @@
 
 angular.module('hitsaOis').config(['$routeProvider', function ($routeProvider) {
   var $route = $routeProvider.$get[$routeProvider.$get.length-1]({$on:function(){}}); // For Regex
-    
+
   function checkRightsToEdit(Session) {
     return ['ROLL_O', 'ROLL_A'].indexOf(Session.roleCode) !== -1 && Session.higher;
   }

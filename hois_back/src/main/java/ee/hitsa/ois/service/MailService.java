@@ -38,7 +38,7 @@ public class MailService {
     private final ExecutorService executorService = ThreadUtil.newScalingThreadPool(0, 10, 300L);
 
     // IKE - emails are always sent together with system messages but we do not have to guarantee their arrival
-    public void sendMail(String from, String to, String subject, String message, boolean isHtml) {
+    public void sendMail(String from, String to, String subject, String message, boolean isHtml, String senderName) {
         if(Boolean.TRUE.equals(disable)) {
             return;
         }
@@ -68,6 +68,9 @@ public class MailService {
                         helper.setTo(receivers != null ? receivers.split(",") : null);
                         helper.setSubject(subject);
                         String msg = message;
+                        if (StringUtils.hasText(senderName)) {
+                            msg = msg + "\n\n" + senderName;
+                        }
                         if (isHtml) {
                             StringBuilder sb = new StringBuilder();
                             sb.append("<html>");
@@ -94,16 +97,16 @@ public class MailService {
                 .filter(Objects::nonNull)
                 .distinct()
                 .collect(Collectors.joining(",")), message.getSubject(), message.getContent(),
-                isHtml);
+                isHtml, null);
     }
 
     public void sendMail(ee.hitsa.ois.domain.Message message, String sender,
-                         Collection<String> receivers, boolean isHtml) {
+                         Collection<String> receivers, boolean isHtml, String senderName) {
         sendMail(sender, receivers.stream()
-                .filter(Objects::nonNull)
-                .distinct()
-                .collect(Collectors.joining(",")), message.getSubject(), message.getContent(),
-                isHtml);
+                        .filter(Objects::nonNull)
+                        .distinct()
+                        .collect(Collectors.joining(",")), message.getSubject(), message.getContent(),
+                isHtml, senderName);
     }
 
 }

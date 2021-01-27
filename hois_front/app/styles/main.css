@@ -1453,6 +1453,10 @@ label.required::after {
   border: 1px solid rgb(221,44,0);
 }
 
+.lessonplan-module-row, .lessonplan-module-row > .fixed-cell {
+  background: rgb(225, 245, 254);
+}
+
 .lessonplan-individual-journal {
   color: blue;
   float: right;
@@ -1469,6 +1473,14 @@ label.required::after {
 
 .lessonplan-total-row {
   background: rgb(238, 238, 238);
+}
+
+#lessonplan-container tfoot td:not(.cross) {
+  background: rgb(238, 238, 238);
+}
+
+#lessonplan-container tfoot tr:first-child td {
+  border-top: 1px solid rgb(204, 204, 204);
 }
 
 .subject-study-period {
@@ -1552,6 +1564,57 @@ label.required::after {
 .subject-study-period-proportion .hois-classifier-value {
   display: inline-block;
   font-size: 12px !important;
+}
+
+table.subject-study-period.load-plan tr.bold-top-line,
+table.subject-study-period.load-plan tr.bold-top-line td{
+  border-top: #525252 2px solid !important;
+}
+
+table.subject-study-period.load-plan td {
+  border-bottom: none !important;
+}
+
+table.subject-study-period.load-plan.pre-last-col-wide td:nth-last-child(2),
+table.subject-study-period.load-plan.pre-last-col-wide th:nth-last-child(2) {
+  min-width: 120px;
+}
+
+table.subject-study-period.load-plan td.div-space-between > div {
+  display: inline-block;
+}
+
+table.subject-study-period.load-plan td.div-space-between > div:last-child {
+  float: right;
+}
+
+table.subject-study-period.load-plan td.div-space-between > div:last-child md-input-container {
+  text-align: left;
+  max-width: 350px;
+  min-width: 200px;
+}
+
+table.subject-study-period.load-plan {
+  border-collapse: unset;
+  border-spacing: 0;
+}
+
+table.subject-study-period.load-plan th,
+table.subject-study-period.load-plan td {
+  border-left: 0;
+}
+
+table.subject-study-period.load-plan tr.header th {
+  border-bottom: #525252 2px solid !important;
+}
+
+table.subject-study-period.load-plan tr.different-color th,
+table.subject-study-period.load-plan tr.different-color .fixed-cell {
+  background-color: rgb(252, 228, 236);
+}
+
+table.subject-study-period.load-plan tr.different-color.header .fixed-cell {
+  background-color: rgb(248, 187, 208) !important;
 }
 
 .bold
@@ -2409,6 +2472,7 @@ label.ui-btn {
   margin: 0;
 }
 .container th,
+.container tfoot td,
 .fixed-cell {
   background: #FAFAFA;
   position: relative;

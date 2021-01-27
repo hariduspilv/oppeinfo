@@ -19,6 +19,7 @@ public class ApplicationSearchCommand {
     private String studentName;
     private String studentIdCode;
     private Boolean connectedByCommittee;
+    private List<Long> studentGroups;
 
     public List<String> getType() {
         return type;
@@ -79,6 +80,12 @@ public class ApplicationSearchCommand {
     }
     public void setConnectedByCommittee(Boolean connectedByCommittee) {
         this.connectedByCommittee = connectedByCommittee;
+    }
+    public List<Long> getStudentGroups() {
+        return studentGroups;
+    }
+    public void setStudentGroups(List<Long> studentGroups) {
+        this.studentGroups = studentGroups;
     }
 
 }

@@ -9,11 +9,15 @@
           </md-button>
         </div>
       </md-toolbar>
-  
+
       <md-dialog-content>
         <span flex></span>
         <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
           <div layout="column">
+            <md-input-container ng-if="timetableType === 'TIMETABLE_ASC'">
+              <md-checkbox ng-model="data.isIndividual" aria-label="individual timetable">
+                {{'timetable.management.individualTimetable' | translate}}</md-checkbox>
+            </md-input-container>
             <md-input-container flex>
                       <lf-ng-md-file-input name="file" lf-files="data.file" lf-browse-label="{{'main.addFile' | translate}}"
                         lf-remove-label="{{'main.button.delete' | translate}}"
@@ -26,7 +30,7 @@
           </div>
         </div>
       </md-dialog-content>
-  
+
       <span flex></span>
       <md-dialog-actions layout="row" layout-align="start center">
         <md-button class="md-raised md-primary" ng-click="submit()">{{"main.button.save" | translate}}</md-button>

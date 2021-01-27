@@ -1,5 +1,6 @@
 package ee.hitsa.ois.report;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
 
@@ -13,7 +14,7 @@ public class StateCurriculumReport {
     private final String nameEt;
     private final String nameEn;
     private final String iscedClass;
-    private final Long credits;
+    private final BigDecimal credits;
     private final String objectives;
     private final String outcomes;
     private final String admissionRequirements;
@@ -62,7 +63,7 @@ public class StateCurriculumReport {
         return TEMPLATE_NAME;
     }
 
-    public Long getCredits() {
+    public BigDecimal getCredits() {
         return credits;
     }
 

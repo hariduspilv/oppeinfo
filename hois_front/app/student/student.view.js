@@ -667,10 +667,10 @@ function ($filter, $q, $route, $scope, GRADING_SCHEMA_TYPE, Classifier, GradingS
 
         response.modules.forEach(function (module) {
           module.markedComplete = module.studentCurriculumCompletionHigherModule !== null;
-          module.studyCredits = module.compulsoryStudyCredits + module.optionalStudyCredits;
-          module.creditsSubmitted = module.mandatoryCreditsSubmitted + module.optionalCreditsSubmitted;
-          module.difference = (module.mandatoryDifference < 0 ? module.mandatoryDifference : 0) +
-            (module.optionalDifference < 0 ? module.optionalDifference : 0);
+          module.studyCredits = Math.round((module.compulsoryStudyCredits + module.optionalStudyCredits)*100)/100;
+          module.creditsSubmitted = Math.round((module.mandatoryCreditsSubmitted + module.optionalCreditsSubmitted)*100)/100;
+          module.difference = Math.round(((module.mandatoryDifference < 0 ? module.mandatoryDifference : 0) +
+            (module.optionalDifference < 0 ? module.optionalDifference : 0))*100)/100;
           module.grades.forEach(function (grade) {
             gradeMapper.objectmapper(grade);
           });

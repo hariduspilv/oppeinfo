@@ -99,7 +99,7 @@ angular.module('hitsaOis')
                   studyYearId: it.studyYearId,
                   loadPercentage: it.loads[loadCoef],
                   coefficient: loadCoef
-                })
+                });
               }
               return acc;
             }, [])

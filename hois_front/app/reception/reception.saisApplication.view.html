@@ -97,6 +97,10 @@
                 <label>{{'reception.admission.code' | translate}}</label>
                 <hois-value value="saisApplication.saisAdmissionCode" ></hois-value>
               </md-input-container>
+              <md-input-container flex>
+                <label>{{'reception.application.secondarySchoolCountry' | translate}}</label>
+                <hois-classifier-value ng-model="saisApplication.secondarySchoolCountry" main-classifier-code="RIIK"></hois-classifier-value>
+              </md-input-container>
             </div>
         </div>
 

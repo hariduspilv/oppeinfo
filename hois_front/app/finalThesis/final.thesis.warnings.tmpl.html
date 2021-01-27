@@ -1,0 +1,15 @@
+<div ng-if="thesis !== undefined" flex>
+  <hois-whiteframe-warning ng-if="!isStudentActive" md-color="'accent'">
+    <span>{{'finalThesis.error.studentNotActive' | translate}}</span>
+  </hois-whiteframe-warning>
+  <hois-whiteframe-warning ng-if="!finalThesisExpected" md-color="'accent'">
+    <span>{{'finalThesis.error.noFinalThesisModule' | translate}}</span>
+  </hois-whiteframe-warning>
+  <hois-whiteframe-warning ng-if="!noFinalExamDeclaration" md-color="'accent'">
+    <span>{{'finalThesis.error.existsFinalExamDeclaration' | translate}}</span>
+  </hois-whiteframe-warning>
+  <hois-whiteframe-warning ng-if="!specialitySet" md-color="'accent'">
+    <span>{{'finalThesis.error.specialityNotSet' | translate}}</span>
+  </hois-whiteframe-warning>
+  <div>&nbsp;</div>
+</div>

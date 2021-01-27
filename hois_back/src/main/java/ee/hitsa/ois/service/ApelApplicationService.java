@@ -173,6 +173,7 @@ public class ApelApplicationService {
         }
 
         qb.optionalCriteria("aa.student_id = :studentId", "studentId", criteria.getStudent());
+        qb.optionalCriteria("sg.id in (:studentGroups)", "studentGroups", criteria.getStudentGroups());
         qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname",
                 "concat(p.firstname, ' ', p.lastname, ' (', p.idcode, ')')"), "name", criteria.getName());
         qb.optionalCriteria("aa.status_code in (:status)", "status", criteria.getStatus());

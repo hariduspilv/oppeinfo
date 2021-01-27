@@ -54,6 +54,7 @@ public abstract class EhisService {
     static final String LAE_KORGHARIDUS_SERVICE_CODE = "laeKorgharidus";
     public static final String LAE_KORGHARIDUS_SERVICE = "ehis."+ LAE_KORGHARIDUS_SERVICE_CODE;
     private static final String BIRTH_DATE_ENTERED = "SS";
+    private static final String DEFAULT_KL_ELUKOHAMAA = "EE";
 
     private DatatypeFactory datatypeFactory;
     @Autowired
@@ -209,9 +210,14 @@ public abstract class EhisService {
                 // XXX citizenship is three letters?
                 isikuandmedLisa.setKlKodakondsus(value(person.getCitizenship()));
             }
-            if (person.getResidenceCountry() != null) {
-                isikuandmedLisa.setKlElukohamaa(value2(person.getResidenceCountry()));
-            }
+        }
+        if (student.getSecondarySchoolCountry() != null) {
+            isikuandmedLisa.setKlElukohamaa(value2(student.getSecondarySchoolCountry()));
+        } else if (person.getResidenceCountry() != null) {
+            isikuandmedLisa.setKlElukohamaa(value2(person.getResidenceCountry()));
+        }
+        if (isikuandmedLisa.getKlElukohamaa() == null) {
+            isikuandmedLisa.setKlElukohamaa(DEFAULT_KL_ELUKOHAMAA);
         }
 
         KhlLisamine lisamine = new KhlLisamine();

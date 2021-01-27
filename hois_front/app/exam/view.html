@@ -8,7 +8,7 @@
 
       <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
         <label class="textInput">{{'exam.subjectTeacher' | translate}}</label>
-        <hois-value value="currentLanguageNameField(record.subjectStudyPeriodDto.subject)+ ' - ' + (record.subjectStudyPeriodDto.teacherNames || []).join(', ')"></hois-value>
+        <hois-value value="currentLanguageNameField(record.subjectStudyPeriodDto.subject) + ' - ' + (record.subjectStudyPeriodDto.teacherNames || []).join(', ') + ((record.subjectStudyPeriodDto.groupNames || []).length > 0 ? ' (' + (record.subjectStudyPeriodDto.groupNames || []).join(', ') + ')' : '')"></hois-value>
       </md-input-container>
 
       <md-input-container flex="15" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">

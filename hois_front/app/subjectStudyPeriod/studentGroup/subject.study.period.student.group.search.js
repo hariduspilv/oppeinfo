@@ -150,7 +150,7 @@ function ($scope, $route, QueryUtils, ArrayUtils, DataUtils, USER_ROLES, AuthSer
             $scope.formState.previousPlans = [];
             if ($scope.record.studyPeriod && $scope.record.studentGroup) {
               $scope.formState.previousPlans = QueryUtils.endpoint('/subjectStudyPeriods/studentGroups/existingPlans/' +
-                $scope.record.studyPeriod + '/' + $scope.record.studentGroup).query();
+                $scope.record.studyPeriod + '/' + $scope.record.studentGroup.id).query();
             }
           });
 
@@ -162,13 +162,13 @@ function ($scope, $route, QueryUtils, ArrayUtils, DataUtils, USER_ROLES, AuthSer
 
             if (!$scope.record.previousPlan) {
               $mdDialog.hide();
-              $location.url('/subjectStudyPeriods/studentGroups/new?studyPeriodId=' + $scope.record.studyPeriod + '&studentGroupId=' + $scope.record.studentGroup);
+              $location.url('/subjectStudyPeriods/studentGroups/new?studyPeriodId=' + $scope.record.studyPeriod + '&studentGroupId=' + $scope.record.studentGroup.id);
             } else {
               QueryUtils.endpoint("/subjectStudyPeriods/studentGroups/copyPlan/" +
-                $scope.record.studyPeriod + "/" + $scope.record.studentGroup + "/" +
+                $scope.record.studyPeriod + "/" + $scope.record.studentGroup.id + "/" +
                 $scope.record.previousPlan.periodId + "/" + $scope.record.previousPlan.groupId).save2({}, function () {
                   $mdDialog.hide();
-                  $location.url('/subjectStudyPeriods/studentGroups/' + $scope.record.studentGroup + '/' + $scope.record.studyPeriod + '/edit');
+                  $location.url('/subjectStudyPeriods/studentGroups/' + $scope.record.studentGroup.id + '/' + $scope.record.studyPeriod + '/edit');
               });
             }
           };

@@ -75,6 +75,7 @@
             <label>{{'student.result.curriculumFulfilled' | translate}}</label>
             <hois-value value="(student.higherResults.isCurriculumFulfilled ? ('student.result.fulfilled' | translate) : ('student.result.notFulfilled' | translate))
               + (student.higherResults.fulfillmentPercentage != null ?' (' + student.higherResults.fulfillmentPercentage +'%)' : '')"></hois-value>
+            <md-tooltip class="tooltip-multiline">{{'student.result.curriculumFulfilledSpecification' | translate}}</md-tooltip>
           </md-input-container>
         </div>
       </div>

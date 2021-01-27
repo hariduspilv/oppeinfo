@@ -132,7 +132,7 @@ public class StudentController {
     public Page<StudentSearchDto> search(HoisUserDetails user, @Valid StudentSearchCommand criteria,
             Pageable pageable) {
         UserUtil.throwAccessDeniedIf(user.isStudent(), "Students cannot search other students");
-        return studentService.search(user, criteria, pageable);
+        return studentService.search(user, criteria, pageable, false);
     }
 
     /**

@@ -90,7 +90,7 @@
                 <td md-cell>{{currentLanguageNameField(teacher.teacher)}}</td>
                 <td md-cell ng-if="!timetableEvent.isSingleEvent">
                   <md-checkbox ng-model="teacher.isSubstitute" aria-label="{{'timetable.timetableEvent.substitute' | translate}}"
-                    ng-disabled="!(auth.isAdmin() || auth.isLeadingTeacher)"></md-checkbox>
+                    ng-disabled="auth.isAdmin()"></md-checkbox>
                 </td>
                 <td md-cell>
                   <a ng-if="!(auth.isTeacher && auth.teacher === teacher.teacher.id)" ng-click="deleteTeacher(teacher)" class="remove">&times;</a>
@@ -141,7 +141,6 @@
           <div layout="row" flex="100">
             <hois-autocomplete label="timetable.timetableEvent.studentGroup" ng-model="timetableEvent.studentGroup" ha-controller="directiveControllers"
               method="studentgroups" warning-param="isOccupied" ng-disabled="timetableEvent.isPersonal"
-              ng-required="auth.isLeadingTeacher() && !timetableEvent.isPersonal && (!timetableEvent.studentGroups || timetableEvent.studentGroups.length === 0)"
               additional-query-params="{valid: true, occupied: true, date: timetableEvent.date, startTime: timetableEvent.startTime, endTime: timetableEvent.endTime,
                 repeatCode: timetableEvent.repeatCode, weekAmount: timetableEvent.weekAmount}"
               flex></hois-autocomplete>

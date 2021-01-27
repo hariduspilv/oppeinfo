@@ -19,11 +19,21 @@
           </md-input-container>
           <md-input-container flex="100" flex-gt-xs="20">
             <label class="textInput">{{'subjectProgram.creditsAndHours' | translate}}</label>
-            <hois-value value="subject.credits + '/' + ((subject.credits * 26) | hoisNumber:1)"></hois-value>
+            <hois-value value="subject.credits + '/' + ((subject.credits * 26) | hoisNumber:2)"></hois-value>
           </md-input-container>
           <md-input-container flex="100" flex-gt-xs="20">
             <label class="textInput">{{'subject.assessment' | translate}}</label>
             <hois-classifier-value ng-model="subject.assessment" main-classifier-code="HINDAMISVIIS"></hois-classifier-value>
+          </md-input-container>
+        </div>
+        <div flex layout="column" layout-gt-xs="row">
+          <md-input-container flex="100" flex-gt-xs="40">
+            <label class="textInput">{{'subjectProgram.studyPeriod' | translate}}</label>
+            <hois-value value="currentLanguageNameField(studyPeriod)"></hois-value>
+          </md-input-container>
+          <md-input-container flex="100" flex-gt-xs="60">
+            <label class="textInput">{{'subjectProgram.teacher' | translate}}</label>
+            <hois-value value="teachers"></hois-value>
           </md-input-container>
         </div>
         <hois-collapsable expanded="false">
@@ -146,7 +156,11 @@
           </fieldset>
         </hois-collapsable>
       </div>
-      <span class="hois-collapse-header" style="padding-bottom: 10px;">{{'subjectProgram.label' | translate}}</span>
+      <span class="hois-collapse-header" style="padding-bottom: 10px;">
+        {{'subjectProgram.label' | translate}} <span ng-if="subjectProgram.isJoint">({{'subjectProgram.joint' | translate}})</span>
+      </span>
+      <ng-include src="'subjectProgram/subject.program.view.action.buttons.html'"></ng-include>
+      <div>&nbsp;</div>
       <div flex class="study-content">
         <fieldset tabindex="3">
           <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'subjectProgram.studyContent' | translate}}</legend>
@@ -156,7 +170,7 @@
             disabled class="md-primary"></hois-classifier-radio>
           </div>
           <div ng-show="subjectProgram.studyContentType === 'OPPETOOSISU_K'" layout="column">
-            <md-table-container>
+            <md-container>
               <div layout="column" ng-repeat="sc in studyContentDt">
                 <div layout="row">
                   <md-input-container flex="10">
@@ -173,7 +187,7 @@
                   </md-input-container>
                   <md-input-container flex="50">
                     <label>{{'subjectProgram.teacher' | translate}}</label>
-                    <hois-value value="isString(sc.teacher) ? sc.teacher : currentLanguageNameField(sc.teacher)"></hois-value>
+                    <hois-value value="teacherField(sc)"></hois-value>
                   </md-input-container>
                 </div>
                 <div layout="row">
@@ -184,7 +198,7 @@
                   </md-input-container>
                 </div>
               </div>
-            </md-table-container>
+            </md-container>
           </div>
           <div ng-show="subjectProgram.studyContentType === 'OPPETOOSISU_N'" layout="column">
             <div layout="column" ng-repeat="sc in studyContentWk">
@@ -203,7 +217,7 @@
                 </md-input-container>
                 <md-input-container flex="50">
                   <label>{{'subjectProgram.teacher' | translate}}</label>
-                  <hois-value value="isString(sc.teacher) ? sc.teacher : currentLanguageNameField(sc.teacher)"></hois-value>
+                  <hois-value value="teacherField(sc)"></hois-value>
                 </md-input-container>
               </div>
               <div layout="row">
@@ -331,19 +345,33 @@
           <hois-value value="subjectProgram.confirmedBy"></hois-value>
         </md-input-container>
       </div>
-      <br>
+      <div ng-if="!isPublic && subjectProgram.isJoint && subjectProgram.teachers.length > 1">&nbsp;</div>
+      <div flex ng-if="!isPublic && subjectProgram.isJoint && subjectProgram.teachers.length > 1">
+        <fieldset tabindex="4">
+          <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'subjectProgram.teacherReadyStatus' | translate}}</legend>
+          <md-table-container>
+            <table md-table class="secondary-table">
+              <thead md-head>
+              <tr md-row>
+                <th md-column>{{'subjectProgram.teacher' | translate}}</th>
+                <th md-column>{{'subjectProgram.operation.complete.label' | translate}}</th>
+                <th md-column>{{'main.date' | translate}}</th>
+              </tr>
+              </thead>
+              <tbody md-body>
+              <tr md-row ng-repeat="teacher in subjectProgram.teachers">
+                <td md-cell>{{currentLanguageNameField(teacher.teacher)}}</td>
+                <td md-cell>{{teacher.isReady ? 'main.yes' : 'main.no' | translate}}</td>
+                <td md-cell>{{teacher.isReadyDt ? teacher.isReadyDt : '-' | hoisDateTime}}</td>
+              </tr>
+              </tbody>
+            </table>
+          </md-table-container>
+        </fieldset>
+      </div>
+      <div>&nbsp;</div>
     </div>
-    <md-button class="md-raised md-primary" ng-if="!isPublic && subjectProgram.id
-      && (subjectProgram.subjectStudyPeriodTeacher.teacherId === userTeacherId || (auth.isAdmin()
-      && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_AINEOPPETAJA')))" ng-click="edit()">{{"main.button.change" | translate}}</md-button>
-    <md-button class="md-raised" ng-if="!isPublic && subjectProgram.id && (isSupervisor || (auth.isAdmin()
-      && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_AINEOPPETAJA'))) && subjectProgram.status === 'AINEPROGRAMM_STAATUS_V'"
-      ng-click="confirm()">{{"main.button.confirm" | translate}}</md-button>
-    <md-button class="md-raised" ng-if="!isPublic && subjectProgram.id && (isSupervisor || (auth.isAdmin()
-      && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_AINEOPPETAJA'))) && subjectProgram.status !== 'AINEPROGRAMM_STAATUS_I'"
-      ng-click="openRejectDialog()">{{"subjectProgram.operation.reject.label" | translate}}</md-button>
-    <md-button class="md-raised" ng-if="subjectProgram.id" ng-href="{{pdfUrl()}}" target="_blank">{{"main.button.print" | translate}}</md-button>
-    <md-button class="md-raised" ng-click="back(getDefaultBack())">{{"main.button.back" | translate}}</md-button>
+    <ng-include src="'subjectProgram/subject.program.view.action.buttons.html'"></ng-include>
   </form>
 </div>
 <style>

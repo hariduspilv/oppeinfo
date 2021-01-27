@@ -34,7 +34,7 @@
           </div>
           <div flex="30" flex-offset="5" flex-sm="100" flex-xs="100">
             <hois-autocomplete ng-model="criteria.teachers" ha-controller="directiveControllers" ha-attribute="id" multiple
-              method="teachers" additional-query-params="{valid: true, vocational: true}" label="teacher.labelHigher"></hois-autocomplete>
+              method="teachers" additional-query-params="{valid: true, vocational: true}" label="{{auth.higher ? 'teacher.labelHigher' : 'teacher.labelVocational'}}"></hois-autocomplete>
           </div>
           <md-input-container flex="30" flex-offset="5" flex-sm="100" flex-xs="100">
             <label>{{'report.teachersDetailLoad.teacherPosition' | translate}}</label>
@@ -97,7 +97,7 @@
           <md-button class="md-raised md-primary" type="submit">{{'main.button.search' | translate}}</md-button>
           <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
           <md-button ng-href="{{excelUrl()}}" ng-disabled="!criteria.studyYear" class="md-button md-raised">{{'main.button.printXls'| translate}}</md-button>
-          <md-button ng-href="{{excelUrlDetail()}}" ng-disabled="!criteria.studyYear" class="md-button md-raised">{{'main.button.printXlsDetail'| translate}}</md-button>
+          <md-button ng-click="toExcel()" target="_blank" class="md-button md-raised" ng-disabled="!reportData.criteria.studyYear">{{'main.button.printXlsDetail' | translate}}</md-button>
         </div>
         <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
       </form>

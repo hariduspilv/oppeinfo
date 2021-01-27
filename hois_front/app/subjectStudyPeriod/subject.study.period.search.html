@@ -40,7 +40,7 @@
             method="studentgroups" name="studentGroup" label="{{'student.studentGroup'}}"></hois-autocomplete>
         </div>
         <div flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-          <hois-autocomplete ha-controller="directiveControllers" ng-model="criteria.curriculumObject" 
+          <hois-autocomplete ha-controller="directiveControllers" ng-model="criteria.curriculumObject"
             method="curriculums" name="curriculum" label="subjectStudyPeriod.curriculum"></hois-autocomplete>
         </div>
       </div>
@@ -85,31 +85,69 @@
             <td md-cell>{{::row.studentgroups}}</td>
             <td md-cell>{{::row.subgroups}}</td>
             <td md-cell ng-if="auth.isTeacher()">
+              <span ng-if="!row.jointProgram.id">
+                <md-button md-no-ink class="md-primary change-button" ng-if="row.canEditJointProgram"
+                           style="padding:0 !important; margin: 3px 0 0 0 !important; min-width: 0 !important"
+                           ng-click="addJointSubjectProgram(row)">
+                  {{'subjectStudyPeriod.addJointSubjectProgram' | translate}}</md-button>
+              </span>
+              <span ng-if="row.jointProgram.id">
+                {{'subjectProgram.jointProgram' | translate}} (<hois-classifier-value ng-model="row.jointProgram.status" main-classifier-code="AINEPROGRAMM_STAATUS" style="display: inline;">
+                </hois-classifier-value>)<span ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_AINEOPPETAJA')">:
+                  <md-button md-no-ink class="md-primary change-button" ng-if="row.jointProgram.status === 'AINEPROGRAMM_STAATUS_I'" style="padding:0 !important; margin: 0 !important; min-width: 0 !important"
+                             ng-click="editSubjectProgram(row.jointProgram)">{{'main.button.change' | translate}}</md-button>
+                  <md-button md-no-ink class="md-primary change-button" ng-if="row.jointProgram.status === 'AINEPROGRAMM_STAATUS_V' || row.jointProgram.status === 'AINEPROGRAMM_STAATUS_K'" style="padding:0 !important; margin: 0 !important; min-width: 0 !important"
+                             ng-href="#/subjectProgram/periods/{{::row.jointProgram.id}}/view">{{'main.button.view' | translate}}</md-button>
+                </span><span ng-if="!isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_AINEOPPETAJA')">:
+                  <md-button md-no-ink class="md-primary change-button" ng-if="row.jointProgram.status !== 'AINEPROGRAMM_STAATUS_L'" style="padding:0 !important; margin: 0 !important; min-width: 0 !important"
+                             ng-href="#/subjectProgram/periods/{{::row.jointProgram.id}}/view">{{'main.button.view' | translate}}</md-button>
+                </span>
+              </span>
               <p class="nomargin">
-                <hois-classifier-value ng-model="row.subjectProgramStatus" main-classifier-code="AINEPROGRAMM_STAATUS"></hois-classifier-value>
+                <hois-classifier-value ng-model="row.program.status" main-classifier-code="AINEPROGRAMM_STAATUS"></hois-classifier-value>
               </p>
               <div>
-                <md-button md-no-ink class="md-primary change-button" ng-if="row.subjectProgramStatus === 'AINEPROGRAMM_STAATUS_L'" style="padding:0 !important; margin: 0 !important; min-width: 0 !important"
-                  ng-href="#/subjectProgram/{{::row.subject.id}}/{{::row.id}}/periods/new">{{'main.button.create' | translate}}</md-button>
-                <md-button md-no-ink class="md-primary change-button" ng-if="row.subjectProgramStatus === 'AINEPROGRAMM_STAATUS_I'" style="padding:0 !important; margin: 0 !important; min-width: 0 !important"
-                    ng-href="#/subjectProgram/periods/{{::row.subjectProgramId}}/edit">{{'main.button.change' | translate}}</md-button>
-                <md-button md-no-ink class="md-primary change-button" ng-if="row.subjectProgramStatus === 'AINEPROGRAMM_STAATUS_V' || row.subjectProgramStatus === 'AINEPROGRAMM_STAATUS_K'" style="padding:0 !important; margin: 0 !important; min-width: 0 !important"
-                  ng-href="#/subjectProgram/periods/{{::row.subjectProgramId}}/view">{{'main.button.view' | translate}}</md-button>
+                <md-button md-no-ink class="md-primary change-button" ng-if="row.program.status === 'AINEPROGRAMM_STAATUS_L'" style="padding:0 !important; margin: 0 !important; min-width: 0 !important"
+                           ng-href="#/subjectProgram/{{::row.subject.id}}/{{::row.id}}/periods/new">{{'main.button.create' | translate}}</md-button>
+                <md-button md-no-ink class="md-primary change-button" ng-if="row.program.status  === 'AINEPROGRAMM_STAATUS_I'" style="padding:0 !important; margin: 0 !important; min-width: 0 !important"
+                           ng-click="editSubjectProgram(row.program)">{{'main.button.change' | translate}}</md-button>
+                <md-button md-no-ink class="md-primary change-button" ng-if="row.program.status  === 'AINEPROGRAMM_STAATUS_V' || row.program.status  === 'AINEPROGRAMM_STAATUS_K'" style="padding:0 !important; margin: 0 !important; min-width: 0 !important"
+                           ng-href="#/subjectProgram/periods/{{::row.program.id}}/view">{{'main.button.view' | translate}}</md-button>
               </div>
             </td>
             <td md-cell ng-if="!auth.isTeacher()">
               <table>
+                <tr>
+                  <td ng-if="!row.jointProgram.id">
+                    <md-button md-no-ink class="md-primary change-button" ng-if="row.canEditJointProgram"
+                               style="padding:0 !important; margin: 3px 0 0 0 !important; min-width: 0 !important"
+                               ng-click="addJointSubjectProgram(row)">
+                      {{'subjectStudyPeriod.addJointSubjectProgram' | translate}}</md-button>
+                  </td>
+                  <td ng-if="row.jointProgram.id">
+                    {{'subjectProgram.jointProgram' | translate}} (<hois-classifier-value ng-model="row.jointProgram.status" main-classifier-code="AINEPROGRAMM_STAATUS" style="display: inline;">
+                    </hois-classifier-value>)<span ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_AINEOPPETAJA')">:
+                      <md-button md-no-ink class="md-primary change-button" ng-if="row.jointProgram.status === 'AINEPROGRAMM_STAATUS_I'" style="padding:0 !important; margin: 0 !important; min-width: 0 !important"
+                                 ng-click="editSubjectProgram(row.jointProgram)">{{'main.button.change' | translate}}</md-button>
+                      <md-button md-no-ink class="md-primary change-button" ng-if="row.jointProgram.status === 'AINEPROGRAMM_STAATUS_V' || row.jointProgram.status === 'AINEPROGRAMM_STAATUS_K'" style="padding:0 !important; margin: 0 !important; min-width: 0 !important"
+                                 ng-href="#/subjectProgram/periods/{{::row.jointProgram.id}}/view">{{'main.button.view' | translate}}</md-button>
+                    </span><span ng-if="!isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_AINEOPPETAJA')">:
+                      <md-button md-no-ink class="md-primary change-button" ng-if="row.jointProgram.status !== 'AINEPROGRAMM_STAATUS_L'" style="padding:0 !important; margin: 0 !important; min-width: 0 !important"
+                                 ng-href="#/subjectProgram/periods/{{::row.jointProgram.id}}/view">{{'main.button.view' | translate}}</md-button>
+                    </span>
+                  </td>
+                </tr>
                 <tr ng-repeat="program in row.programs | orderBy: 'teacherName'">
                   <td>
                     {{program.teacherName}} (<hois-classifier-value ng-model="program.status" main-classifier-code="AINEPROGRAMM_STAATUS" style="display: inline;">
-                    </hois-classifier-value>)<span ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_AINEOPPETAJA')">: 
+                    </hois-classifier-value>)<span ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_AINEOPPETAJA')">:
                       <md-button md-no-ink class="md-primary change-button" ng-if="program.status === 'AINEPROGRAMM_STAATUS_L'" style="padding:0 !important; margin: 0 !important; min-width: 0 !important"
                         ng-href="#/subjectProgram/{{::row.subject.id}}/{{::row.id}}/periods/new?teacher={{::program.teacherId}}">{{'main.button.create' | translate}}</md-button>
                       <md-button md-no-ink class="md-primary change-button" ng-if="program.status === 'AINEPROGRAMM_STAATUS_I'" style="padding:0 !important; margin: 0 !important; min-width: 0 !important"
-                          ng-href="#/subjectProgram/periods/{{::program.id}}/edit">{{'main.button.change' | translate}}</md-button>
+                                 ng-click="editSubjectProgram(program)">{{'main.button.change' | translate}}</md-button>
                       <md-button md-no-ink class="md-primary change-button" ng-if="program.status === 'AINEPROGRAMM_STAATUS_V' || program.status === 'AINEPROGRAMM_STAATUS_K'" style="padding:0 !important; margin: 0 !important; min-width: 0 !important"
                         ng-href="#/subjectProgram/periods/{{::program.id}}/view">{{'main.button.view' | translate}}</md-button>
-                    </span><span ng-if="!isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_AINEOPPETAJA')">: 
+                    </span><span ng-if="!isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_AINEOPPETAJA')">:
                       <md-button md-no-ink class="md-primary change-button" ng-if="program.status !== 'AINEPROGRAMM_STAATUS_L'" style="padding:0 !important; margin: 0 !important; min-width: 0 !important"
                         ng-href="#/subjectProgram/periods/{{::program.id}}/view">{{'main.button.view' | translate}}</md-button>
                     </span>

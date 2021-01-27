@@ -6,6 +6,7 @@ public class SchoolPublicDataSettingsDto {
     private Boolean isTimetableNotPublic;
     private Boolean isCurriculumNotPublic;
     private Boolean isSubjectNotPublic;
+    private Boolean higher;
 
     public Boolean getIsAcademicCalendarNotPublic() {
         return isAcademicCalendarNotPublic;
@@ -37,5 +38,13 @@ public class SchoolPublicDataSettingsDto {
 
     public void setIsSubjectNotPublic(Boolean isSubjectNotPublic) {
         this.isSubjectNotPublic = isSubjectNotPublic;
+    }
+
+    public Boolean getHigher() {
+        return higher;
+    }
+
+    public void setHigher(Boolean higher) {
+        this.higher = higher;
     }
 }

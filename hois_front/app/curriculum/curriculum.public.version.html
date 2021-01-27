@@ -96,13 +96,13 @@
                 <td md-cell>{{subject.subject.credits}}</td>
                 <td md-cell>{{subject.subject.assessment}}</td>
                 <td md-cell>{{subject.studyYearNumber}}</td>
-                <td md-cell>{{subject.autumn ? ('main.no' | translate) : ('main.yes' | translate)}}</td>
-                <td md-cell>{{subject.spring ? ('main.no' | translate) : ('main.yes' | translate)}}</td>
+                <td md-cell>{{subject.autumn ? ('main.yes' | translate) : ('main.no' | translate)}}</td>
+                <td md-cell>{{subject.spring ? ('main.yes' | translate) : ('main.no' | translate)}}</td>
               </tr>
             </tbody>
           </table>
-        </md-table-container> 
-        
+        </md-table-container>
+
         <md-table-container style="margin-top: 0px;">
           <table ng-if="(optionalSubjects = (module.subjects | filter : {optional: true})).length > 0" md-table class="secondary-table">
             <thead md-head>
@@ -128,8 +128,8 @@
                 <td md-cell>{{subject.subject.credits}}</td>
                 <td md-cell>{{subject.subject.assessment}}</td>
                 <td md-cell>{{subject.studyYearNumber}}</td>
-                <td md-cell>{{subject.autumn ? ('main.no' | translate) : ('main.yes' | translate)}}</td>
-                <td md-cell>{{subject.spring ? ('main.no' | translate) : ('main.yes' | translate)}}</td>
+                <td md-cell>{{subject.autumn ? ('main.yes' | translate) : ('main.no' | translate)}}</td>
+                <td md-cell>{{subject.spring ? ('main.yes' | translate) : ('main.no' | translate)}}</td>
               </tr>
             </tbody>
           </table>
@@ -228,8 +228,43 @@
       </hois-collapsable>
     </fieldset>
   </span>
-  
-  
+
+  <div ng-if="curriculum.higher">
+    <hois-collapsable expanded="formState.nominalCapacity">
+      <hois-collapsable-header>
+          <span>{{'module.implementationPlan.nominalCapacity' | translate}}</span>
+      </hois-collapsable-header>
+      <!-- do not remove margin-top -->
+      <md-table-container style="padding: 1px;margin-top: 0px;">
+        <table md-table class="custom-table">
+          <thead class="secondary-table-header">
+            <th width="30%"></th>
+            <th width="30%" style="text-align: center">{{'nominalCapacity.autumn' | translate}}</th>
+            <th width="30%" style="text-align: center">{{'nominalCapacity.spring' | translate}}</th>
+            <th width="10%" style="text-align: center">{{'nominalCapacity.sum' | translate}}</th>
+          </thead>
+          <tbody ng-repeat="speciality in version.specialities | orderBy: currentLanguageNameField()" style="font-size: 13px;">
+            <tr class="even">
+              <td colspan="4"><b>{{currentLanguageNameField(speciality)}}</b></td>
+            </tr>
+            <tr ng-repeat="periods in speciality.capacities" class="higher-curriculum-subject-row">
+              <td>{{$index + 1 + ". " + ('nominalCapacity.studyYear' | translate)}}</td>
+              <td style="text-align: center">{{periods[0].credits}}</td>
+              <td style="text-align: center">{{periods[1].credits}}</td>
+              <td style="text-align: center">{{sumOfPeriods(periods)}}</td>
+            </tr>
+            <tr>
+              <td><b>{{'nominalCapacity.sum' | translate}}</b></td>
+              <td style="text-align: center"><b>{{sumOfAutumnPeriods(speciality.capacities)}}</b></td>
+              <td style="text-align: center"><b>{{sumOfSpringPeriods(speciality.capacities)}}</b></td>
+              <td style="text-align: center"><b>{{sumOfPeriods(speciality.capacities)}}</b></td>
+            </tr>
+          </tbody>
+        </table>
+      </md-table-container>
+    </hois-collapsable>
+  </div>
+
   <hois-collapsable expanded="false" ng-if="version.modules.length > 0 && years.length > 0">
     <hois-collapsable-header>
         <span>{{'curriculum.version.typicalTrainingPlan' | translate}}</span>
@@ -275,6 +310,7 @@
   <div layout="row">
     <a href="{{curriculumVersionPdfUrl}}" target="_blank" class="md-button md-raised" ng-if="version.id && !curriculum.higher">{{'module.implementationPlan.print' | translate}}</a>
     <a href="{{curriculumVersionModulesPdfUrl}}" target="_blank" class="md-button md-raised" ng-if="version.id && !curriculum.higher">{{'module.implementationPlan.printModules' | translate}}</a>
+    <a href="{{curriculumVersionSummaryRtfUrl}}" target="_blank" class="md-button md-raised" ng-if="version.id && !curriculum.higher">{{'module.implementationPlan.printAll' | translate}}</a>
     <md-button ng-click="back('#/curriculums/')" class="md-raised">{{'main.button.back' | translate}}</md-button>
   </div>
 </div>

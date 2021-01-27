@@ -1,7 +1,7 @@
 'use strict';
 
-angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$location', '$route', '$scope', '$timeout', 'dialogService', 'message', 'Classifier', 'QueryUtils', '$http',
-  function ($location, $route, $scope, $timeout, dialogService, message, Classifier, QueryUtils, $http) {
+angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$location', '$route', '$scope', '$timeout', 'dialogService', 'message', 'Classifier', 'DataUtils', 'QueryUtils', '$http',
+  function ($location, $route, $scope, $timeout, dialogService, message, Classifier, DataUtils, QueryUtils, $http) {
     $scope.auth = $route.current.locals.auth;
     var id = $route.current.params.id;
     var lessonPlan = $route.current.params.lessonPlan;
@@ -9,9 +9,14 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$loca
     var lessonPlanModule = $route.current.params.lessonPlanModule;
     var baseUrl = '/lessonplans/journals';
     $scope.formState = {
-      capacityTypes: QueryUtils.endpoint('/autocomplete/schoolCapacityTypes').query({journalId: id, isHigher: false, isTimetable: true}),
-      groupProportions: Classifier.queryForDropdown({ mainClassCode: 'PAEVIK_GRUPI_JAOTUS' })
+      capacityTypes: QueryUtils.endpoint('/autocomplete/schoolCapacityTypes').query({journalId: id, isHigher: false})
     };
+
+    Classifier.queryForDropdown({ mainClassCode: 'PAEVIK_GRUPI_JAOTUS' }, function (response) {
+      $scope.formState.groupProportions = response.sort(function (a, b) {
+        return a.value.localeCompare(b.value, undefined, {numeric: true, sensitivity: 'base'});
+      });
+    });
 
     $scope.record = QueryUtils.endpoint(baseUrl).get({
       id: id || 'new',
@@ -24,11 +29,13 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$loca
         Classifier.setSelectedCodes($scope.formState.capacityTypes, $scope.record.journalCapacityTypes);
       });
       QueryUtils.endpoint('/autocomplete/studentgroups').query({
-        valid: true,
         higher: false
       }).$promise.then(function (groups) {
+        var studyYear = $scope.record.studyYear;
         $scope.formState.studentGroups = groups.filter(function (group) {
-          return group.id !== result.studentGroupId && group.curriculumVersion !== null;
+          if (DataUtils.isValidObject(studyYear.startDate, studyYear.endDate, group.validFrom, group.validThru)) {
+            return group.id !== result.studentGroupId && group.curriculumVersion !== null;
+          }
         });
       });
 
@@ -214,15 +221,27 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$loca
     };
 
     $scope.delete = function () {
+      QueryUtils.endpoint(baseUrl + '/:id/hasStudents').search({ id: id} ).$promise.then(function (result) {
+        deleteJournal(result.hasStudents);
+      });
+    };
+
+    function deleteJournal(hasStudents) {
+      var extraPrompts = [];
+      if (hasStudents) {
+        extraPrompts.push('lessonplan.journal.hasStudents');
+      }
+
       dialogService.confirmDialog({
-        prompt: 'lessonplan.journal.deleteconfirm'
+        prompt: 'lessonplan.journal.deleteconfirm',
+        extraPrompts: extraPrompts
       }, function () {
         $scope.record.$delete().then(function () {
           message.info('main.messages.delete.success');
           $location.url('/lessonplans/vocational/' + $scope.record.lessonPlan + '/edit?_noback');
         }).catch(angular.noop);
       });
-    };
+    }
 
     $scope.addTheme = function () {
       var themeId = $scope.formState.theme;
@@ -237,9 +256,19 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$loca
         }
         $scope.record.journalOccupationModuleThemes.push(themeId);
         checkCapacitiesForThemes();
+        if ($scope.record.id === null && $scope.record.journalOccupationModuleThemes.length === 1) {
+          setAddedThemeAssessment();
+        }
       }
       $scope.formState.theme = null;
     };
+
+    function setAddedThemeAssessment() {
+      var currentTheme = $scope.formState.themes.find(function (currTheme) {
+        return currTheme.id === $scope.record.journalOccupationModuleThemes[0];
+      });
+      $scope.record.assessment = currentTheme.assessment;
+    }
 
     $scope.deleteTheme = function (themeId) {
       var index = $scope.record.journalOccupationModuleThemes.indexOf(themeId);

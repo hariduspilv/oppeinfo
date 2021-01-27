@@ -1,0 +1,37 @@
+{"properties": [
+  {
+    "name": "hois.school.ad.url",
+    "type": "java.lang.String",
+    "description": "A description for 'hois.school.ad.url'"
+  },
+  {
+    "name": "hois.school.id",
+    "type": "java.lang.String",
+    "description": "A description for 'hois.school.id'"
+  },
+  {
+    "name": "hois.school.ad_url",
+    "type": "java.lang.String",
+    "description": "A description for 'hois.school.ad_url'"
+  },
+  {
+    "name": "hois.school.ad_port",
+    "type": "java.lang.String",
+    "description": "A description for 'hois.school.ad_port'"
+  },
+  {
+    "name": "hois.school.ad_domain",
+    "type": "java.lang.String",
+    "description": "A description for 'hois.school.ad_domain'"
+  },
+  {
+    "name": "hois.school.ad_base",
+    "type": "java.lang.String",
+    "description": "A description for 'hois.school.ad_base'"
+  },
+  {
+    "name": "hois.school.ad_idcode_field",
+    "type": "java.lang.String",
+    "description": "A description for 'hois.school.ad_idcode_field'"
+  }
+]}

@@ -146,9 +146,7 @@ public class JobService {
             break;
         case KASKKIRI_VALISKATK:
             for(DirectiveStudent ds : directive.getStudents()) {
-                if (Boolean.TRUE.equals(ds.getStudent().getCurriculumVersion().getCurriculum().getHigher())) {
-                    submitEhisSend(directive, ds.getStudent());
-                }
+                submitEhisSend(directive, ds.getStudent());
                 changeValisTulekJob(ds);
             }
             break;
@@ -310,15 +308,13 @@ public class JobService {
         Directive directive = ds.getDirective();
 
         Job job;
-        if (Boolean.TRUE.equals(ds.getStudent().getCurriculumVersion().getCurriculum().getHigher())) {
-            // directive data should be sent to EHIS
-            job = new Job();
-            job.setSchool(directive.getSchool());
-            job.setDirective(directive);
-            job.setStudent(ds.getStudent());
-            job.setJobTime(LocalDateTime.now());
-            submitJob(JobType.JOB_EHIS, job);
-        }
+        // directive data should be sent to EHIS
+        job = new Job();
+        job.setSchool(directive.getSchool());
+        job.setDirective(directive);
+        job.setStudent(ds.getStudent());
+        job.setJobTime(LocalDateTime.now());
+        submitJob(JobType.JOB_EHIS, job);
 
         // student will be foreign student, change status O -> V
         job = new Job();

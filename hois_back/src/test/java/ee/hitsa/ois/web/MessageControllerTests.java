@@ -23,8 +23,8 @@ import ee.hitsa.ois.TestConfigurationService;
 import ee.hitsa.ois.domain.Message;
 import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.service.MessageService;
-import ee.hitsa.ois.web.commandobject.MessageForm;
-import ee.hitsa.ois.web.dto.MessageDto;
+import ee.hitsa.ois.web.commandobject.message.MessageForm;
+import ee.hitsa.ois.web.dto.message.MessageDto;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)

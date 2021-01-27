@@ -4,12 +4,16 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodTeacherCapacity;
+import ee.hitsa.ois.domain.subject.subjectprogram.SubjectProgram;
+import ee.hitsa.ois.domain.subject.subjectprogram.SubjectProgramTeacher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -139,18 +143,59 @@ public class SubjectStudyPeriodService {
     public void updateSubjectStudyPeriodTeachers(SubjectStudyPeriod subjectStudyPeriod, SubjectStudyPeriodForm form) {
         Map<Long, SubjectStudyPeriodTeacher> oldTeachersMap = StreamUtil.toMap(t -> EntityUtil.getId(t.getTeacher()),
                 subjectStudyPeriod.getTeachers());
-        List<SubjectStudyPeriodTeacher> newTeachers = new ArrayList<>();
-        for (SubjectStudyPeriodTeacherForm t : form.getTeachers()) {
-            SubjectStudyPeriodTeacher teacher = oldTeachersMap.get(t.getTeacherId());
-            if (teacher == null) {
-                teacher = new SubjectStudyPeriodTeacher();
-                teacher.setSubjectStudyPeriod(subjectStudyPeriod);
-                teacher.setTeacher(em.getReference(Teacher.class, t.getTeacherId()));
-            }
-            teacher.setIsSignatory(t.getIsSignatory());
-            newTeachers.add(teacher);
-        }
-        subjectStudyPeriod.setTeachers(newTeachers);
+        ValidationFailedException.throwIf(
+                form.getTeachers().stream().noneMatch(t -> Boolean.TRUE.equals(t.getIsDiplomaSupplement())),
+                "subjectStudyPeriod.error.teacherNoDiplomaSupplement");
+
+        // Only 1 joint program per subject study period
+        Optional<SubjectProgram> jointProgram = subjectStudyPeriod.getTeachers().stream()
+                .flatMap(teacher -> teacher.getSubjectProgramTeachers().stream())
+                .map(SubjectProgramTeacher::getSubjectProgram)
+                .filter(program -> Boolean.TRUE.equals(program.getIsJoint()))
+                .findAny();
+
+        List<SubjectProgram> programsToDelete = new ArrayList<>();
+        EntityUtil.bindEntityCollection(
+                subjectStudyPeriod.getTeachers(), BaseEntityWithId::getId,
+                form.getTeachers(), formTeacher -> oldTeachersMap.containsKey(formTeacher.getTeacherId())
+                        ? oldTeachersMap.get(formTeacher.getTeacherId()).getId() : null,
+                formTeacher -> {
+                    SubjectStudyPeriodTeacher teacher = new SubjectStudyPeriodTeacher();
+                    teacher.setSubjectStudyPeriod(subjectStudyPeriod);
+                    teacher.setTeacher(em.getReference(Teacher.class, formTeacher.getTeacherId()));
+
+                    teacher.setIsSignatory(formTeacher.getIsSignatory());
+                    // case when somehow old data without is_diploma_supplement (nullable) comes from db
+                    if (formTeacher.getIsDiplomaSupplement() == null) {
+                        formTeacher.setIsDiplomaSupplement(Boolean.TRUE);
+                    }
+                    teacher.setIsDiplomaSupplement(formTeacher.getIsDiplomaSupplement());
+
+                    if (jointProgram.isPresent()) {
+                        SubjectProgramTeacher programTeacher = new SubjectProgramTeacher();
+                        programTeacher.setSubjectStudyPeriodTeacher(teacher);
+                        programTeacher.setSubjectProgram(jointProgram.get());
+                        teacher.getSubjectProgramTeachers().add(programTeacher);
+                    }
+
+                    return teacher;
+                },
+                (formTeacher, sspt) -> {
+                    sspt.setIsSignatory(formTeacher.getIsSignatory());
+                    // case when somehow old data without is_diploma_supplement (nullable) comes from db
+                    if (formTeacher.getIsDiplomaSupplement() == null) {
+                        formTeacher.setIsDiplomaSupplement(Boolean.TRUE);
+                    }
+                    sspt.setIsDiplomaSupplement(formTeacher.getIsDiplomaSupplement());
+                },
+                sspt -> {
+                    // delete individual programs
+                    programsToDelete.addAll(sspt.getSubjectProgramTeachers().stream()
+                            .map(SubjectProgramTeacher::getSubjectProgram)
+                            .filter(sp -> !Boolean.TRUE.equals(sp.getIsJoint()))
+                            .collect(Collectors.toList()));
+                });
+        programsToDelete.forEach(p -> EntityUtil.deleteEntity(p, em));
     }
 
     /**

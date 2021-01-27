@@ -33,6 +33,7 @@
             <input type="number" ng-model="abroadStudiesDays" min="0" ng-disabled="calculated">
           </md-input-container>
         </div>
+        <ng-include src="'studentGroupYearTransfer/student.group.year.transfer.action.buttons.html'"></ng-include>
         <div class="label-with-vertical-margin" ng-show="checkGroupValidThru">
           {{'studentGroupYearTransfer.checkGroupValidThru' | translate}}: {{checkGroupValidThru}}
         </div>
@@ -81,12 +82,7 @@
             </table>
           </md-table-container>
         </div>
-        <div layout="row">
-          <md-button class="md-raised" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_UUDE_AASTASSE')" 
-            ng-show="canTransfer" ng-class="{'md-primary': !calculated}" ng-click="calculate()">
-            {{'main.button.calculate' | translate}}
-          </md-button>
-        </div>
+        <ng-include src="'studentGroupYearTransfer/student.group.year.transfer.action.buttons.html'"></ng-include>
         <div ng-show="calculated">
           <div layout="row">
             <fieldset flex="100">

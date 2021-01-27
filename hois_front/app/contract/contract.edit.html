@@ -92,7 +92,19 @@
 
         <md-input-container flex="10" flex-sm="100" flex-xs="100" flex-offset-gt-sm="5">
           <label>{{'contract.creditsEKAP' | translate}}</label>
-          <input type="number" name="credits[{{$index}}]" ng-model="module.credits" ng-min="0" ng-max="999.9" ng-change="updateHours(module, $index)" required>
+          <input type="number" name="credits[{{$index}}]" ng-model="module.credits" min="0" pattern="^\d+(\.\d{1,2})?$"
+            max="999.99" ng-change="updateHours(module, $index)" required>
+          <div ng-messages="contractForm['credits['+$index+']'].$error" ng-show="contractForm['credits['+$index+']'].$dirty">
+            <div ng-message="min">
+              {{'main.messages.error.positive' | translate}}
+            </div>
+            <div ng-message="max">
+              {{'curriculum.error.max999' | translate}}
+            </div>
+            <div ng-message="pattern">
+              {{'stateCurriculum.error.decimalPresision2' | translate}}
+            </div>
+          </div>
         </md-input-container>
 
         <md-input-container flex="10" flex-sm="100" flex-xs="100">
@@ -122,7 +134,19 @@
 
         <md-input-container flex="10" flex-sm="100" flex-xs="100" flex-offset-gt-sm="5">
           <label>{{'contract.creditsEAP' | translate}}</label>
-          <input type="number" name="credits[{{$index}}]" ng-model="subject.credits" ng-min="0" ng-max="999.9" ng-change="updateHours(subject, $index)" required>
+          <input type="number" name="credits[{{$index}}]" ng-model="subject.credits" min="0" max="999.9" 
+            ng-change="updateHours(subject, $index)" required pattern="^\d+(\.\d{1,2})?$">
+            <div ng-messages="contractForm['credits['+$index+']'].$error" ng-show="contractForm['credits['+$index+']'].$dirty">
+              <div ng-message="min">
+                {{'main.messages.error.positive' | translate}}
+              </div>
+              <div ng-message="max">
+                {{'curriculum.error.max999' | translate}}
+              </div>
+              <div ng-message="pattern">
+                {{'stateCurriculum.error.decimalPresision2' | translate}}
+              </div>
+            </div>
         </md-input-container>
 
         <md-input-container flex="10" flex-sm="100" flex-xs="100">

@@ -59,7 +59,7 @@ angular.module('hitsaOis').factory('QueryUtils', ['config', '$resource', '$route
       scope.directiveControllers = [];
       scope.clearCriteria = function() {
         clearQueryParams(scope.criteria);
-        scope.directiveControllers.forEach(function (c) { 
+        scope.directiveControllers.forEach(function (c) {
           c.clear();
         });
       };
@@ -73,6 +73,14 @@ angular.module('hitsaOis').factory('QueryUtils', ['config', '$resource', '$route
 
       scope.toStorage = function(key, criteria) {
         $sessionStorage[key] = JSON.stringify(criteria);
+      };
+
+      scope.updateStorage = function (query) {
+        var q = !query ? scope.getCriteria() : query;
+        if (!ignoreStorage) {
+          scope.toStorage(url, q);
+          scope.toStorage('hidden_' + url, scope.hiddenCriteria);
+        }
       };
 
       if(!('_menu' in $route.current.params) && !ignoreStorage) {
@@ -143,10 +151,7 @@ angular.module('hitsaOis').factory('QueryUtils', ['config', '$resource', '$route
           loadingWheel(scope, true);
         }
         var query = scope.getCriteria();
-        if (!ignoreStorage) {
-          scope.toStorage(url, query);
-          scope.toStorage('hidden_' + url, scope.hiddenCriteria);
-        }
+        scope.updateStorage(query);
         scope.tabledata.$promise = endpoint(url).search(query, _afterLoadData, _errorAfterLoadData);
         return scope.tabledata.$promise;
       };
@@ -176,13 +181,13 @@ angular.module('hitsaOis').factory('QueryUtils', ['config', '$resource', '$route
     };
 
     /**
-     * 
-     * @param {Object} scope 
-     * @param {Boolean} busy 
-     * @param {Boolean} multiple 
-     * @param {String} text 
-     * @param {Boolean} value 
-     * @param {Function} onComplete 
+     *
+     * @param {Object} scope
+     * @param {Boolean} busy
+     * @param {Boolean} multiple
+     * @param {String} text
+     * @param {Boolean} value
+     * @param {Function} onComplete
      */
     var loadingWheel = function(scope, busy, multiple, text, value, onComplete) {
       scope.$root.$emit('backendBusy', {busy: busy, isMultiple: multiple, text: text, value: value, onComplete: onComplete});
@@ -202,7 +207,7 @@ angular.module('hitsaOis').factory('QueryUtils', ['config', '$resource', '$route
         $mdDialog.hide();
       }
     }
-    
+
     function setProgress(value) {
       progress.value = value;
     }

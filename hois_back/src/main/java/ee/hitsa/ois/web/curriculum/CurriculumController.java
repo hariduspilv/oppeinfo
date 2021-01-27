@@ -30,6 +30,7 @@ import ee.hitsa.ois.domain.curriculum.CurriculumFile;
 import ee.hitsa.ois.domain.curriculum.CurriculumGrade;
 import ee.hitsa.ois.domain.curriculum.CurriculumSpeciality;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
+import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.report.CurriculumReport;
 import ee.hitsa.ois.report.curriculum.CurriculumCompetencesReport;
@@ -38,6 +39,7 @@ import ee.hitsa.ois.report.curriculum.CurriculumVersionModulesReport;
 import ee.hitsa.ois.report.curriculum.CurriculumVersionReport;
 import ee.hitsa.ois.service.AutocompleteService;
 import ee.hitsa.ois.service.PdfService;
+import ee.hitsa.ois.service.RtfService;
 import ee.hitsa.ois.service.SchoolService;
 import ee.hitsa.ois.service.XmlService;
 import ee.hitsa.ois.service.curriculum.CurriculumCopyService;
@@ -61,12 +63,12 @@ import ee.hitsa.ois.web.commandobject.curriculum.CurriculumSchoolDepartmentComma
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumSearchCommand;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumStudyLevelCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
-import ee.hitsa.ois.web.dto.OccupiedAutocompleteResult;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumFileUpdateDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumGradeDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumSearchDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumSpecialityDto;
+import ee.hitsa.ois.web.dto.report.CurriculumVersionSummaryReport;
 import ee.hitsa.ois.xml.curriculum.CurriculumVersionXml;
 import ee.hitsa.ois.xml.curriculum.CurriculumXml;
 
@@ -92,6 +94,8 @@ public class CurriculumController {
     private StateCurriculumCopyService stateCurriculumCopyService;
     @Autowired
     private SchoolService schoolService;
+    @Autowired
+    private RtfService rtfService;
 
     @Value("${hois.frontend.baseUrl}")
     private String frontendBaseUrl;
@@ -163,6 +167,17 @@ public class CurriculumController {
         report.setIsHigherSchool(Boolean.valueOf(schoolService.schoolType(user.getSchoolId()).isHigher()));
         HttpUtil.pdf(response, "curriculum_version_modules.pdf",
                 pdfService.generate(CurriculumVersionModulesReport.VOCATIONAL_TEMPLATE_NAME, report));
+    }
+    
+    @GetMapping("/print/{id:\\d+}/curriculumVersionSummary.rtf")
+    public void printRtf(HoisUserDetails user, @WithEntity CurriculumVersion curriculumVersion, HttpServletResponse response, 
+            @RequestParam(required = false) Language lang) throws IOException {
+        CurriculumUtil.assertCanView(user, schoolService.getEhisSchool(user.getSchoolId()),
+                curriculumVersion.getCurriculum());
+        CurriculumVersionSummaryReport report = new CurriculumVersionSummaryReport(curriculumVersion, lang, frontendBaseUrl);
+        report.getCurriculumVersionModules().setIsHigherSchool(Boolean.valueOf(schoolService.schoolType(EntityUtil.getId(curriculumVersion.getCurriculum().getSchool())).isHigher()));
+        HttpUtil.rtf(response, "curriculum_version_summary.rtf",
+                rtfService.generateFop(CurriculumVersionSummaryReport.TEMPLATE_NAME, report, lang));
     }
 
     @GetMapping

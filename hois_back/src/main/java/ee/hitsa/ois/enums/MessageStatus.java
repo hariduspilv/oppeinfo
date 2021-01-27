@@ -4,5 +4,7 @@ public enum MessageStatus {
     /** New */
     TEATESTAATUS_U, 
     /** Read */
-    TEATESTAATUS_L
+    TEATESTAATUS_L,
+    /** Deleted */
+    TEATESTAATUS_K
 }

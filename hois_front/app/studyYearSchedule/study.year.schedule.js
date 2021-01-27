@@ -9,7 +9,7 @@ function ($scope, $route, QueryUtils, ArrayUtils, message, DataUtils, $window, d
         $scope.userSchoolId = $scope.auth.school.id;
     }
     var promises = [];
-    
+
     $scope.colorOptions = {
         disabled: true
     };
@@ -156,6 +156,10 @@ function ($scope, $route, QueryUtils, ArrayUtils, message, DataUtils, $window, d
       var weeks = [];
 
       studyPeriods.forEach(function (studyPeriod) {
+        (studyPeriod.vacations || []).forEach(function (vacation) {
+          DataUtils.convertStringToDates(vacation, ['start', 'end']);
+        });
+
         for (var i = 0; i < studyPeriod.weekNrs.length; i++) {
           var week = {};
           week.weekNr = studyPeriod.weekNrs[i];
@@ -167,9 +171,7 @@ function ($scope, $route, QueryUtils, ArrayUtils, message, DataUtils, $window, d
           week.notInStudyPeriod = studyPeriod.externalWeeks.indexOf(week.weekNr) !== -1;
           if (studyPeriod.vacations != null) {
             studyPeriod.vacations.forEach(function(vacation) {
-                var vacationStart = moment(vacation.start, "YYYY-MM-DD'T'hh:mm:ss.SSS'Z'").toDate();
-                var vacationEnd = moment(vacation.end, "YYYY-MM-DD'T'hh:mm:ss.SSS'Z'").toDate();
-                if (vacationStart <= week.end && (vacation.end === null || vacationEnd >= week.start)) {
+                if (vacation.start <= week.end && (vacation.end === null || vacation.end >= week.start)) {
                     week.hasVacation = true;
                 }
               });

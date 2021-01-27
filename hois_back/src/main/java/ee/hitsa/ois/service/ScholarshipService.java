@@ -585,15 +585,13 @@ public class ScholarshipService {
                     .sorted(Comparator.comparing(a -> a.getInserted(), Comparator.reverseOrder()))
                     .collect(Collectors.toList());
 
-            if (!prevApplications.isEmpty()) {
+            applicationDto.setBankAccount(person.getBankaccount());
+            applicationDto.setBankAccountOwnerName(PersonUtil.fullname(person));
+            applicationDto.setBankAccountOwnerIdcode(person.getIdcode());
+            if (person.getBankaccount() == null && !prevApplications.isEmpty()) {
                 ScholarshipApplication prevApplication = prevApplications.get(0);
                 applicationDto.setBankAccount(prevApplication.getBankAccount());
-                applicationDto.setBankAccountOwnerName(PersonUtil.fullname(person));
                 applicationDto.setBankAccountOwnerIdcode(prevApplication.getBankAccountOwnerIdcode());
-            } else {
-                applicationDto.setBankAccount(person.getBankaccount());
-                applicationDto.setBankAccountOwnerName(PersonUtil.fullname(person));
-                applicationDto.setBankAccountOwnerIdcode(person.getIdcode());
             }
         }
         return applicationDto;

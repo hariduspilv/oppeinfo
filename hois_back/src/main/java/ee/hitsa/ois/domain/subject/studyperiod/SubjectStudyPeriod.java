@@ -20,6 +20,7 @@ import ee.hitsa.ois.domain.MidtermTask;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.protocol.ProtocolHdata;
 import ee.hitsa.ois.domain.subject.Subject;
+import ee.hitsa.ois.domain.subject.subjectprogram.SubjectProgram;
 import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodCapacity;
 import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodStudentGroup;
 import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodSubgroup;
@@ -57,6 +58,9 @@ public class SubjectStudyPeriod extends BaseEntityWithId {
 
     @OneToMany(mappedBy = "subjectStudyPeriod", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SubjectStudyPeriodCapacity> capacities;
+
+    @OneToMany(mappedBy = "subjectStudyPeriod", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<SubjectProgram> subjectPrograms;
     
     /*
      * This mapping is required for saving midtermTasks using EntityUtil.bindEntityCollection.
@@ -213,5 +217,14 @@ public class SubjectStudyPeriod extends BaseEntityWithId {
 
     public void setCoefficient(Classifier coefficient) {
         this.coefficient = coefficient;
+    }
+
+    public List<SubjectProgram> getSubjectPrograms() {
+        return subjectPrograms != null ? subjectPrograms : (subjectPrograms = new ArrayList<>());
+    }
+
+    public void setSubjectPrograms(List<SubjectProgram> subjectPrograms) {
+        getSubjectPrograms().clear();
+        getSubjectPrograms().addAll(subjectPrograms);
     }
 }

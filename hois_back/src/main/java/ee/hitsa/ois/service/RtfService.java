@@ -57,7 +57,7 @@ public class RtfService {
      */
     public byte[] generateFop(String templateName, Object data, Language lang) {
         String fo = evaluateTemplate(templateName, data, lang == null ? Language.ET : lang);
-
+        fo = fo.replaceAll("<br/>", "&#10;");
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         try {
             @SuppressWarnings("static-access")

@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
@@ -95,6 +96,12 @@ public class LessonPlanController {
         return get(user, lessonPlanService.save(lessonPlan, form));
     }
 
+    @GetMapping("/{id:\\d+}/hasJournalsWithStudents")
+    public Map<String, Object> hasJournalsWithStudents(LessonPlan lessonPlan) {
+        return Collections.singletonMap("hasStudents",
+                Boolean.valueOf(lessonPlanService.lessonPlanHasJournalsWithStudents(lessonPlan)));
+    }
+
     @DeleteMapping("/{id:\\d+}")
     public void delete(HoisUserDetails user, @WithVersionedEntity(versionRequestParam = "version") LessonPlan lessonPlan,
             @SuppressWarnings("unused") @RequestParam("version") Long version) {
@@ -140,6 +147,11 @@ public class LessonPlanController {
         UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, journal);
         UserUtil.assertHasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_TUNNIJAOTUSPLAAN);
         return getJournal(user, lessonPlanService.saveJournal(journal, form, user), form.getLessonPlanModuleId());
+    }
+
+    @GetMapping("/journals/{id:\\d+}/hasStudents")
+    public Map<String, Object> journalHasStudents(Journal journal) {
+        return Collections.singletonMap("hasStudents", Boolean.valueOf(lessonPlanService.journalHasStudents(journal)));
     }
 
     @DeleteMapping("/journals/{id:\\d+}")

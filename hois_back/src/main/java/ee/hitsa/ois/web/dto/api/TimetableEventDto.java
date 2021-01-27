@@ -1,6 +1,5 @@
 package ee.hitsa.ois.web.dto.api;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -9,8 +8,8 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 public class TimetableEventDto {
 	
 	private String nameEt;
-	private LocalDateTime eventStart;
-	private LocalDateTime eventEnd;
+	private String eventStart;
+	private String eventEnd;
 	private Long journalId;
 	private Long subjectStudyPeriodId;
 	private List<TimetableEventTeacherDto> teachers;
@@ -46,16 +45,16 @@ public class TimetableEventDto {
 	public void setRooms(List<TimetableEventRoomDto> rooms) {
 		this.rooms = rooms;
 	}
-	public LocalDateTime getEventStart() {
-		return eventStart;
-	}
-	public void setEventStart(LocalDateTime eventStart) {
-		this.eventStart = eventStart;
-	}
-	public LocalDateTime getEventEnd() {
-		return eventEnd;
-	}
-	public void setEventEnd(LocalDateTime eventEnd) {
-		this.eventEnd = eventEnd;
-	}
+    public String getEventStart() {
+        return eventStart;
+    }
+    public void setEventStart(String eventStart) {
+        this.eventStart = eventStart;
+    }
+    public String getEventEnd() {
+        return eventEnd;
+    }
+    public void setEventEnd(String eventEnd) {
+        this.eventEnd = eventEnd;
+    }
 }

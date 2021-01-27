@@ -304,7 +304,9 @@ public class DirectiveService {
             dto = DirectiveCancelDto.of(directive, changedStudentsForCancel(directive.getCanceledDirective()));
         } else {
             dto = DirectiveDto.of(directive);
-            if (KASKKIRI_STIPTOET.equals(directiveType)) {
+            if (KASKKIRI_AKADK.equals(directiveType)) {
+                setAcademicLeaveDirectiveStudents(dto);
+            } else if (KASKKIRI_STIPTOET.equals(directiveType)) {
                 setScholarshipApplications(dto);
             } else if (KASKKIRI_LOPET.equals(directiveType)) {
                 setOccupations(dto);
@@ -334,6 +336,20 @@ public class DirectiveService {
                 }
             } 
         });
+    }
+
+    private void setAcademicLeaveDirectiveStudents(DirectiveDto dto) {
+        List<? extends DirectiveFormStudent> studentDtos = dto.getStudents();
+        List<Long> applicationIds = StreamUtil.toMappedList(DirectiveFormStudent::getApplication, studentDtos);
+
+        if (!applicationIds.isEmpty()) {
+            Map<Long, ExistingDirectiveStudentDto> applicationDirectives = studentAcademicLeaveDirectiveStudents(
+                    applicationIds);
+            studentDtos.forEach(studentDto -> {
+                studentDto.setExistingDirectiveStudents(Collections.singletonList(
+                        applicationDirectives.get(studentDto.getStudent())));
+            });
+        }
     }
 
     private void setExistingDirectiveStudents(DirectiveDto dto, DirectiveType directiveType) {
@@ -525,6 +541,9 @@ public class DirectiveService {
 
         qb.optionalCriteria("d.inserted >= :insertedFrom", "insertedFrom", criteria.getInsertedFrom(), DateUtils::firstMomentOfDay);
         qb.optionalCriteria("d.inserted <= :insertedThru", "insertedThru", criteria.getInsertedThru(), DateUtils::lastMomentOfDay);
+        qb.optionalCriteria("d.id in (select ds.directive_id from directive_student ds "
+                + "join student s on ds.student_id = s.id "
+                + "join student_group sg on s.student_group_id=sg.id where sg.id in (:studentGroups))", "studentGroups", criteria.getStudentGroups());
 
         qb.optionalCriteria("d.id in (select ds.directive_id from directive_student ds inner join student_group sg on ds.student_group_id=sg.id where upper(sg.code) like :studentGroup)", "studentGroup", criteria.getStudentGroup(), JpaQueryUtil::toContains);
 
@@ -872,6 +891,7 @@ public class DirectiveService {
                 case KASKKIRI_INDOK:
                     bindDirectiveStudentModules(directiveStudent, formStudent);
                     break;
+                case KASKKIRI_AKADK:
                 case KASKKIRI_INDOKLOP:
                 case KASKKIRI_VALISKATK:
                     directiveStudent.setDirectiveStudent(EntityUtil.getOptionalOne(DirectiveStudent.class,
@@ -1116,7 +1136,13 @@ public class DirectiveService {
             }
             return DirectiveStudentDto.of(student, directiveType);
         }, students);
-        if(KASKKIRI_LOPET.equals(directiveType) || KASKKIRI_DUPLIKAAT.equals(directiveType)) {
+        if (KASKKIRI_AKADK.equals(directiveType)) {
+            Map<Long, ExistingDirectiveStudentDto> applicationDirectives = studentAcademicLeaveDirectiveStudents(
+                    StreamUtil.toMappedList(EntityUtil::getId, applications.values()));
+            for (DirectiveStudentDto dto : result) {
+                dto.setExistingDirectiveStudents(Collections.singletonList(applicationDirectives.get(dto.getStudent())));
+            }
+        } else if (KASKKIRI_LOPET.equals(directiveType) || KASKKIRI_DUPLIKAAT.equals(directiveType)) {
             Set<Long> fetchedStudentIds = StreamUtil.toMappedSet(DirectiveStudentDto::getStudent, result);
             if (!fetchedStudentIds.isEmpty()) {
                 boolean isHigher = cmd.getIsHigher().booleanValue();
@@ -1161,6 +1187,19 @@ public class DirectiveService {
             });
         }
         return result;
+    }
+
+    private Map<Long, ExistingDirectiveStudentDto> studentAcademicLeaveDirectiveStudents(List<Long> applicationIds) {
+        List<?> data = em.createNativeQuery("select ds.student_id, ds.id, d.directive_nr, ds.start_date, ds.end_date " +
+                "from application a " +
+                "join directive d on d.id = a.directive_id " +
+                "join directive_student ds on ds.directive_id = d.id and ds.student_id = a.student_id " +
+                "where a.id in (?1)")
+                .setParameter(1, applicationIds)
+                .getResultList();
+
+        return StreamUtil.toMap(r -> resultAsLong(r, 0), r -> new ExistingDirectiveStudentDto(resultAsLong(r, 1),
+                resultAsString(r, 2), resultAsLocalDate(r, 3), resultAsLocalDate(r, 4)), data);
     }
 
     private Map<Long, List<ExistingDirectiveStudentDto>> existingDirectiveStudents(DirectiveDataCommand cmd,
@@ -1506,12 +1545,12 @@ public class DirectiveService {
         qb.optionalCriteria("s.id not in (select ds.student_id from directive_student ds where ds.directive_id = :directiveId)", "directiveId", criteria.getDirective());
         qb.optionalCriteria("c.is_higher = :isHigher", "isHigher", criteria.getIsHigher());
         qb.optionalCriteria("s.student_group_id = :studentGroupId", "studentGroupId", criteria.getStudentGroup());
-        if (DirectiveType.KASKKIRI_TYHIST != directiveType) qb.requiredCriteria("s.type_code != :typeCode", "typeCode", StudentType.OPPUR_K.name());
+        if (DirectiveType.KASKKIRI_TYHIST != directiveType) qb.requiredCriteria("s.type_code != :guestType", "guestType", StudentType.OPPUR_K.name());
         
         List<DirectiveType> externalAllowedTypes = Arrays.asList(DirectiveType.KASKKIRI_TYHIST, DirectiveType.KASKKIRI_DUPLIKAAT, 
                 DirectiveType.KASKKIRI_EKSTERN, DirectiveType.KASKKIRI_EKSTERNKATK, DirectiveType.KASKKIRI_LOPET, DirectiveType.KASKKIRI_MUU, 
                 DirectiveType.KASKKIRI_PRAKTIK, DirectiveType.KASKKIRI_OKAVA, DirectiveType.KASKKIRI_OTEGEVUS);
-        if (!externalAllowedTypes.contains(directiveType)) qb.requiredCriteria("s.type_code != :typeCode", "typeCode", StudentType.OPPUR_E.name());
+        if (!externalAllowedTypes.contains(directiveType)) qb.requiredCriteria("s.type_code != :externalType", "externalType", StudentType.OPPUR_E.name());
 
         if(DirectiveType.KASKKIRI_STIPTOET.equals(directiveType)) {
             // For EHIS_STIPENDIUM which passed only if it has scholarship_no_application for current school

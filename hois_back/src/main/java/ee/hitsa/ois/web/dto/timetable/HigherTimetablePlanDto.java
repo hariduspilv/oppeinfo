@@ -6,12 +6,21 @@ import java.util.Map;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public class HigherTimetablePlanDto extends TimetablePlanDto {
+    private List<AutocompleteResult> teachers;
     private List<SubjectTeacherPairDto> subjectTeacherPairs;
     private List<HigherTimetableStudentGroupCapacityDto> studentGroupCapacities;
     private List<HigherTimetableStudentGroupDto> studentGroups;
     private Map<Long, List<HigherTimetableSubgroupDto>> subjectStudyPeriodSubgroups;
     private List<AutocompleteResult> buildings;
     private List<DateRangeDto> weeks;
+
+    public List<AutocompleteResult> getTeachers() {
+        return teachers;
+    }
+
+    public void setTeachers(List<AutocompleteResult> teachers) {
+        this.teachers = teachers;
+    }
 
     public List<SubjectTeacherPairDto> getSubjectTeacherPairs() {
         return subjectTeacherPairs;

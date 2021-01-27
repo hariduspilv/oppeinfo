@@ -6,7 +6,7 @@
         <hois-value value="(plan.startDate | hoisDate) + '-'+(plan.endDate | hoisDate)" />
       </md-input-container>
       <div flex layout="row" layout-align="end start" class="common-label" md-colors="{color: 'background-400'}">
-        <span ng-repeat="c in capacityTypes | orderBy: currentLanguageNameField()">
+        <span ng-repeat="c in capacityTypes | filter: {valid: true} | orderBy: currentLanguageNameField() ">
           <span ng-if="!$first">|</span>
           {{::c.value.toUpperCase()}} - {{currentLanguageNameField(c)}}
         </span>

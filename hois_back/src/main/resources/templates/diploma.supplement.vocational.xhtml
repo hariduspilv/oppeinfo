@@ -16,7 +16,7 @@
    	{% endif %}
     <div class="padding-top"></div>
     <div class="general-info">
-        <div class="diploma-nr">{{ content.diplomaNr }}</div>
+        <div class="diploma-nr" style="padding-top: {{ 12 + content.paddingChange }}pt; padding-bottom: {{ 10 - content.paddingChange }}pt;">{{ content.diplomaNr }}</div>
         <div><span class="label">{{ content.schoolName }}</span></div>
         <div>{{ "diploma.validWithDiploma" | translate }}</div>
         {% if content.additionalNrs is not empty %}

@@ -2,21 +2,28 @@ package ee.hitsa.ois.service.subjectstudyperiod;
 
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsDecimal;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsInteger;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDateTime;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
 import ee.hitsa.ois.service.StudyYearService;
+import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.SubjectStudyPeriodUtil;
+import ee.hitsa.ois.validation.ValidationFailedException;
+import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -31,7 +38,7 @@ import ee.hitsa.ois.util.SubjectUtil;
 import ee.hitsa.ois.web.commandobject.SearchCommand;
 import ee.hitsa.ois.web.commandobject.subject.studyperiod.SubjectStudyPeriodSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
-import ee.hitsa.ois.web.dto.SubjectProgramResult;
+import ee.hitsa.ois.web.dto.subject.subjectprogram.SubjectProgramResult;
 import ee.hitsa.ois.web.dto.SubjectResult;
 import ee.hitsa.ois.web.dto.SubjectStudyPeriodSearchDto;
 
@@ -88,6 +95,8 @@ public class SubjectStudyPeriodSearchService {
     private EntityManager em;
     @Autowired
     private StudyYearService studyYearService;
+    @Value("${hois.subject.program.lock}")
+    private Integer lockTime;
 
     public List<SubjectResult> searchSubjects(HoisUserDetails user, SearchCommand lookup) {
 
@@ -126,7 +135,12 @@ public class SubjectStudyPeriodSearchService {
         StringBuilder select = new StringBuilder(SELECT);
         if (user.isTeacher()) {
             from.append("join subject_study_period_teacher sspt on sspt.subject_study_period_id = ssp.id ");
-            from.append("left join subject_program spr on spr.subject_study_period_teacher_id = sspt.id ");
+            from.append("left join (select sp.id, sp.status_code, spt.subject_study_period_teacher_id "
+                        + "from subject_program_teacher spt "
+                        + "join subject_program sp "
+                        + "on spt.subject_program_id = sp.id "
+                    + "where not coalesce(sp.is_joint, false)) spr "
+                    + "on spr.subject_study_period_teacher_id = sspt.id and sspt.teacher_id = :currentTeacherId ");
             select.append(", spr.id, spr.status_code");
         }
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from.toString()).sort(pageable);
@@ -144,17 +158,18 @@ public class SubjectStudyPeriodSearchService {
         qb.optionalCriteria("sp.id in (:studyPeriods)", "studyPeriods", criteria.getStudyPeriods());
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.optionalCriteria(FILTER_BY_DECLARED_STUDENT_ID, "studentId", criteria.getStudent());
-        if (SubjectProgramStatus.AINEPROGRAMM_STAATUS_L.name().equals(criteria.getProgramStatus())) {
-            qb.filter("spr.status_code is null");
-        } else {
-            qb.optionalCriteria("spr.status_code = :status", "status", criteria.getProgramStatus());
-        }
         if(user.isTeacher()) {
-            qb.requiredCriteria("sspt.teacher_id = :teacherId", "teacherId", user.getTeacherId());
+            if (SubjectProgramStatus.AINEPROGRAMM_STAATUS_L.name().equals(criteria.getProgramStatus())) {
+                qb.filter("not exists(select 1 from subject_program_teacher spt where spt.subject_study_period_teacher_id = spt:id spr.status_code is null");
+            } else {
+                qb.optionalCriteria("spr.status_code = :status", "status", criteria.getProgramStatus());
+            }
+            qb.requiredCriteria("sspt.teacher_id = :currentTeacherId", "currentTeacherId", user.getTeacherId());
         }
         Page<Object[]> results = JpaQueryUtil.pagingResult(qb, select.toString(), em, pageable);
         List<Long> sspIds = StreamUtil.toMappedList(r -> resultAsLong(r, 0), results.getContent());
-        Map<Long, List<SubjectProgramResult>> teachersAndPrograms = teachersAndProgramsForSubjectStudyPeriods(sspIds);
+        Map<Long, List<SubjectProgramResult>> teachersAndPrograms = teachersAndProgramsForSubjectStudyPeriods(user, sspIds);
+        Map<Long, SubjectProgramResult> jointPrograms = jointProgramsForSubjectStudyPeriods(user, sspIds);
         Map<Long, Integer> subgroupCount = subgroupsQueryForSubjectStudyPeriods(sspIds);
         Map<Long, String> studentgroups = studentgroupsQueryForSubjectStudyPeriods(sspIds);
         Long currentStudyPeriod = studyYearService.getCurrentStudyPeriod(user.getSchoolId());
@@ -169,16 +184,16 @@ public class SubjectStudyPeriodSearchService {
                         .collect(Collectors.toList()));
                 dto.setPrograms(teachersAndPrograms.get(dto.getId()));
             }
+            if (jointPrograms.containsKey(dto.getId())) {
+                dto.setJointProgram(jointPrograms.get(dto.getId()));
+            }
+            // TODO: check if teacher can modify
+            dto.setCanEditJointProgram(Boolean.TRUE);
             dto.setCredits(resultAsDecimal(r, 8));
             dto.setStudentsNumber(resultAsLong(r, 9));
             if (user.isTeacher()) {
-                dto.setSubjectProgramId(resultAsLong(r, 10));
-                String status = resultAsString(r, 11);
-                if (status == null) {
-                    dto.setSubjectProgramStatus(SubjectProgramStatus.AINEPROGRAMM_STAATUS_L.name());
-                } else {
-                    dto.setSubjectProgramStatus(status);
-                }
+                StreamUtil.nullSafeList(teachersAndPrograms.get(dto.getId())).stream()
+                        .filter(p -> user.getTeacherId().equals(p.getTeacherId())).findAny().ifPresent(dto::setProgram);
             }
             dto.setSubgroups(subgroupCount.get(dto.getId()));
             dto.setStudentgroups(studentgroups.get(dto.getId()));
@@ -186,6 +201,31 @@ public class SubjectStudyPeriodSearchService {
                     dto.getStudyPeriod().getId(), currentStudyPeriod)));
             return dto;
         });
+    }
+
+    private Map<Long, SubjectProgramResult> jointProgramsForSubjectStudyPeriods(
+            HoisUserDetails user, List<Long> sspIds) {
+        if (sspIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        List<?> result = em.createNativeQuery("select ssp.id as sspid, sp.id, sp.status_code " +
+                "from public.subject_study_period ssp " +
+                "join subject_study_period_teacher sspt on ssp.id = sspt.subject_study_period_id " +
+                "join subject_program_teacher spt on sspt.id = spt.subject_study_period_teacher_id " +
+                "join subject_program sp on spt.subject_program_id = sp.id " +
+                "where ssp.id in :sspIds and sp.is_joint " +
+                "group by ssp.id, sp.id ")
+                .setParameter("sspIds", sspIds)
+                .getResultList();
+
+        return result.stream().collect(Collectors.toMap(r -> resultAsLong(r, 0),
+                r -> {
+                    SubjectProgramResult dto = new SubjectProgramResult();
+                    dto.setId(resultAsLong(r, 1));
+                    dto.setStatus(resultAsString(r, 2));
+                    return dto;
+                }, (o, n) -> o));
     }
 
     private static AutocompleteResult getSubject(Object r) {
@@ -197,17 +237,24 @@ public class SubjectStudyPeriodSearchService {
                 nameEnCode);
     }
     
-    private Map<Long, List<SubjectProgramResult>> teachersAndProgramsForSubjectStudyPeriods(List<Long> subjectStudyPeriods) {
+    private Map<Long, List<SubjectProgramResult>> teachersAndProgramsForSubjectStudyPeriods(
+            HoisUserDetails user, List<Long> subjectStudyPeriods) {
         if(subjectStudyPeriods.isEmpty()) {
             return Collections.emptyMap();
         }
 
-        List<?> data = em.createNativeQuery("select ssp.id as sspId, t.id as tId, p.firstname || ' ' || p.lastname, sp.id as spId, coalesce( sp.status_code, 'AINEPROGRAMM_STAATUS_L' ) "
+        List<?> data = em.createNativeQuery("select ssp.id as sspId, t.id as tId, "
+                + "p.firstname || ' ' || p.lastname, sp.id as spId, coalesce( sp.status_code, 'AINEPROGRAMM_STAATUS_L' ) "
                 + "from subject_study_period ssp "
                 + "join subject_study_period_teacher sspt on sspt.subject_study_period_id = ssp.id "
                 + "join teacher t on t.id = sspt.teacher_id "
                 + "join person p on p.id = t.person_id "
-                + "left join subject_program sp on sp.subject_study_period_teacher_id = sspt.id "
+                + "left join (select sp.id, sp.status_code, spt.subject_study_period_teacher_id, "
+                    + "sp.accessed_user_id, sp.accessed, sp.accessed_by "
+                        + "from subject_program_teacher spt "
+                        + "join subject_program sp "
+                        + "on spt.subject_program_id = sp.id and not coalesce(sp.is_joint, false)) sp "
+                + "on sp.subject_study_period_teacher_id = sspt.id "
                 + "where ssp.id in (?1)")
             .setParameter(1, subjectStudyPeriods)
             .getResultList();

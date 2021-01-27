@@ -68,6 +68,7 @@ public class SubjectStudyPeriodTeacherDto extends SubjectStudyPeriodTeacherForm 
     public static SubjectStudyPeriodTeacherDto of(SubjectStudyPeriodTeacher t, boolean onlyMainCapacity) {
         SubjectStudyPeriodTeacherDto dto = new SubjectStudyPeriodTeacherDto();
         dto.setIsSignatory(t.getIsSignatory());
+        dto.setIsDiplomaSupplement(t.getIsDiplomaSupplement());
         dto.setName(t.getTeacher().getPerson().getFullname());
         dto.setTeacherId(t.getTeacher().getId());
         dto.setVersion(t.getVersion());

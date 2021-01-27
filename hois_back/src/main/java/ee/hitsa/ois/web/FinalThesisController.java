@@ -6,10 +6,12 @@ import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
+import ee.hitsa.ois.web.dto.finalthesis.FinalThesisDtoContainer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -34,7 +36,6 @@ import ee.hitsa.ois.web.commandobject.FinalThesisSearchCommand;
 import ee.hitsa.ois.web.commandobject.SearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.TeacherDto;
-import ee.hitsa.ois.web.dto.finalthesis.FinalThesisDto;
 import ee.hitsa.ois.web.dto.finalthesis.FinalThesisSearchDto;
 import ee.hitsa.ois.web.dto.finalthesis.FinalThesisStudentDto;
 
@@ -55,39 +56,46 @@ public class FinalThesisController {
     }
 
     @GetMapping("/{id:\\d+}")
-    public FinalThesisDto get(HoisUserDetails user, @WithEntity FinalThesis finalThesis) {
+    public FinalThesisDtoContainer get(HoisUserDetails user, @WithEntity FinalThesis finalThesis) {
         FinalThesisUtil.assertCanView(user, finalThesis);
         return finalThesisService.get(user, finalThesis);
     }
 
     @GetMapping("/studentFinalThesis")
-    public Map<String, Object> studentFinalThesis(HoisUserDetails user) {
-        return finalThesisService.studentFinalThesis(user);
+    public FinalThesisDtoContainer studentFinalThesis(HoisUserDetails user,
+            @RequestParam(value = "studentId", required = false) Long studentId) {
+        return finalThesisService.studentFinalThesis(user, studentId != null ? studentId : user.getStudentId());
     }
 
     @PostMapping
-    public FinalThesisDto create(HoisUserDetails user, @Valid @RequestBody FinalThesisForm form) {
-        FinalThesisUtil.assertCanCreate(user);
-        return get(user, finalThesisService.create(form));
+    public FinalThesisDtoContainer create(HoisUserDetails user, @Valid @RequestBody FinalThesisForm form) {
+        FinalThesisUtil.assertCanCreate(user, form);
+        return get(user, finalThesisService.create(user, form));
+    }
+
+    @GetMapping("/{id:\\d+}/isStudentActive")
+    public Map<String, Boolean> isFinalThesisStudentActive(@WithEntity FinalThesis finalThesis) {
+        return finalThesisService.isFinalThesisStudentActive(finalThesis);
     }
 
     @PutMapping("/{id:\\d+}")
-    public FinalThesisDto save(HoisUserDetails user,
+    public FinalThesisDtoContainer save(HoisUserDetails user,
             @WithVersionedEntity(versionRequestBody = true) FinalThesis finalThesis,
             @Valid @RequestBody FinalThesisForm form) {
         FinalThesisUtil.assertCanEdit(user, finalThesis);
         return get(user, finalThesisService.save(finalThesis, form));
     }
 
+    @DeleteMapping("/{id:\\d+}")
+    public void delete(HoisUserDetails user, @WithVersionedEntity(versionRequestParam = "version") FinalThesis finalThesis,
+            @SuppressWarnings("unused") @RequestParam("version") Long version) {
+        FinalThesisUtil.assertCanDelete(user, finalThesis);
+        finalThesisService.delete(user, finalThesis);
+    }
+
     @GetMapping("/students")
     public Page<AutocompleteResult> students(HoisUserDetails user, SearchCommand lookup) {
         return new PageImpl<>(finalThesisService.students(user, lookup));
-    }
-    
-    @GetMapping("/student/{id:\\d+}")
-    public FinalThesisStudentDto student(HoisUserDetails user, @WithEntity Student student) {
-        UserUtil.assertSameSchool(user, student.getSchool());
-        return finalThesisService.student(student);
     }
 
     @GetMapping("/teacher")
@@ -96,7 +104,7 @@ public class FinalThesisController {
     }
 
     @PutMapping("/{id:\\d+}/confirm")
-    public FinalThesisDto confirm(HoisUserDetails user, @WithEntity FinalThesis finalThesis,
+    public FinalThesisDtoContainer confirm(HoisUserDetails user, @WithEntity FinalThesis finalThesis,
             @Valid @RequestBody FinalThesisForm form) {
         FinalThesisUtil.assertCanConfirm(user, finalThesis);
         return get(user, finalThesisService.confirm(user, finalThesis, form));

@@ -81,8 +81,10 @@ angular.module('hitsaOis').controller('ExamSearchController', ['$q', '$route', '
      });
    };
   }
-]).controller('ExamEditController', ['$location', '$route', '$scope', 'dialogService', 'message', 'Classifier', 'DataUtils', 'FormUtils', 'QueryUtils',
-  function($location, $route, $scope, dialogService, message, Classifier, DataUtils, FormUtils, QueryUtils) {
+]).controller('ExamEditController', ['$location', '$route', '$scope', 'dialogService', 'message', 'Classifier',
+  'DataUtils', 'FormUtils', 'QueryUtils', 'resourceErrorHandler', '$timeout',
+  function($location, $route, $scope, dialogService, message, Classifier, DataUtils, FormUtils,
+           QueryUtils, resourceErrorHandler, $timeout) {
     $scope.auth = $route.current.locals.auth;
     var id = $route.current.params.id;
     var baseUrl = '/exams';
@@ -174,14 +176,22 @@ angular.module('hitsaOis').controller('ExamSearchController', ['$q', '$route', '
 
     function update() {
       if($scope.record.id) {
-        $scope.record.$update().then(message.updateSuccess).then(afterLoad).catch(angular.noop);
+        $scope.record.$update2().then(message.updateSuccess).then(afterLoad).catch(displayFormErrors);
         $scope.examForm.$setPristine();
       } else {
-        $scope.record.$save().then(function() {
+        $scope.record.$save2().then(function() {
           message.info('main.messages.create.success');
           $location.url(baseUrl + '/' + $scope.record.id + '/edit?_noback');
-        }).catch(angular.noop);
+        }).catch(displayFormErrors);
       }
+    }
+
+    function displayFormErrors(response) {
+      // failure, required fields are not filled
+      // wait for elements to render
+      $timeout(function () {
+        resourceErrorHandler.responseError(response, $scope.examForm).catch(angular.noop);
+      });
     }
 
     $scope.delete = function() {
@@ -247,7 +257,9 @@ angular.module('hitsaOis').controller('ExamSearchController', ['$q', '$route', '
           var query = {studyPeriod: $scope.formState.studyPeriod};
           $scope.formState.subjectStudyPeriods = subjectStudyPeriodEndpoint.query(query, function (response) {
             response.forEach( function (subjectStudyPeriod) {
-              subjectStudyPeriod.display = $scope.currentLanguageNameField(subjectStudyPeriod.subject) + ' - ' + (subjectStudyPeriod.teacherNames || []).join(', ');
+              subjectStudyPeriod.display = $scope.currentLanguageNameField(subjectStudyPeriod.subject) +
+                ' - ' + (subjectStudyPeriod.teacherNames || []).join(', ') +
+                ((subjectStudyPeriod.groupNames || []).length > 0 ? ' (' + (subjectStudyPeriod.groupNames || []).join(', ') + ')' : '');
             });
           });
         } else {

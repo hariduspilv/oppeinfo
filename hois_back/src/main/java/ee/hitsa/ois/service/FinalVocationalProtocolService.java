@@ -119,6 +119,10 @@ public class FinalVocationalProtocolService extends AbstractProtocolService {
         qb.optionalCriteria("p.inserted <= :insertedThru", "insertedThru", cmd.getInsertedThru(), DateUtils::lastMomentOfDay);
         qb.optionalCriteria("p.confirm_date >= :confirmedFrom", "confirmedFrom", cmd.getConfirmDateFrom(), DateUtils::firstMomentOfDay);
         qb.optionalCriteria("p.confirm_date <= :confirmedThru", "confirmedThru", cmd.getConfirmDateThru(), DateUtils::lastMomentOfDay);
+        qb.optionalCriteria("p.id in (select p.id from protocol p "
+                + "join protocol_student ps on p.id = ps.protocol_id "
+                + "join student s on ps.student_id = s.id "
+                + "where s.student_group_id in (:studentGroups))", "studentGroups", cmd.getStudentGroups());
         
         if (cmd.getStudentName() != null) {
             qb.filter("p.id in (select p.id from protocol p "

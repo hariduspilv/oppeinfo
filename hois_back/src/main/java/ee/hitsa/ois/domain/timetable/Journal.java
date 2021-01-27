@@ -49,6 +49,10 @@ public class Journal extends BaseEntityWithId {
     @ManyToOne(fetch = FetchType.LAZY)
     private JournalSub journalSub;
 
+    private Boolean addModuleOutcomes;
+    private Boolean isIndividual;
+    private Boolean isFree;
+
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "journal_id", nullable = false, updatable = false)
     private List<JournalTeacher> journalTeachers;
@@ -76,9 +80,6 @@ public class Journal extends BaseEntityWithId {
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "journal_id", nullable = false, updatable = false)
     private Set<JournalEntry> journalEntries = new HashSet<>();
-
-    private Boolean addModuleOutcomes;
-    private Boolean isIndividual;
 
     public School getSchool() {
         return school;
@@ -192,6 +193,30 @@ public class Journal extends BaseEntityWithId {
         this.journalSub = journalSub;
     }
 
+    public Boolean getAddModuleOutcomes() {
+        return addModuleOutcomes;
+    }
+
+    public void setAddModuleOutcomes(Boolean addModuleOutcomes) {
+        this.addModuleOutcomes = addModuleOutcomes;
+    }
+
+    public Boolean getIsIndividual() {
+        return isIndividual;
+    }
+
+    public void setIsIndividual(Boolean isIndividual) {
+        this.isIndividual = isIndividual;
+    }
+
+    public Boolean getIsFree() {
+        return isFree;
+    }
+
+    public void setIsFree(Boolean isFree) {
+        this.isFree = isFree;
+    }
+
     public Boolean getAddStudents() {
         return addStudents;
     }
@@ -254,21 +279,5 @@ public class Journal extends BaseEntityWithId {
 
     public void setJournalEntries(Set<JournalEntry> journalEntries) {
         this.journalEntries = journalEntries;
-    }
-
-    public Boolean getAddModuleOutcomes() {
-        return addModuleOutcomes;
-    }
-
-    public void setAddModuleOutcomes(Boolean addModuleOutcomes) {
-        this.addModuleOutcomes = addModuleOutcomes;
-    }
-
-    public Boolean getIsIndividual() {
-        return isIndividual;
-    }
-
-    public void setIsIndividual(Boolean isIndividual) {
-        this.isIndividual = isIndividual;
     }
 }

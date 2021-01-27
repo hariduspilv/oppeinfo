@@ -1,0 +1,8 @@
+<div layout="row" layout-xs="column">
+  <md-button class="md-raised md-primary" ng-if="!auth.isAdmin() || isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_AINEOPPETAJA')" ng-click="save()">{{"main.button.save" | translate}}</md-button>
+  <md-button class="md-raised" ng-if="subjectProgram.status === 'AINEPROGRAMM_STAATUS_I'
+      && (!auth.isAdmin() || isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_AINEOPPETAJA'))" ng-click="completeProgram()">{{"subjectProgram.operation.complete.label" | translate}}</md-button>
+  <md-button class="md-raised" ng-if="subjectProgram.id" ng-href="{{pdfUrl()}}" target="_blank">{{"main.button.print" | translate}}</md-button>
+  <md-button class="md-raised" ng-if="subjectProgram.id && (!auth.isAdmin() || isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_AINEOPPETAJA'))" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
+  <md-button class="md-raised" ng-click="customBack(getDefaultBack(), subjectProgramForm)">{{"main.button.back" | translate}}</md-button>
+</div>

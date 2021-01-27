@@ -25,6 +25,8 @@ import ee.hitsa.ois.domain.timetable.JournalStudent;
 
 @Entity
 public class Student extends StudentBase {
+    
+    /** Do not add student meal fields, student meal job batch update will take too long */
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false)

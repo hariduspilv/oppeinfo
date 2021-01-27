@@ -10,7 +10,7 @@ public class StudentGroupAbsenceDtoContainer {
 
     private List<AutocompleteResult> journals;
     private List<LocalDate> dates;
-    private Map<LocalDate, List<AutocompleteResult>> journalsByDates;
+    private Map<LocalDate, List<StudentGroupAbsenceJournalDto>> journalsByDates;
     private List<AutocompleteResult> students;
     private List<StudentGroupAbsenceDto> studentAbsences;
 
@@ -30,11 +30,11 @@ public class StudentGroupAbsenceDtoContainer {
         this.dates = dates;
     }
 
-    public Map<LocalDate, List<AutocompleteResult>> getJournalsByDates() {
+    public Map<LocalDate, List<StudentGroupAbsenceJournalDto>> getJournalsByDates() {
         return journalsByDates;
     }
 
-    public void setJournalsByDates(Map<LocalDate, List<AutocompleteResult>> journalsByDates) {
+    public void setJournalsByDates(Map<LocalDate, List<StudentGroupAbsenceJournalDto>> journalsByDates) {
         this.journalsByDates = journalsByDates;
     }
 

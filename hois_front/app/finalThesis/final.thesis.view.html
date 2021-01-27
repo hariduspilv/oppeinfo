@@ -1,6 +1,7 @@
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div ng-include="'finalThesis/final.thesis.warnings.tmpl.html'"></div>
   <div flex>
-    <form name="finalThesisForm" ng-submit="save()" novalidate>
+    <form name="formState.finalThesisForm" ng-submit="save()" novalidate>
       <div class="form-readonly">
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="45" flex-sm="100" flex-xs="100">
@@ -36,7 +37,7 @@
             <hois-value value="thesis.themeEn"></hois-value>
           </md-input-container>
         </div>
-        
+
         <div ng-if="thesis.isMagisterOrDoctoralOrIntegratedStudy">
           <div layout="row">
             <md-input-container flex-gt-sm="45" flex="100">
@@ -73,7 +74,7 @@
             </md-table-container>
           </fieldset>
           <div>&nbsp;</div>
-  
+
           <div layout="row">
             <md-input-container flex="100">
               <label>{{'finalThesis.curriculumGrade' | translate}}</label>

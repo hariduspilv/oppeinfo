@@ -30,6 +30,7 @@ public class SaisApplicationDto {
     private LocalDate submitted;
     private LocalDate saisChanged;
     private String saisAdmissionCode;
+    private String secondarySchoolCountry;
     private Boolean isHigher;
     private Boolean relatedToDirective;
     private Set<SaisApplicationGraduatedSchoolDto> graduatedSchools;
@@ -238,5 +239,11 @@ public class SaisApplicationDto {
 		this.relatedToDirective = relatedToDirective;
 	}
 
+    public String getSecondarySchoolCountry() {
+        return secondarySchoolCountry;
+    }
 
+    public void setSecondarySchoolCountry(String secondarySchoolCountry) {
+        this.secondarySchoolCountry = secondarySchoolCountry;
+    }
 }

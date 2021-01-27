@@ -1,3 +1,12 @@
+<style>
+  .hois-collapse-parent {
+    margin-bottom: 0px;
+  }
+  .hois-collapse {
+    margin-bottom: 0px;
+  }
+</style>
+
 <div class="ois-form-layout-padding" ng-cloak ng-show="!showMainForm">
   <form name="higherCurriculumVersionForm" layout="column" class="nomargin" >
     <fieldset tabindex="1">
@@ -37,6 +46,8 @@
         <br>
       </div>
     </fieldset>
+    <div>&nbsp;</div>
+    <ng-include src="'higherCurriculum/higher.curriculum.version.view.action.buttons.html'"></ng-include>
     <div>&nbsp;</div>
     <fieldset tabindex="2">
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'module.modules' | translate}}</legend>
@@ -183,6 +194,42 @@
         </table>
       </md-table-container>
     </fieldset>
+
+    <div>&nbsp;</div>
+    <hois-collapsable expanded="formState.nominalCapacity">
+      <hois-collapsable-header ng-class="{invalid: !allSpecialityCapacitiesValid() && formState.strictValidation}">
+          <span>{{'module.implementationPlan.nominalCapacity' | translate}}</span>
+      </hois-collapsable-header>
+      <!-- do not remove margin-top -->
+      <md-table-container style="padding: 1px;margin-top: 0px;">
+        <table md-table class="custom-table">
+          <thead class="secondary-table-header">
+            <th width="30%"></th>
+            <th width="30%" style="text-align: center">{{'nominalCapacity.autumn' | translate}}</th>
+            <th width="30%" style="text-align: center">{{'nominalCapacity.spring' | translate}}</th>
+            <th width="10%" style="text-align: center">{{'nominalCapacity.sum' | translate}}</th>
+          </thead>
+          <tbody ng-repeat="speciality in curriculum.specialities | filter: filterSpecialities | orderBy: currentLanguageNameField()" style="font-size: 13px;">
+            <tr class="even">
+              <td colspan="4"><b>{{currentLanguageNameField(speciality)}}</b></td>
+            </tr>
+            <tr ng-repeat="periods in speciality.capacities track by $index" class="higher-curriculum-subject-row">
+              <td>{{$index + 1 + ". " + ('nominalCapacity.studyYear' | translate)}}</td>
+              <td style="text-align: center">{{periods[0].credits}}</td>
+              <td style="text-align: center">{{periods[1].credits}}</td>
+              <td style="text-align: center">{{sumOfPeriods(periods)}}</td>
+            </tr>
+            <tr>
+              <td><b>{{'nominalCapacity.sum' | translate}}</b></td>
+              <td style="text-align: center"><b>{{sumOfAutumnPeriods(speciality.capacities)}}</b></td>
+              <td style="text-align: center"><b>{{sumOfSpringPeriods(speciality.capacities)}}</b></td>
+              <td style="text-align: center"><b>{{sumOfPeriods(speciality.capacities)}}</b></td>
+            </tr>
+          </tbody>
+        </table>
+      </md-table-container>
+    </hois-collapsable>
+
     <div>&nbsp;</div>
     <fieldset tabindex="4">
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.versionStatus' | translate}}</legend>
@@ -209,7 +256,7 @@
       <hois-collapsable-header>
           <span>{{'curriculum.version.typicalTrainingPlan' | translate}}</span>
       </hois-collapsable-header>
-      <md-table-container style="padding: 1px;">
+      <md-table-container style="padding: 1px;margin-top: 0px;">
         <table class="custom-table">
           <thead class="secondary-table-header">
             <th style="width: 35%;">{{'subject.name' | translate}}</th>
@@ -250,30 +297,7 @@
     <hois-created-modified object="version"></hois-created-modified>
   </form>
 
-  <div layout="row">
-    <div flex layout-xs="column">
-      <span ng-show="version.status === VERSION_STATUS.S" layout-xs="column">
-        <md-button class="md-raised md-primary" ng-click="goToEditForm()" ng-if="version.canChange">{{'main.button.change' | translate}}</md-button>
-        <md-button class="md-raised" ng-click="confirm()" ng-if="version.canConfirm">{{'curriculum.statuschange.version.button.verify' | translate}}</md-button>
-        <md-button class="md-raised" ng-click="setStatusClosed()" ng-if="version.canClose">{{'curriculum.statuschange.version.button.close' | translate}}</md-button>
-        <md-button class="md-raised md-default" ng-click="copy()" ng-if="version.canChange">{{'main.button.copy' | translate}}</md-button>
-      </span>
-      <span ng-show="version.status === VERSION_STATUS.K" layout-xs="column">
-        <md-button class="md-raised md-primary" ng-if="version.canChange" ng-click="goToEditForm()">{{'main.button.change' | translate}}</md-button>
-        <md-button class="md-raised md-default" ng-click="changeStatusUnderRevision()" ng-if="version.canChange && version.canSetUnderRevision">{{'curriculum.statuschange.version.button.changeStatusUnderRevision' | translate}}</md-button>
-        <md-button class="md-raised" ng-click="setStatusClosed()" ng-if="version.canClose">{{'curriculum.statuschange.version.button.close' | translate}}</md-button>
-        <md-button class="md-raised md-default" ng-if="version.canChange" ng-click="copy()">{{'main.button.copy' | translate}}</md-button>
-      </span>
-      <span ng-show="version.status === VERSION_STATUS.C" layout-xs="column">
-        <md-button class="md-raised md-default" ng-if="version.canChange" ng-click="copy()">{{'main.button.copy' | translate}}</md-button>
-      </span>
-
-      <a ng-show="showPrintButton()" href="{{formState.curriculumPdfUrl}}" target="_blank" class="md-button md-raised">{{'main.button.print' | translate}}</a>
-      <a ng-show="showPrintButton()" href="{{formState.curriculumXmlUrl}}" target="_blank" class="md-button md-raised">XML</a>
-
-      <md-button class="md-raised md-default" ng-click="back('#/higherCurriculum/' + version.curriculum + '/view', higherCurriculumVersionForm)">{{'main.button.back' | translate}}</md-button>
-    </div>
-  </div>
+  <ng-include src="'higherCurriculum/higher.curriculum.version.view.action.buttons.html'"></ng-include>
 </div>
 
 <style>

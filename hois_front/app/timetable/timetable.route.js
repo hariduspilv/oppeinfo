@@ -209,18 +209,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIPLAAN]
       }
     })
-    .when('/timetable/:id/createHigherPlan/group/:groupId', {
-      templateUrl: 'timetable/timetable.createHigherPlan.html',
-      controller: 'HigherTimetablePlanController',
-      controllerAs: 'controller',
-      resolve: {
-        auth: function (AuthResolver) { return AuthResolver.resolve(); }
-      },
-      data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIPLAAN]
-      }
-    })
-    .when('/timetable/:id/createHigherPlan/pair/:pairId', {
+    .when('/timetable/:id/createHigherPlan/:type/:typeId', {
       templateUrl: 'timetable/timetable.createHigherPlan.html',
       controller: 'HigherTimetablePlanController',
       controllerAs: 'controller',
@@ -347,7 +336,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       }
     });
 
-    // Regex for paths  
+    // Regex for paths
+    $route.routes['/timetable/:id/createHigherPlan/:type/:typeId'].regexp = /^\/(?:timetable\/(\d+)\/createHigherPlan\/(teacher|group|pair)\/(\d+))$/;
     $route.routes['/timetable/:schoolId/:type/:typeId/:studyYearId/:weekIndex?'].regexp = /^\/(?:timetable\/(\d+)\/(group|teacher|room)\/(\d+)\/(\d+)\/?(\d+)?)\/?$/;
     $route.routes['/timetable/person/:encodedPerson/:studyYearId/:weekIndex?'].regexp = /^\/(?:timetable\/person\/(\w+)\/(\d+)\/?(\d+)?)\/?$/;
 }]);

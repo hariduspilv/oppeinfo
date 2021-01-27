@@ -13,6 +13,7 @@ public class SubjectStudyPeriodTeacherForm extends VersionedCommand {
     private Long teacherId;
     @NotNull
     private Boolean isSignatory = Boolean.FALSE;
+    private Boolean isDiplomaSupplement = Boolean.FALSE;
     private List<SubjectStudyPeriodCapacityDto> capacities;
 
     public Long getTeacherId() {
@@ -29,6 +30,14 @@ public class SubjectStudyPeriodTeacherForm extends VersionedCommand {
 
     public void setIsSignatory(Boolean isSignatory) {
         this.isSignatory = isSignatory;
+    }
+
+    public Boolean getIsDiplomaSupplement() {
+        return isDiplomaSupplement;
+    }
+
+    public void setIsDiplomaSupplement(Boolean isDiplomaSupplement) {
+        this.isDiplomaSupplement = isDiplomaSupplement;
     }
 
     public List<SubjectStudyPeriodCapacityDto> getCapacities() {

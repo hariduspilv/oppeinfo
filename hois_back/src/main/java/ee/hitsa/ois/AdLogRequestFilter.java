@@ -20,7 +20,7 @@ import org.springframework.web.util.ContentCachingRequestWrapper;
 import org.springframework.web.util.ContentCachingResponseWrapper;
 
 import ee.hitsa.ois.domain.WsAdLog;
-import ee.hitsa.ois.service.api.StudentApiService;
+import ee.hitsa.ois.services.StudentApiService;
 
 @Transactional
 @Component

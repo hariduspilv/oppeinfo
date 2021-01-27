@@ -14,6 +14,7 @@
         <th md-column>{{'directive.student.fin' | translate}}</th>
         <th md-column class="required">{{'directive.student.finSpecific' | translate}}</th>
         <th md-column class="required">{{'directive.student.studentGroup' | translate}}</th>
+        <th md-column ng-class="{required: !formState.school.vocational}">{{'directive.student.secondarySchoolCountry' | translate}}</th>
         <th md-column ng-if="formState.school.vocational" ng-class="{required: !formState.school.higher}">{{'directive.student.dormitory' | translate}}</th>
       </tr>
     </thead>
@@ -73,6 +74,15 @@
               <p ng-message="required">{{'main.required' | translate}}</p>
             </div>
 <!--          </hois-table-data-detail>-->
+        </td>
+        <td md-cell>
+          <hois-classifier-select ng-model="row.secondarySchoolCountry" name="students[{{$index}}].secondarySchoolCountry" model-value-attr="code"
+                                  criteria="{vocational: formState.school.vocational ? true : undefined, higher: formState.school.higher ? true : undefined}" only-valid ignore-preselected
+                                  main-classifier-code="RIIK" aria-label="{{'directive.student.secondarySchoolCountry' | translate}}"
+                                  ng-disabled="row.hasSecondarySchoolCountryFromSAIS"></hois-classifier-select>
+          <div class="invalid" ng-messages="directiveForm['students['+$index+'].secondarySchoolCountry'].$error">
+            <p ng-message="required">{{'main.required' | translate}}</p>
+          </div>
         </td>
         <td md-cell ng-if="formState.school.vocational">
 <!--          <hois-table-data-master>-->

@@ -21,6 +21,7 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersionElectiveModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModuleSpeciality;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModuleSubject;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionNominalCapacity;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleCapacity;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleOutcome;
@@ -43,7 +44,7 @@ public class CurriculumVersionCopyService {
     public CurriculumVersion copy(CurriculumVersion copied) {
         CurriculumVersion newCurriculumVersion = new CurriculumVersion();
         BeanUtils.copyProperties(copied, newCurriculumVersion, "id", "created", "createdBy", "changed", "changedBy",
-                "version", "validFrom", "validThru", "modules", "specialities", "occupationModules", "status", "code");
+                "version", "validFrom", "validThru", "modules", "specialities", "occupationModules", "status", "code", "nominalCapacities");
 
         newCurriculumVersion
                 .setStatus(em.getReference(Classifier.class, CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_S.name()));
@@ -52,8 +53,26 @@ public class CurriculumVersionCopyService {
         copySpecialities(newCurriculumVersion, copied.getSpecialities());
         copyHigherModules(newCurriculumVersion, copied.getModules());
         copyOccupationModules(newCurriculumVersion, copied.getOccupationModules());
-
+        copyNominalCapacities(newCurriculumVersion, copied.getNominalCapacities());
         return EntityUtil.save(newCurriculumVersion, em);
+    }
+
+    private void copyNominalCapacities(CurriculumVersion newCurriculumVersion,
+            Set<CurriculumVersionNominalCapacity> nominalCapacities) {
+        if (!CollectionUtils.isEmpty(nominalCapacities)) {
+            newCurriculumVersion.setNominalCapacities(new HashSet<>());
+
+            for (CurriculumVersionNominalCapacity copied : nominalCapacities) {
+                CurriculumVersionNominalCapacity newCap = new CurriculumVersionNominalCapacity();
+                newCap.setCurriculumVersion(newCurriculumVersion);
+                Optional<CurriculumVersionSpeciality> speciality = newCurriculumVersion.getSpecialities().stream()
+                        .filter(p-> EntityUtil.getId(copied.getCurriculumVersionSpeciality().getCurriculumSpeciality()).equals(EntityUtil.getId(p.getCurriculumSpeciality()))).findFirst();
+                newCap.setCurriculumVersionSpeciality(speciality.get());
+                newCap.setCredits(copied.getCredits());
+                newCap.setPeriodNr(copied.getPeriodNr());
+                newCurriculumVersion.getNominalCapacities().add(newCap);
+            }
+        }
     }
 
     private static void copyOccupationModules(CurriculumVersion newCurriculumVersion,

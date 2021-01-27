@@ -47,7 +47,6 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsDecimal;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
-import static ee.hitsa.ois.util.JpaQueryUtil.resultAsStringList;
 
 @Transactional
 @Service
@@ -188,13 +187,19 @@ public class SubjectStudyPeriodStudentGroupSearchService {
         qb.requiredCriteria("sy.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.optionalCriteria("ssp.study_period_id = :studyPeriodId", "studyPeriodId", criteria.getStudyPeriod());
         qb.optionalCriteria("sy.id = :studyYearId", "studyYearId", criteria.getStudyYear());
-        qb.optionalCriteria("sd.id = :schoolDepartmentId", "schoolDepartmentId", criteria.getDepartment());
         qb.optionalCriteria("ssp.subject_id = :subjectId", "subjectId", criteria.getSubject());
         if (user.isTeacher()) {
             qb.requiredCriteria("sspt.teacher_id = :teacherId", "teacherId", user.getTeacherId());
         } else {
-            qb.optionalCriteria("sspt.teacher_id = :teacherId", "teacherId", criteria.getTeacher());
+            qb.optionalCriteria("sspt.teacher_id in (:teacherId)", "teacherId", criteria.getTeacher());
         }
+        qb.optionalCriteria("exists(select 1 " +
+                        "from subject_study_period_student_group sspsg " +
+                        "join student_group sg on sspsg.student_group_id = sg.id " +
+                        "join curriculum_department cd on cd.curriculum_id = sg.curriculum_id " +
+                        "where cd.school_department_id = :departmentId " +
+                        "and sspsg.subject_study_period_id = ssp.id)",
+                "departmentId", criteria.getDepartment());
         qb.optionalCriteria("exists(select 1 from subject_study_period_student_group sspsg "
                 + "where sspsg.subject_study_period_id = ssp.id "
                 + "and sspsg.student_group_id in (:studentGroupIds))", "studentGroupIds", criteria.getStudentGroup());
@@ -207,7 +212,7 @@ public class SubjectStudyPeriodStudentGroupSearchService {
         List<ClassifierDto> teacherCapacities = getTeacherCapacities(user.getSchoolId(), subjectStudyPeriodTeacherIds, criteria);
         teacherCapacities.sort(Comparator.comparing(ClassifierDto::getValue, String.CASE_INSENSITIVE_ORDER));
         Map<String, Object> data = new HashMap<>();
-        Map<Long, List<LessonPlanXlsCapacityDto>> capacitiesPerTeacherId = teacherCapacities(user, subjectStudyPeriodTeacherIds, teacherCapacities, criteria);
+        Map<Long, List<LessonPlanXlsCapacityDto>> capacitiesPerTeacherId = teacherCapacities(user, teacherCapacities, criteria);
         Map<Long, List<String>> subjectStudyPeriodStudentGroups = subjectStudyPeriodStudentGroups(subjectStudyPeriodTeacherIds);
         Map<Long, List<String>> subjectStudyPeriodSubGroups = subjectStudyPeriodSubGroups(subjectStudyPeriodTeacherIds);
         List<TeacherWithWorkLoadDto> subjectStudyPeriodTeachers = StreamUtil.toMappedList(r -> {
@@ -296,13 +301,17 @@ public class SubjectStudyPeriodStudentGroupSearchService {
         dto.setSumWithLoad(sumWithLoad);
     }
 
-    private Map<Long, List<LessonPlanXlsCapacityDto>> teacherCapacities(HoisUserDetails user, Set<Long> subjectStudyPeriodTeacherIds, 
+    private Map<Long, List<LessonPlanXlsCapacityDto>> teacherCapacities(HoisUserDetails user,
             List<ClassifierDto> teacherCapacities, SubjectStudyPeriodSearchCommand criteria) {
         if (teacherCapacities == null|| teacherCapacities.isEmpty()) return new LinkedHashMap<>();
+        
+        
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
                 "from subject_study_period ssp "
-                + "join study_period sp on ssp.study_period_id = sp.id "
-                + "join subject_study_period_teacher sspt on sspt.subject_study_period_id = ssp.id "
+                + "join study_period sp on sp.id = ssp.study_period_id "
+                + "join study_year sy on sp.study_year_id = sy.id "
+                + "join subject s on ssp.subject_id = s.id "
+                + "join subject_study_period_teacher sspt on ssp.id = sspt.subject_study_period_id "
                 + "join classifier c_type on c_type.code in (:capacityTypes) "
                 + "left join school_capacity_type sct on sct.capacity_type_code = c_type.code and sct.school_id = :schoolId and sct.is_higher = true "
                 + "left join school_capacity_type_load sctl on sctl.school_capacity_type_id = sct.id and sctl.study_year_id = sp.study_year_id "
@@ -325,9 +334,25 @@ public class SubjectStudyPeriodStudentGroupSearchService {
                         + "and CHours.capacity_type_code = c_type.code "
                         + "and ssp.is_capacity_diff is not true");
 
-        qb.optionalCriteria("sspt.id in (:teacherIds)", "teacherIds", subjectStudyPeriodTeacherIds);
+        qb.requiredCriteria("sy.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.optionalCriteria("ssp.study_period_id = :studyPeriodId", "studyPeriodId", criteria.getStudyPeriod());
-        qb.optionalCriteria("sp.study_year_id = :studyYearId", "studyYearId", criteria.getStudyYear());
+        qb.optionalCriteria("exists(select 1 " +
+                "from subject_study_period_student_group sspsg " +
+                "join student_group sg on sspsg.student_group_id = sg.id " +
+                "join curriculum_department cd on cd.curriculum_id = sg.curriculum_id " +
+                "where cd.school_department_id = :departmentId " +
+                "and sspsg.subject_study_period_id = ssp.id)",
+                "departmentId", criteria.getDepartment());
+        qb.optionalCriteria("ssp.subject_id = :subjectId", "subjectId", criteria.getSubject());
+        if (user.isTeacher()) {
+            qb.requiredCriteria("sspt.teacher_id = :teacherId", "teacherId", user.getTeacherId());
+        } else {
+            qb.optionalCriteria("sspt.teacher_id in (:teacherId)", "teacherId", criteria.getTeacher());
+        }
+        qb.optionalCriteria("exists(select 1 from subject_study_period_student_group sspsg "
+                + "where sspsg.subject_study_period_id = ssp.id "
+                + "and sspsg.student_group_id in (:studentGroupIds))", "studentGroupIds", criteria.getStudentGroup());
+        qb.optionalCriteria("sy.id = :studyYearId", "studyYearId", criteria.getStudyYear());
         qb.parameter("capacityTypes", teacherCapacities.stream().map(p -> p.getCode()).collect(Collectors.toList()));
         qb.parameter("schoolId", user.getSchoolId());
         

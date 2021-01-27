@@ -2,7 +2,7 @@
     <form name="subjectStudyPeriodStudentGroupEditForm">
         <div layout="column">
             <div layout="row" layout-sm="column" layout-xs="column">
-                <md-input-container ng-if="!isEditing" flex="25" flex-sm="100" flex-xs="100"  class="readonly top-margin" >
+                <md-input-container ng-if="!isEditing" flex="25" flex-sm="100" flex-xs="100" class="readonly">
                     <label>{{'subjectStudyPeriod.studyPeriod' | translate}}</label>
                     <hois-value value="currentLanguageNameField(studyPeriod)"></hois-value>
                 </md-input-container>
@@ -18,11 +18,11 @@
                      </md-option>
                     </md-select>
                 </md-input-container>
-                <md-input-container ng-if="!isEditing" flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5"  class="readonly top-margin" >
+                <md-input-container ng-if="!isEditing" flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5"  class="readonly" >
                     <label>{{'subjectStudyPeriod.studentGroup' | translate}}</label>
                     <hois-value value="studentGroup.code"></hois-value>
                 </md-input-container>
-                <md-input-container  class="readonly top-margin"  flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
+                <md-input-container  class="readonly"  flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
                     <label>{{'subjectStudyPeriod.course' | translate}}</label>
                     <hois-value value="course"></hois-value>
                 </md-input-container>
@@ -37,6 +37,8 @@
                     <hois-value value="'subjectStudyPeriod.curriculumStudyPeriod.value' | translate:curriculumStudyPeriod"></hois-value>
                 </md-input-container>
             </div>
+            <ng-include src="'subjectStudyPeriod/studentGroup/subject.study.period.student.group.edit.action.buttons.html'"></ng-include>
+            <div>&nbsp;</div>
             <div layout="row" style="margin-top: -18px; margin-bottom: 8px;" ng-show="record.studyPeriod && studentGroup.id && studentGroup.curriculumVersionAdmissinYear">
               <md-input-container flex="100" flex-gt-sm="25">
                 <label>{{'subjectStudyPeriod.plannedSemester' | translate}}</label>
@@ -54,9 +56,9 @@
             </div>
             <div>&nbsp;</div>
             <md-table-container fixed-column-table fixed-columns="1" resize-table search-criteria-height="250">
-                <table class="subject-study-period pre-last-col-wide">
+                <table class="subject-study-period pre-last-col-wide load-plan">
                     <thead>
-                      <tr>
+                      <tr class="header">
                         <th>
                           <span>{{'subjectStudyPeriod.subjectStudyPeriod' | translate}}</span>
                           <a ng-href="#/subjectStudyPeriod/new?studentGroupId={{record.studentGroup}}&studyPeriodId={{record.studyPeriod}}"
@@ -68,7 +70,7 @@
                       </tr>
                     </thead>
                     <tbody ng-repeat="subject in record.subjects">
-                        <tr class="bold-top-line">
+                        <tr ng-class="{'bold-top-line': !$first}">
                             <td>
                                 <span class="bold">{{currentLanguageNameField(subject)}}</span>
                                 <a ng-href="#/subjectStudyPeriod/new?subjectId={{subject.id}}&studentGroupId={{record.studentGroup}}&studyPeriodId={{record.studyPeriod}}">{{'subjectStudyPeriod.addTeachers' | translate}}</a>
@@ -118,7 +120,7 @@
                         </tr>
                     </tbody>
                     <tbody ng-if="!!semester && semesterSubjects.length > 0">
-                      <tr class="bold-top-line different-color" style="background-color: rgb(248, 187, 208);">
+                      <tr class="header different-color" ng-class="{'bold-top-line': record.subjects.length > 0}" style="background-color: rgb(248, 187, 208);">
                         <td>
                           <span class="bold">{{'subjectStudyPeriod.unplannedSubjects' | translate}}</span>
                         </td>
@@ -157,7 +159,7 @@
                         <td class="bold">{{capacitiesUtil.toEap(calculateSubjectCapacityFromProgram(subject)) | number: 2}}</td>
                       </tr>
                     </tbody>
-                    <tr class="bold bold-top-line" md-colors="{background: 'background-200'}">
+                    <tr class="bold" ng-class="{'bold-top-line': record.subjects.length > 0 || !!semester && semesterSubjects.length > 0}" md-colors="{background: 'background-200'}">
                       <td>{{'subjectStudyPeriod.overall' | translate | uppercase}}</td>
                       <td ng-repeat="type in capacityTypes" >{{capacitiesUtil.capacitiesSumByType(type.code)}}</td>
                       <td>{{capacitiesUtil.capacitiesSumOverall()}}</td>
@@ -173,53 +175,6 @@
             </md-table-container>
             <div>&nbsp;</div>
         </div>
-        <div layout="row">
-            <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
-            <a ng-if="!isEditing" ng-href="{{excel(formState.xlsUrl, container)}}" target="_blank" class="md-button md-raised">{{'main.button.printXls' | translate}}</a>
-            <md-button class="md-raised" ng-click="back('#/subjectStudyPeriods/studentGroups', subjectStudyPeriodStudentGroupEditForm)">{{'main.button.back' | translate}}</md-button>
-            <md-button class="md-raised" ng-href="#/subjectStudyPeriod/new?studentGroupId={{record.studentGroup}}&studyPeriodId={{record.studyPeriod}}"
-                       ng-if="record.studentGroup">{{'subjectStudyPeriod.addSubjectStudyPeriod' | translate}}</md-button>
-        </div>
+        <ng-include src="'subjectStudyPeriod/studentGroup/subject.study.period.student.group.edit.action.buttons.html'"></ng-include>
     </form>
 </div>
-
-<style>
-  tr.bold-top-line,
-  tr.bold-top-line td {
-      border-top: #525252 2px solid !important;
-  }
-
-  .subject-study-period td,
-  .subject-study-period th {
-    border-bottom: none !important;
-  }
-
-  .subject-study-period.pre-last-col-wide td:nth-last-child(2),
-  .subject-study-period.pre-last-col-wide th:nth-last-child(2) {
-    min-width: 120px;
-  }
-
-  td.div-space-between > div {
-    display: inline-block;
-  }
-
-  td.div-space-between > div:last-child {
-    float: right;
-  }
-
-  td.div-space-between > div:last-child md-input-container {
-    text-align: left;
-    max-width: 350px;
-    min-width: 200px;
-  }
-
-  table.subject-study-period tr.different-color th,
-  table.subject-study-period tr.different-color .fixed-cell {
-    background-color: rgb(252, 228, 236);
-  }
-
-  table.subject-study-period tr.different-color.bold-top-line .fixed-cell {
-    background-color: rgb(248, 187, 208) !important;
-  }
-
-</style>

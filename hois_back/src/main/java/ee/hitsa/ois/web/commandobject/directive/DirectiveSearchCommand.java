@@ -18,6 +18,7 @@ public class DirectiveSearchCommand {
     private LocalDate insertedFrom;
     private LocalDate insertedThru;
     private String studentGroup;
+    private List<Long> studentGroups;
 
     public List<String> getType() {
         return type;
@@ -89,5 +90,13 @@ public class DirectiveSearchCommand {
 
     public void setStudentGroup(String studentGroup) {
         this.studentGroup = studentGroup;
+    }
+
+    public List<Long> getStudentGroups() {
+        return studentGroups;
+    }
+
+    public void setStudentGroups(List<Long> studentGroups) {
+        this.studentGroups = studentGroups;
     }
 }

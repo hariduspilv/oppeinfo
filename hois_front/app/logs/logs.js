@@ -3,25 +3,36 @@
 angular.module('hitsaOis').controller('LogsController', ['$mdDialog', '$route', '$scope', 'QueryUtils',
   function ($mdDialog, $route, $scope, QueryUtils) {
     $scope.auth = $route.current.locals.auth;
-    
+
     var messageTypes = {
       ekis: ['registerDirective', 'deleteDirective', 'registerCertificate', 'registerPracticeContract', 'cancelPracticeContract','enforceContract', 'rejectContract', 'enforceDirective', 'rejectDirective'],
       kutseregister: [$scope.auth.roleCode === 'ROLL_P' ? 'kutseregister.muutunudKutsestandardid' : 'kutseregister.kutsetunnistus'],
       rtip: ['sap.Z_EMPLOEES', 'sap.tootajaPohiandmed'],
-      sais: ['sais2.AllAdmissionsExport', 'sais2.AllApplicationsExport'],
+      sais: ['sais2.AllAdmissionsExport', 'sais2.AllApplicationsExport', 'sais2.AllApplicationsExportv2'],
       rr: ['rr.RR434']
+    };
+
+    $scope.convertType = {
+      'sais2.AllApplicationsExportv2': 'sais2.AllApplicationsExport'
     };
 
     var logType = $route.current.locals.logType, messagePrefix = 'logs.' + logType + '.';
     $scope.logType = logType;
     $scope.messagePrefix = messagePrefix;
-    $scope.messageTypes = messageTypes[logType];
+    $scope.messageTypes = (messageTypes[logType] || []).reduce(function (acc, it) {
+      var item = !!$scope.convertType[it] ? $scope.convertType[it] : it;
+      if (acc.indexOf(item) === -1) {
+        acc.push(item);
+      }
+      return acc;
+    }, []);
 
     var baseUrl = '/logs/' + logType;
     QueryUtils.createQueryForm($scope, baseUrl, {order: '-inserted'});
     $scope.loadData();
 
     $scope.logentry = function(row) {
+      var convertType = $scope.convertType;
       $mdDialog.show({
         controller: function($scope) {
           var initialLength = 1000;
@@ -29,6 +40,7 @@ angular.module('hitsaOis').controller('LogsController', ['$mdDialog', '$route', 
           $scope.cancel = $mdDialog.hide;
           $scope.logType = logType;
           $scope.messagePrefix = messagePrefix;
+          $scope.convertType = convertType;
 
           $scope.showAll = function(request) {
             if(request) {

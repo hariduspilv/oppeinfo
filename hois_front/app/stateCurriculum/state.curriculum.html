@@ -50,7 +50,7 @@
           <div layout="row" layout-sm="column" layout-xs="column" class="top-margin">
             <md-input-container flex="25" flex-sm="100" flex-xs="100">
               <label>{{'stateCurriculum.enter.credits.credits' | translate}}</label>
-              <input ng-model="stateCurriculum.credits" type="number" pattern="^\d+$" required min="0" max="999" name="credits">
+              <input ng-model="stateCurriculum.credits" type="number" pattern="^\d+(\.\d{1,2})?$" required min="0" max="999" name="credits">
               <div ng-messages="stateCurriculumForm.credits.$error" ng-show="stateCurriculumForm.credits.$dirty">
                 <div ng-message="min">
                   {{'stateCurriculum.enter.credits.positive' | translate}}
@@ -59,7 +59,7 @@
                   {{'stateCurriculum.enter.credits.max' | translate}}
                 </div>
                 <div ng-message="pattern">
-                  {{'stateCurriculum.enter.credits.integer' | translate}}
+                  {{'stateCurriculum.error.decimalPresision2' | translate}}
                 </div>
               </div>
             </md-input-container>

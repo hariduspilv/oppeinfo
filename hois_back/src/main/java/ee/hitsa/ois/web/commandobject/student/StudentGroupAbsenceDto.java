@@ -6,6 +6,8 @@ public class StudentGroupAbsenceDto {
 
     private Long student;
     private LocalDate entryDate;
+    private Long startLessonNr;
+    private Long lessons;
     private Long journal;
     private Long journalStudentEntry;
     private Long journalEntryStudentLessonAbsence;
@@ -26,6 +28,22 @@ public class StudentGroupAbsenceDto {
 
     public void setEntryDate(LocalDate entryDate) {
         this.entryDate = entryDate;
+    }
+
+    public Long getStartLessonNr() {
+        return startLessonNr;
+    }
+
+    public void setStartLessonNr(Long startLessonNr) {
+        this.startLessonNr = startLessonNr;
+    }
+
+    public Long getLessons() {
+        return lessons;
+    }
+
+    public void setLessons(Long lessons) {
+        this.lessons = lessons;
     }
 
     public Long getJournal() {

@@ -1,8 +1,8 @@
 package ee.hitsa.ois.service.basemodule;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsDecimal;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
-import static ee.hitsa.ois.util.JpaQueryUtil.resultAsInteger;
 
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -53,7 +53,6 @@ import ee.hitsa.ois.web.commandobject.basemodule.BaseModuleReplaceCommand;
 import ee.hitsa.ois.web.commandobject.basemodule.BaseModuleReplaceForm;
 import ee.hitsa.ois.web.commandobject.basemodule.BaseModuleSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
-import ee.hitsa.ois.web.dto.OccupiedAutocompleteResult;
 import ee.hitsa.ois.web.dto.basemodule.BaseModuleCapacityDto;
 import ee.hitsa.ois.web.dto.basemodule.BaseModuleDto;
 import ee.hitsa.ois.web.dto.basemodule.BaseModuleOutcomesDto;
@@ -103,7 +102,7 @@ public class BaseModuleService {
             dto.setId(resultAsLong(r, 0));
             dto.setNameEt(resultAsString(r, 1));
             dto.setNameEn(resultAsString(r, 2));
-            dto.setCredits(resultAsInteger(r, 3));
+            dto.setCredits(resultAsDecimal(r, 3));
             String curriculums = resultAsString(r, 4);
             if (curriculums != null) {
                 dto.setCurriculums(new LinkedHashSet<>(Arrays.asList(curriculums.split(","))));

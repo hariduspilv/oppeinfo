@@ -173,6 +173,7 @@ public class LessonPlanXlsDto {
         
         private Map<String, List<Double>> hours;
         private List<Double> totalHours;
+        private List<Double> totalContactHours;
         
         public Map<String, List<Double>> getHours() {
             return hours;
@@ -188,6 +189,14 @@ public class LessonPlanXlsDto {
         
         public void setTotalHours(List<Double> totalHours) {
             this.totalHours = totalHours;
+        }
+
+        public List<Double> getTotalContactHours() {
+            return totalContactHours;
+        }
+
+        public void setTotalContactHours(List<Double> totalContactHours) {
+            this.totalContactHours = totalContactHours;
         }
     }
 }

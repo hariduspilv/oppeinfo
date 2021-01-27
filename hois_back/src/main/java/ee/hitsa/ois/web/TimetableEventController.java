@@ -1,11 +1,13 @@
 package ee.hitsa.ois.web;
 
+import java.io.IOException;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
 import ee.hitsa.ois.enums.Language;
+import ee.hitsa.ois.util.HttpUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -62,9 +64,16 @@ public class TimetableEventController {
     public Page<TimetableEventSearchDto> search(HoisUserDetails user, @Valid TimetableEventSearchCommand criteria,
             Pageable pageable) {
         TimetableUserRights.assertCanSearchEvents(user);
-        return timetableEventService.search(criteria, pageable, user);
+        return timetableEventService.search(user, criteria, pageable);
     }
-    
+
+    @GetMapping("/search.pdf")
+    public void excel(HoisUserDetails user, @Valid TimetableEventSearchCommand criteria,
+            HttpServletResponse response) throws IOException {
+        TimetableUserRights.assertCanSearchEvents(user);
+        HttpUtil.pdf(response, "event_search.pdf", timetableEventService.searchPrint(user, criteria));
+    }
+
     @GetMapping("/rooms")
     public Page<TimetableEventRoomSearchDto> searchRooms(HoisUserDetails user, @Valid TimetableEventRoomsCommand cmd, Pageable pageable) {
         // Same user rights as for event searching.
@@ -93,20 +102,14 @@ public class TimetableEventController {
     }
 
     @GetMapping("/timetableSearch/{school:\\d+}")
-    public TimetableByDto searchTimetable(@WithEntity("school") School school, @Valid TimetableEventSearchCommand criteria) {
-        return timetableEventService.searchTimetable(criteria, school);
+    public Page<TimetableEventSearchDto> searchTimetable(@WithEntity("school") School school,
+            @Valid TimetableEventSearchCommand criteria, Pageable pageable) {
+        return timetableEventService.searchTimetable(criteria, school, pageable);
     }
 
-    @GetMapping("/timetableSearch/{school:\\d+}/calendar")
-    public TimetableCalendarDto searchTimetableIcs(@WithEntity("school") School school, @Valid TimetableEventSearchCommand criteria,
-           Language lang) {
-        return timetableEventService.getSearchCalendar(school, criteria, lang);
-    }
-
-    @GetMapping("/timetableSearch/{school:\\d+}/searchFormData/{studyYear:\\d+}")
-    public Map<String, ?> searchTimetableFormData(@WithEntity("school") School school,
-            @PathVariable("studyYear") Long studyYearId) {
-        return timetableEventService.searchTimetableFormData(school, studyYearId);
+    @GetMapping("/timetableSearch/{school:\\d+}/searchFormData")
+    public Map<String, ?> searchTimetableFormData(@WithEntity("school") School school) {
+        return timetableEventService.searchTimetableFormData(school);
     }
 
     @GetMapping("/timetableByGroup/{school:\\d+}")

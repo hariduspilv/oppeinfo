@@ -121,7 +121,8 @@ public class DirectiveStudent extends BaseEntityWithId implements Period {
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier abroadPurpose;
     @ManyToOne(fetch = FetchType.LAZY)
-    private Classifier abroadProgramme; // Kylalis and Valis is checked by hand (only higher)
+    @Required(groups = {Valis.class})
+    private Classifier abroadProgramme; // Kylalis is checked by hand (only higher)
     private String abroadSchool;
     private String email;
     @Required(groups = Immat.class)
@@ -154,7 +155,7 @@ public class DirectiveStudent extends BaseEntityWithId implements Period {
     private List<DirectiveStudentOccupation> occupations;
     @OneToMany(mappedBy = "directiveStudent", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DirectiveStudentModule> modules = new ArrayList<>();
-    @Required(groups = {Indoklop.class, Stiptoetl.class, Tugilopp.class})
+    @Required(groups = {Akadk.class, Indoklop.class, Stiptoetl.class, Tugilopp.class})
     @ManyToOne(fetch = FetchType.LAZY)
     private DirectiveStudent directiveStudent;
     @Required(groups = Duplikaat.class)
@@ -171,6 +172,8 @@ public class DirectiveStudent extends BaseEntityWithId implements Period {
     private DiplomaSupplement diplomaSupplementEn;
     @ManyToOne(fetch = FetchType.LAZY)
     private Form diplomaForm;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Classifier secondarySchoolCountry;
 
     @OneToOne(mappedBy = "directiveStudent")
     private StudentAbsence studentAbsence;
@@ -583,4 +586,11 @@ public class DirectiveStudent extends BaseEntityWithId implements Period {
         getForms().addAll(forms);
     }
 
+    public Classifier getSecondarySchoolCountry() {
+        return secondarySchoolCountry;
+    }
+
+    public void setSecondarySchoolCountry(Classifier secondarySchoolCountry) {
+        this.secondarySchoolCountry = secondarySchoolCountry;
+    }
 }

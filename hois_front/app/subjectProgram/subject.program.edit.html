@@ -26,6 +26,16 @@
             <hois-classifier-value ng-model="subject.assessment" main-classifier-code="HINDAMISVIIS"></hois-classifier-value>
           </md-input-container>
         </div>
+        <div flex layout="column" layout-gt-xs="row">
+          <md-input-container flex="100" flex-gt-xs="40">
+            <label class="textInput">{{'subjectProgram.studyPeriod' | translate}}</label>
+            <hois-value value="currentLanguageNameField(studyPeriod)"></hois-value>
+          </md-input-container>
+          <md-input-container flex="100" flex-gt-xs="60">
+            <label class="textInput">{{'subjectProgram.teacher' | translate}}</label>
+            <hois-value value="teachers"></hois-value>
+          </md-input-container>
+        </div>
         <hois-collapsable expanded="false">
           <hois-collapsable-header>
             <span>{{'subjectProgram.syllabus' | translate}}</span>
@@ -146,7 +156,9 @@
           </fieldset>
         </hois-collapsable>
       </div>
-      <span class="hois-collapse-header" style="padding-bottom: 10px;">{{'subjectProgram.label' | translate}}</span>
+      <span class="hois-collapse-header" style="padding-bottom: 10px;">
+        {{'subjectProgram.label' | translate}} <span ng-if="subjectProgram.isJoint">({{'subjectProgram.joint' | translate}})</span>
+      </span>
       <div layout="column" ng-if="!subjectProgram.id && subjectPrograms.length > 0">
         <md-input-container flex>
           <label>{{'subjectProgram.copySubjectProgram' | translate}}</label>
@@ -156,6 +168,8 @@
         </md-input-container>
         <div>&nbsp;</div>
       </div>
+      <ng-include src="'subjectProgram/subject.program.edit.action.buttons.html'"></ng-include>
+      <div>&nbsp;</div>
       <div flex class="study-content">
         <fieldset tabindex="1">
           <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'subjectProgram.studyContent' | translate}}</legend>
@@ -170,29 +184,37 @@
             <md-table-container>
               <div layout="row" ng-repeat="sc in studyContentDt">
                 <div layout="column" flex>
-                  <div layout="row">
+                  <div layout="row" flex="100">
                     <md-input-container>
                       <label>{{'subjectProgram.date' | translate}}</label>
                       <md-datepicker ng-model="sc.studyDt" ng-required="subjectProgram.studyContentType === 'OPPETOOSISU_K'"></md-datepicker>
                     </md-input-container>
-                    <md-input-container flex="30" style="padding-right: 6px">
+                    <md-input-container flex="60" style="padding-right: 6px">
                       <label>{{'subjectProgram.studyType' | translate}}</label>
-                      <hois-classifier-select ng-model="sc.capacityType" model-value-attr="code" only-valid 
+                      <hois-classifier-select ng-model="sc.capacityType" model-value-attr="code" only-valid
                         main-classifier-code="MAHT" criteria="{higher: true}" style="padding-top: 17px"></hois-classifier-select>
-                    </md-input-container> 
-                    <md-input-container flex="10">
+                    </md-input-container>
+                    <md-input-container flex="20">
                       <label>{{'subjectProgram.credits' | translate}}</label>
                       <input type="text" ng-model="sc.capacity" name="credits[{{$index}}]" md-maxlength="20"/>
                     </md-input-container>
-                    <hois-autocomplete ng-model="sc.teacher" method="teachers" name="techers" flex
-                      label="subjectProgram.teacher" additional-query-params="{valid: true}"></hois-autocomplete>
                   </div>
                   <div layout="row">
-                    <div layout="row" style="width: 154px"></div>
                     <md-input-container flex>
                       <label>{{'subjectProgram.description' | translate}}</label>
                       <textarea ng-model="sc.studyInfo" md-maxlength="4000" max-rows="10" ng-required="subjectProgram.studyContentType === 'OPPETOOSISU_K'" ></textarea>
                     </md-input-container>
+                  </div>
+                </div>
+                <div layout="column" flex>
+                  <div layout="column" style="margin-top: 4px;" ng-if="subjectProgram.isJoint">
+                    <md-checkbox ng-repeat="teacher in subjectProgram.teachers" ng-checked="sc.teachers.indexOf(teacher.teacher.id) !== -1"
+                                 ng-click="modifyStudyContentTeacher(sc, teacher)" style="margin: 3px 0 3px 8px;">
+                      {{currentLanguageNameField(teacher.teacher)}}</md-checkbox>
+                  </div>
+                  <div layout="row">
+                    <hois-autocomplete ng-model="sc.teacher" method="teachers" name="techers" flex md-selected-item-change="changedTeacher(sc)"
+                                       label="subjectProgram.teacher" additional-query-params="{valid: true}"></hois-autocomplete>
                   </div>
                 </div>
                 <div layout="row" layout-align="center center" style="margin-left: 10px;height: 47px">
@@ -209,30 +231,38 @@
               <div layout="column" ng-repeat="sc in studyContentWk">
                 <div layout="row">
                   <div layout="column" flex>
-                    <div layout="row">
-                      <md-input-container flex="10">
+                    <div layout="row" flex="100">
+                      <md-input-container flex="20">
                         <label>{{'subjectProgram.week' | translate}}</label>
                         <input type="text" ng-model="sc.weekNr" name="week[{{$index}}]" md-maxlength="20"
                           ng-required="subjectProgram.studyContentType === 'OPPETOOSISU_N'"/>
                       </md-input-container>
-                      <md-input-container flex="30" style="padding-right: 6px">
+                      <md-input-container flex="60" style="padding-right: 6px">
                         <label>{{'subjectProgram.studyType' | translate}}</label>
-                        <hois-classifier-select ng-model="sc.capacityType" model-value-attr="code" only-valid 
+                        <hois-classifier-select ng-model="sc.capacityType" model-value-attr="code" only-valid
                           main-classifier-code="MAHT" criteria="{higher: true}" style="padding-top: 17px"></hois-classifier-select>
-                      </md-input-container> 
-                      <md-input-container flex="10">
+                      </md-input-container>
+                      <md-input-container flex="20">
                         <label>{{'subjectProgram.credits' | translate}}</label>
                         <input type="text" ng-model="sc.capacity" name="credits[{{$index}}]" md-maxlength="20"/>
                       </md-input-container>
-                      <hois-autocomplete ng-model="sc.teacher" method="teachers" name="techers" flex
-                        label="subjectProgram.teacher" additional-query-params="{valid: true}"></hois-autocomplete>
                     </div>
                     <div layout="row">
-                      <div layout="row" flex="10"></div>
                       <md-input-container flex>
                         <label>{{'subjectProgram.description' | translate}}</label>
                         <textarea ng-model="sc.studyInfo" md-maxlength="4000" max-rows="10" ng-required="subjectProgram.studyContentType === 'OPPETOOSISU_N'" ></textarea>
                       </md-input-container>
+                    </div>
+                  </div>
+                  <div layout="column" flex>
+                    <div layout="column" style="margin-top: 4px;" ng-if="subjectProgram.isJoint">
+                      <md-checkbox ng-repeat="teacher in subjectProgram.teachers" ng-checked="sc.teachers.indexOf(teacher.teacher.id) !== -1"
+                                   ng-click="modifyStudyContentTeacher(sc, teacher)" style="margin: 3px 0 3px 8px;">
+                        {{currentLanguageNameField(teacher.teacher)}}</md-checkbox>
+                    </div>
+                    <div layout="row">
+                      <hois-autocomplete ng-model="sc.teacher" method="teachers" name="techers" flex md-selected-item-change="changedTeacher(sc)"
+                                         label="subjectProgram.teacher" additional-query-params="{valid: true}"></hois-autocomplete>
                     </div>
                   </div>
                   <div layout="row" class="occupation-row align-center" style="margin-left: 10px; height: 47px">
@@ -375,14 +405,33 @@
           <hois-value value="subjectProgram.confirmedBy"></hois-value>
         </md-input-container>
       </div>
-      <br>
+      <div ng-if="subjectProgram.isJoint && subjectProgram.teachers.length > 1">&nbsp;</div>
+      <div flex ng-if="subjectProgram.isJoint && subjectProgram.teachers.length > 1">
+        <fieldset tabindex="4">
+          <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'subjectProgram.teacherReadyStatus' | translate}}</legend>
+          <md-table-container>
+            <table md-table class="secondary-table">
+              <thead md-head>
+                <tr md-row>
+                  <th md-column>{{'subjectProgram.teacher' | translate}}</th>
+                  <th md-column>{{'subjectProgram.operation.complete.label' | translate}}</th>
+                  <th md-column>{{'main.date' | translate}}</th>
+                </tr>
+              </thead>
+              <tbody md-body>
+                <tr md-row ng-repeat="teacher in subjectProgram.teachers">
+                  <td md-cell>{{currentLanguageNameField(teacher.teacher)}}</td>
+                  <td md-cell>{{teacher.isReady ? 'main.yes' : 'main.no' | translate}}</td>
+                  <td md-cell>{{teacher.isReadyDt ? teacher.isReadyDt : '-' | hoisDateTime}}</td>
+                </tr>
+              </tbody>
+            </table>
+          </md-table-container>
+        </fieldset>
+      </div>
+      <div>&nbsp;</div>
     </div>
-    <md-button class="md-raised md-primary" ng-if="!auth.isAdmin() || isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_AINEOPPETAJA')" ng-click="save()">{{"main.button.save" | translate}}</md-button>
-    <md-button class="md-raised" ng-if="subjectProgram.status === 'AINEPROGRAMM_STAATUS_I'
-      && (!auth.isAdmin() || isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_AINEOPPETAJA'))" ng-click="completeProgram()">{{"subjectProgram.operation.complete.label" | translate}}</md-button>
-    <md-button class="md-raised" ng-if="subjectProgram.id" ng-href="{{pdfUrl()}}" target="_blank">{{"main.button.print" | translate}}</md-button>
-    <md-button class="md-raised" ng-if="subjectProgram.id && (!auth.isAdmin() || isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_AINEOPPETAJA'))" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
-    <md-button class="md-raised" ng-click="back(getDefaultBack(), subjectProgramForm)">{{"main.button.back" | translate}}</md-button>
+    <ng-include src="'subjectProgram/subject.program.edit.action.buttons.html'"></ng-include>
   </form>
 </div>
 <style>

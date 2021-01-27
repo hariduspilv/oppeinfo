@@ -98,7 +98,7 @@ public class SubjectStudyPeriodPlanControllerTests {
 
         SubjectStudyPeriodPlanDto form = new SubjectStudyPeriodPlanDto();
         form.setSubject(subjectId);
-        form.setStudyPeriod(studyPeriodId);
+        //form.setStudyPeriod(studyPeriodId);
 
         form.setCapacities(new HashSet<>());
         form.getCapacities().add(getCapacity());

@@ -53,21 +53,21 @@ public class LdapService {
         }
         env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
         env.put(Context.PROVIDER_URL, "ldaps://" + params.getUrl() + ":" + params.getPort());
+        //env.put(Context.PROVIDER_URL, "ldaps://devtestad.devtest.test:" + params.getPort());
         env.put(Context.SECURITY_AUTHENTICATION, "simple");
         env.put(Context.SECURITY_PRINCIPAL, username + params.getDomain());
         env.put(Context.SECURITY_CREDENTIALS, password);
 
-        DirContext ctx;
-        try {
-            ctx = new InitialDirContext(env);
-        } catch (@SuppressWarnings("unused") AuthenticationException e) {
-            log.info("Invalid LDAP user credentials - username: {}, schoolId: {}", username, schoolId);
-            return null;
-        } catch (NamingException e) {
-            log.error("Cannot connect to LDAP server", e);
-            return null;
+        DirContext ctx = getContext(env, username, schoolId);
+        boolean userPrincipalName = false; 
+        if (ctx == null) {
+            env.remove(Context.SECURITY_PRINCIPAL);
+            env.put(Context.SECURITY_PRINCIPAL, username);
+            ctx = getContext(env, username, schoolId);
+            userPrincipalName = true;
         }
-
+        // finding user with both sAMAccountName and userPrincipalName failed
+        if (ctx == null) return null;
         String idcode = null;
         NamingEnumeration<SearchResult> answer = null;
         try {
@@ -75,8 +75,8 @@ public class LdapService {
             ctls.setSearchScope(SearchControls.SUBTREE_SCOPE);
             String[] attrIDs = { params.getIdcodeAttribute() };
             ctls.setReturningAttributes(attrIDs);
-
-            answer = ctx.search(params.getBase(), "sAMAccountName=" + username, ctls);
+            
+            answer = ctx.search(params.getBase(), (userPrincipalName ? "userPrincipalName=" : "sAMAccountName=") + username, ctls);
             if (answer.hasMore()) {
                 SearchResult result = answer.next();
                 Attribute attribute = result.getAttributes().get(params.getIdcodeAttribute());
@@ -105,6 +105,20 @@ public class LdapService {
             }
         }
         return idcode;
+    }
+    
+    private DirContext getContext(Hashtable<String, String> env, String username, Long schoolId) {
+        DirContext ctx;
+        try {
+            ctx = new InitialDirContext(env);
+        } catch (@SuppressWarnings("unused") AuthenticationException e) {
+            log.info("Invalid LDAP user credentials - username: {}, schoolId: {}", username, schoolId);
+            return null;
+        } catch (NamingException e) {
+            log.error("Cannot connect to LDAP server", e);
+            return null;
+        }
+        return ctx;
     }
 
     private SchoolLdapParams schoolLdapParams(Long schoolId) {

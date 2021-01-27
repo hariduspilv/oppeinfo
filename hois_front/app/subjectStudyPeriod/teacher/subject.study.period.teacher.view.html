@@ -32,6 +32,7 @@
               </md-radio-group>
             </div>
           </div>
+          <ng-include src="'subjectStudyPeriod/teacher/subject.study.period.teacher.view.action.buttons.html'"></ng-include>
             <div flex="70" layout="row" class="common-label" md-colors="{color: 'background-400'}">
               <span ng-repeat="capacity in capacityTypes">
                 <span ng-if="!$first">|</span>
@@ -40,9 +41,9 @@
             </div>
             <div>&nbsp;</div>
             <md-table-container fixed-column-table fixed-columns="1" resize-table search-criteria-height="250">
-                <table class="subject-study-period pre-last-col-wide">
+                <table class="subject-study-period pre-last-col-wide load-plan">
                     <thead>
-                    <tr>
+                    <tr class="header">
                         <th>
                             <span>{{'subjectStudyPeriod.subjectStudyPeriod' | translate}}</span>
                         </th>
@@ -52,7 +53,7 @@
                     </tr>
                     </thead>
                     <tbody ng-repeat="subject in record.subjects">
-                        <tr class="bold-top-line">
+                        <tr ng-class="{'bold-top-line': !$first}">
                             <td class="bold">
                                 <span>{{currentLanguageNameField(subject)}}</span>
                             </td>
@@ -117,7 +118,7 @@
                           <td>{{capacitiesUtil.toEap(capacitiesUtil.capacitiesSumBySubject(subject.id, teacher.id)) | number: 2}}</td>
                         </tr>
                     </tbody>
-                    <tr class="bold bold-top-line" md-colors="{background: 'background-200'}">
+                    <tr class="bold" ng-class="{'bold-top-line': record.subjects.length > 0}" md-colors="{background: 'background-200'}">
                         <td>{{'subjectStudyPeriod.overall' | translate | uppercase}}</td>
                         <td ng-repeat="type in capacityTypes">{{capacitiesUtil.capacitiesSumByType(type.code, teacher.id)}}</td>
                         <td>{{capacitiesUtil.capacitiesSumOverall(teacher.id)}}</td>
@@ -169,25 +170,6 @@
             </md-table-container>
             <div>&nbsp;</div>
         </div>
-        <div layout="row">
-            <md-button ng-if="canEdit" class="md-raised md-primary" ng-href="#/subjectStudyPeriods/teachers/{{teacher.id}}/{{studyPeriod.id}}/edit?_noback">{{'main.button.change' | translate}}</md-button>
-            <a ng-if="auth.isAdmin() || auth.isTeacher()" ng-href="{{excel(formState.xlsUrl, container)}}" target="_blank" class="md-button md-raised">{{'main.button.printXls' | translate}}</a>
-            <md-button class="md-raised" ng-click="back('#/subjectStudyPeriods/teachers')">{{'main.button.back' | translate}}</md-button>
-        </div>
+        <ng-include src="'subjectStudyPeriod/teacher/subject.study.period.teacher.view.action.buttons.html'"></ng-include>
     </form>
 </div>
-
-<style>
-    tr.bold-top-line,
-    tr.bold-top-line td {
-        border-top: #525252 2px solid !important;
-    }
-    .subject-study-period td,
-    .subject-study-period th {
-        border-bottom: none !important;
-    }
-    .subject-study-period.pre-last-col-wide td:nth-last-child(2),
-    .subject-study-period.pre-last-col-wide th:nth-last-child(2) {
-      min-width: 120px;
-    }
-</style>

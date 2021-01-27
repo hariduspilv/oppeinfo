@@ -13,10 +13,10 @@
       <md-autocomplete ng-if="currentNavItem === 'group'" flex="45" flex-sm="100" flex-xs="100"
         md-search-text="searchText"
         md-min-length="1"
-        md-items="item in getStudentGroups(searchText)" 
+        md-items="item in getStudentGroups(searchText)"
         md-item-text="item.groupCode"
         md-selected-item="criteria.selectedTimetable"
-        md-selected-item-change="showTypeWeek(item.groupId)" 
+        md-selected-item-change="showTypeWeek(item.groupId)"
         md-floating-label="{{'timetable.search.studentGroup' | translate}}"
         md-require-match
         md-no-cache>
@@ -28,11 +28,11 @@
       <md-autocomplete ng-if="currentNavItem === 'teacher'" flex="45" flex-sm="100" flex-xs="100"
         md-search-text="searchText"
         md-min-length="1"
-        md-items="item in getTeachers(searchText)" 
+        md-items="item in getTeachers(searchText)"
         md-item-text="item.firstname + ' ' + item.lastname"
         md-selected-item="criteria.selectedTimetable"
-        md-selected-item-change="showTypeWeek(item.teacherId)" 
-        md-floating-label="{{auth.higher ? ('timetable.search.teacherHigher' | translate) : ('timetable.search.teacherVocational' | translate)}}"
+        md-selected-item-change="showTypeWeek(item.teacherId)"
+        md-floating-label="{{(isHigherSchool ? 'timetable.search.teacherHigher' : 'timetable.search.teacherVocational') | translate}}"
         md-require-match
         md-no-cache>
         <md-item-template>
@@ -43,10 +43,10 @@
       <md-autocomplete ng-if="currentNavItem === 'room'" flex="45" flex-sm="100" flex-xs="100"
         md-search-text="searchText"
         md-min-length="1"
-        md-items="item in getRooms(searchText)" 
+        md-items="item in getRooms(searchText)"
         md-item-text="item.code"
         md-selected-item="criteria.selectedTimetable"
-        md-selected-item-change="showTypeWeek(item.roomId)" 
+        md-selected-item-change="showTypeWeek(item.roomId)"
         md-floating-label="{{'timetable.search.room' | translate}}"
         md-require-match
         md-no-cache>

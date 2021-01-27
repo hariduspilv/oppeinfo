@@ -23,12 +23,14 @@
               <tr md-row>
                 <th md-column>{{'reception.application.csvFileRowNr' | translate}}</th>
                 <th md-column>{{'reception.application.nr' | translate}}</th>
+                <th md-column>{{'reception.application.warning' | translate}}</th>
               </tr>
               </thead>
               <tbody md-body>
               <tr md-row ng-repeat="row in result.successful" ng-class-odd="'odd'" ng-class-even="'even'">
                 <td md-cell>{{::row.rowNr}}</td>
                 <td md-cell>{{::row.message}}</td>
+                <td md-cell>{{::row.warning | translate}}</td>
               </tr>
               </tbody>
             </table>

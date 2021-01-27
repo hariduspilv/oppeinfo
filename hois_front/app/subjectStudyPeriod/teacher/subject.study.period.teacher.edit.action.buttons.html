@@ -1,0 +1,7 @@
+<div layout="row" layout-xs="column">
+  <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
+  <a ng-if="!isNew" ng-href="{{excel(formState.xlsUrl, container)}}" target="_blank" class="md-button md-raised">{{'main.button.printXls' | translate}}</a>
+  <md-button class="md-raised" ng-click="back('#/subjectStudyPeriods/teachers', subjectStudyPeriodTeacherEditForm)">{{'main.button.back' | translate}}</md-button>
+  <md-button class="md-raised" ng-href="#/subjectStudyPeriod/new?teacherId={{record.teacher}}&studyPeriodId={{record.studyPeriod}}"
+             ng-if="record.teacher">{{'subjectStudyPeriod.addSubjectStudyPeriod' | translate}}</md-button>
+</div>

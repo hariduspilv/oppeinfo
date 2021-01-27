@@ -9,8 +9,10 @@
               <input ng-model="criteria.studentName" type="text" md-maxlength="255">
           </md-input-container>
 
-          <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-          </md-input-container>
+          <hois-autocomplete flex="50" flex-sm="100" flex-xs="100" flex ng-model="criteria.studentGroups" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0"
+            ha-attribute="id"  ha-controller="directiveControllers"
+            method="studentgroups" name="studentGroups" label="{{'application.studentGroup'}}" multiple
+            additional-query-params="{userId: auth.isLeadingTeacher() ? auth.user : null, higher: true}" ></hois-autocomplete>
         </div>
 
         <div ng-if="auth.isAdmin() || auth.isLeadingTeacher()" layout="row" layout-sm="column" layout-xs="column">
@@ -30,10 +32,10 @@
         </div>
 
         <div ng-if="auth.isTeacher()" layout="row" layout-sm="column" layout-xs="column">
-            <md-input-container flex="50" flex-sm="100" flex-xs="100">
-                <label>{{'finalThesis.student' | translate}}</label>
-                <input ng-model="criteria.studentName" type="text" md-maxlength="255">
-            </md-input-container>
+          <md-input-container flex="50" flex-sm="100" flex-xs="100">
+              <label>{{'finalThesis.student' | translate}}</label>
+              <input ng-model="criteria.studentName" type="text" md-maxlength="255">
+          </md-input-container>
 
           <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label class="textInput">{{'finalProtocol.protocolStatus' | translate}}</label>
@@ -83,6 +85,13 @@
               </div>
             </div>
           </div>
+        </div>
+
+        <div ng-if="auth.isTeacher()" layout="row" layout-sm="column" layout-xs="column">
+          <hois-autocomplete flex="50" flex-sm="100" flex-xs="100" flex ng-model="criteria.studentGroups" 
+            ha-attribute="id"  ha-controller="directiveControllers"
+            method="studentgroups" name="studentGroups" label="{{'application.studentGroup'}}" multiple
+            additional-query-params="{userId: auth.isLeadingTeacher() ? auth.user : null, higher: true}" ></hois-autocomplete>
         </div>
 
         <div layout="row">

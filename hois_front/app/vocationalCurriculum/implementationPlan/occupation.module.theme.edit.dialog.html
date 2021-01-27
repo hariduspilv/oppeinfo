@@ -26,7 +26,7 @@
             <div layout="row" flex-gt-sm="60" flex="100">
               <md-input-container flex-gt-sm="50" flex="100">
                 <label>EKAP</label>
-                <input ng-model="occupationModuleTheme.credits" name="credits" type="number" min="0" max="999" pattern="^\d+(\.\d{1})?$"
+                <input ng-model="occupationModuleTheme.credits" name="credits" type="number" min="0" max="999" pattern="^\d+(\.\d{1,2})?$"
                   ng-change="setDefaultHours()" required ng-readonly="hasBaseModule">
                 <div ng-messages="dialogForm.credits.$error" ng-show="dialogForm.credits.$dirty">
                   <div ng-message="min">
@@ -36,7 +36,7 @@
                     {{'curriculum.error.max999' | translate}}
                   </div>
                   <div ng-message="pattern">
-                    {{'stateCurriculum.error.decimalPresision' | translate}}
+                    {{'stateCurriculum.error.decimalPresision2' | translate}}
                   </div>
                 </div>
               </md-input-container>

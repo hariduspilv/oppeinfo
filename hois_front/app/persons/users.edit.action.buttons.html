@@ -1,0 +1,5 @@
+<div layout="row" layout-xs="column">
+  <md-button ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
+  <md-button ng-if="user.id" ng-click="delete()" class="md-raised">{{'main.button.delete' | translate}}</md-button>
+  <md-button ng-click="back('#/persons/' + user.person.id + '/edit')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+</div>

@@ -200,10 +200,14 @@ angular.module('hitsaOis')
       module1.compulsoryStudyCredits = 0;
       module1.subjects.forEach(function (e) {
         if (!e.optional) {
-          module1.compulsoryStudyCredits += e.credits;
+          module1.compulsoryStudyCredits = Math.round((module1.compulsoryStudyCredits + e.credits) * 100) / 100;
         }
       });
-      module1.totalCredits = module1.compulsoryStudyCredits + module1.optionalStudyCredits;
+      module1.totalCredits = module1.compulsoryStudyCredits = Math.round((module1.compulsoryStudyCredits + module1.optionalStudyCredits) * 100) / 100;
+    };
+
+    $scope.setTotalCredits = function() {
+      $scope.data.totalCredits = Math.round(($scope.data.optionalStudyCredits + $scope.data.compulsoryStudyCredits) * 100) / 100;
     };
 
     function validationPassed() {

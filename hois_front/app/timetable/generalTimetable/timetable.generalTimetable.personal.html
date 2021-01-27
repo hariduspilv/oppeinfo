@@ -1,4 +1,4 @@
-<div ng-if="auth && auth.school" ng-include="'timetable/generalTimetable/timetable.generalTimetable.navbar.html'"></div>
+<div ng-if="auth && auth.school && !criteria.personalId" ng-include="'timetable/generalTimetable/timetable.generalTimetable.navbar.html'"></div>
 
 <div>
   <div ng-show="studyYears">

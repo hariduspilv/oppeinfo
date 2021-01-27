@@ -30,7 +30,7 @@
               <td md-cell>{{currentLanguageNameField(studyYearMap[row.studyYearId])}}</td>
               <td md-cell style="width: 100px; padding: 0 12px;" ng-repeat="coef in coefficients">
                 <md-input-container>
-                  <input ng-model="row.loads[coef.code]" name="loadPercentage" type="number" min="0" max="100"
+                  <input ng-model="row.loads[coef.code]" name="loadPercentage" type="number" min="0" max="999"
                          aria-label="{{coef.value}}" style="height: 24px; padding-top: 2px;">
                 </md-input-container>
               </td>

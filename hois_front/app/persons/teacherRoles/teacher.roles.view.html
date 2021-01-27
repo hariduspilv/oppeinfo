@@ -3,11 +3,11 @@
 <div class="ois-form-layout-padding form-readonly" layout="column" ng-cloak>
   <form name="roleForm" class="ois-form-layout">
     <div layout="column" flex>
-      <md-input-container class="readonly">
+      <md-input-container class="readonly readonly-reverse-margin">
         <label>{{'userRole.nameEt' | translate}}</label>
         <hois-value value="role.teacherOccupation.nameEt"></hois-value>
       </md-input-container>
-      <md-input-container class="readonly">
+      <md-input-container class="readonly readonly-reverse-margin">
         <label>{{'userRole.nameEn' | translate}}</label>
         <hois-value value="role.teacherOccupation.nameEn"></hois-value>
       </md-input-container>
@@ -36,6 +36,7 @@
                               md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
       </md-table-container>
     </hois-collapsable>
+    <ng-include src="'persons/teacherRoles/teacher.roles.view.action.buttons.html'"></ng-include>
     <div flex>
       <md-table-container>
         <table md-table class="secondary-table">
@@ -54,16 +55,11 @@
         </table>
       </md-table-container>
     </div>
-    <md-button ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_KASUTAJA')" ng-href="#/persons/teacher-roles/{{role.id}}/edit?_noback" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
-    <md-button ng-click="back('#/persons/teacher-roles?_menu')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+    <ng-include src="'persons/teacherRoles/teacher.roles.view.action.buttons.html'"></ng-include>
   </form>
 </div>
 
 <style>
-  .readonly {
-    margin-bottom: 0px !important;
-    margin-top: 18px !important;
-  }
   .hois-collapse2 .hois-collapse-header {
     font-size: 14px;
   }

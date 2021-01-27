@@ -1,0 +1,24 @@
+<div ng-if="application.student" layout="row" layout-xs="column">
+  <md-button class="md-raised md-primary" ng-if="canChangeTransferStatus" type="submit">{{'main.button.save' | translate}}</md-button>
+  <md-button class="md-raised md-default" ng-if="(auth.isStudent() || auth.isAdmin() || auth.isLeadingTeacher()) && application.status === 'VOTA_STAATUS_K'"
+             ng-click="submit()">{{'main.button.submit' | translate}}</md-button>
+  <md-button class="md-raised md-default" ng-if="(auth.isStudent() || auth.isAdmin() || auth.isLeadingTeacher()) && application.status === 'VOTA_STAATUS_K'"
+             ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
+  <md-button class="md-raised md-default" ng-if="application.canSendToConfirm"
+             ng-click="sendToConfirm()">{{'apel.sendToConfirm' | translate}}</md-button>
+  <md-button class="md-raised md-default" ng-if="application.canSendToCommittee" ng-click="sendToCommittee()"
+             ng-disabled="!application.committeeIds || application.committeeIds.length === 0">{{'apel.sendToCommittee' | translate}}</md-button>
+  <md-button class="md-raised md-default" ng-if="application.canSendBackToCreation"
+             ng-click="sendBackToCreation()">{{'apel.sendBackToCreation' | translate}}</md-button>
+  <md-button class="md-raised md-default" ng-if="application.canConfirm"
+             ng-click="confirm()">{{'apel.confirm' | translate}}</md-button>
+  <md-button class="md-raised md-default" ng-if="application.canSendBack" ng-click="sendBack()">{{'apel.sendBack' | translate}}</md-button>
+  <md-button class="md-raised md-default" ng-if="application.canReject" ng-click="reject()">{{'apel.reject' | translate}}</md-button>
+  <md-button class="md-raised md-default" ng-if="application.canRemoveConfirmation"
+             ng-click="removeConfirmation()">{{'apel.removeConfirmation' | translate}}</md-button>
+  <a href="{{applicationPdfUrl}}" target="_blank" class="md-button md-raised">{{'main.button.print' | translate}}</a>
+  <md-button class="md-raised md-default" ng-click="back('/#/apelApplication/')">{{'main.button.back' | translate}}</md-button>
+</div>
+<div ng-if="!application.student" layout="row">
+  <md-button class="md-raised md-default" ng-click="back('/#/apelApplication/')">{{'main.button.back' | translate}}</md-button>
+</div>

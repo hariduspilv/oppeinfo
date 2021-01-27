@@ -2,6 +2,7 @@
 
 angular.module('hitsaOis').controller('FinalThesisEditController', function ($location, $route, $scope, QueryUtils, config, dialogService, message, DataUtils) {
   $scope.auth = $route.current.locals.auth;
+  $scope.formState = {};
   var endpoint = '/finalThesis';
   var FinalThesisEndpoint = QueryUtils.endpoint(endpoint);
   var isEditForm = $route.current.locals.params.isEdit;
@@ -10,28 +11,30 @@ angular.module('hitsaOis').controller('FinalThesisEditController', function ($lo
   $scope.cercsTypeChanged = cercsTypeChanged;
 
   function entityToForm(entity) {
-    entity.supervisors.forEach(function (supervisor) {
-      supervisor.canEdit = !$scope.auth.isTeacher() || supervisor.isExternal || supervisor.teacher.id !== $scope.auth.teacher;
-    });
-    if (isEditForm && entity.curriculumGrade) {
-      entity.curriculumGrade = entity.curriculumGrade.id;
+    $scope.thesis = entity.finalThesis;
+    if ($scope.thesis !== null) {
+      $scope.thesis.supervisors.forEach(function (supervisor) {
+        supervisor.canEdit = !$scope.auth.isTeacher() || supervisor.isExternal || supervisor.teacher.id !== $scope.auth.teacher;
+      });
+      if (isEditForm && $scope.thesis.curriculumGrade) {
+        $scope.thesis.curriculumGrade = $scope.thesis.curriculumGrade.id;
+      }
+      if (isEditForm && $scope.thesis.cercses.length < 100) {
+        $scope.thesis.cercses.push({});
+      }
+    } else {
+      newThesis();
     }
-    if (isEditForm && entity.cercses.length < 100) {
-      entity.cercses.push({});
-    }
-    $scope.thesis = entity;
+    setStudentInfo(entity);
+    $scope.isStudentActive = entity.isStudentActive;
+    $scope.finalThesisExpected = entity.finalThesisExpected;
+    $scope.noFinalExamDeclaration = entity.noFinalExamDeclaration;
+    $scope.specialitySet = entity.specialitySet;
+    $scope.allRequirementsMet = entity.isStudentActive && entity.finalThesisExpected &&
+      entity.noFinalExamDeclaration && entity.specialitySet;
   }
 
-  var entity = $route.current.locals.entity;
-  if (angular.isDefined(entity)) {
-    entityToForm(entity);
-    
-    if (!$scope.thesis.canBeEdited && $route.current.$$route.originalPath.indexOf("view") === -1) {
-      $location.url(endpoint + '/' + $scope.thesis.id + '/view?_noback');
-    }
-
-    $scope.finalThesisPdfUrl = config.apiUrl + endpoint + '/print/' + entity.id + '/finalThesis.pdf';
-  } else {
+  function newThesis() {
     $scope.thesis = {
       hasDraft: false,
       supervisors: [],
@@ -39,25 +42,42 @@ angular.module('hitsaOis').controller('FinalThesisEditController', function ($lo
     };
 
     if ($scope.auth.isStudent()) {
-      $scope.thesis.student = {id: $scope.auth.student}; 
+      $scope.thesis.student = {id: $scope.auth.student};
     }
   }
 
-  if (angular.isUndefined(entity) && $scope.auth.isStudent()) {
-    QueryUtils.endpoint(endpoint + '/studentFinalThesis').get().$promise.then(function (result) {
-      if (result.finalThesisRequired) {
-        if (result.finalThesis) {
-          $location.url(endpoint + '/' + result.finalThesis + '/view?_noback');
+  var entity = $route.current.locals.entity;
+  if (angular.isDefined(entity)) {
+    entity.$promise.then(function (result) {
+      if (result !== null) {
+        entityToForm(result);
+        if (angular.isDefined($scope.thesis.id) && $scope.thesis.id !== null) {
+          if (!$scope.thesis.canBeEdited && isEditForm) {
+            $location.url(endpoint + '/' + $scope.thesis.id + '/view?_noback');
+          }
+          $scope.finalThesisPdfUrl = config.apiUrl + endpoint + '/print/' + $scope.thesis.id + '/finalThesis.pdf';
         }
-      } else {
-        $location.url(endpoint);
       }
     });
   }
 
-  $scope.$watch('thesis.student', function () {
-    if ($scope.thesis.student) {
-      QueryUtils.endpoint(endpoint + '/student/' + $scope.thesis.student.id).get(function (result) {
+  if (angular.isUndefined(entity) && $scope.auth.isStudent()) {
+    $scope.formState.student = { id:  $scope.auth.student };
+  }
+
+  $scope.$watch('formState.student', function () {
+    if ($scope.formState.student !== null && angular.isDefined($scope.formState.student)) {
+      var studentId = $scope.formState.student.id;
+      QueryUtils.endpoint(endpoint + '/studentFinalThesis').get({ studentId: studentId }, function (result) {
+        entityToForm(result);
+        $scope.thesis.student = { id: studentId };
+      });
+    }
+  });
+
+  function setStudentInfo(entity) {
+    var result = entity.student;
+    if (angular.isDefined(result)) {
         $scope.thesis.person = result.person;
         $scope.thesis.curriculumVersion = result.curriculumVersion;
         $scope.thesis.studentGroup = result.studentGroup;
@@ -79,9 +99,8 @@ angular.module('hitsaOis').controller('FinalThesisEditController', function ($lo
             $scope.thesis.cercses.push({});
           }
         }
-      });
     }
-  });
+  }
 
   $scope.openAddSupervisorDialog = function (supervisorIndex) {
     var supervisorsCount = $scope.thesis.supervisors ? $scope.thesis.supervisors.length : 0;
@@ -96,7 +115,7 @@ angular.module('hitsaOis').controller('FinalThesisEditController', function ($lo
         } else {
           dialogScope.supervisor = {isExternal: false};
         }
-        
+
         dialogScope.$watch("supervisor.teacher", function () {
           if (dialogScope.supervisor && dialogScope.supervisor.teacher) {
             QueryUtils.endpoint(endpoint + '/teacher/').get({teacherId: dialogScope.supervisor.teacher.id}, function (result) {
@@ -107,11 +126,11 @@ angular.module('hitsaOis').controller('FinalThesisEditController', function ($lo
             });
           }
         });
-  
+
         dialogScope.typeChanged = function (isExternal) {
           dialogScope.supervisor = {isExternal: isExternal};
         };
-  
+
         dialogScope.removeSupervisor = function () {
           dialogService.confirmDialog({prompt: 'finalThesis.supervisorDeleteConfirm'}, function() {
             $scope.thesis.supervisors.splice(supervisorIndex, 1);
@@ -147,7 +166,7 @@ angular.module('hitsaOis').controller('FinalThesisEditController', function ($lo
           }
           dialogScope.preventBtn = false;
         };
-  
+
       }, function (submittedDialogScope) {
         var modifiedSupervisor = submittedDialogScope.supervisor;
         removePreviousPrimarySupervisor(modifiedSupervisor);
@@ -183,12 +202,12 @@ angular.module('hitsaOis').controller('FinalThesisEditController', function ($lo
   }
 
   function isValid() {
-    $scope.finalThesisForm.$setSubmitted();
+    $scope.formState.finalThesisForm.$setSubmitted();
     if($scope.thesis.supervisors.length === 0) {
       message.error('finalThesis.error.supervisorRequired');
       return false;
     }
-    
+
     // Check supervisor data if outer.
     if ($scope.thesis.isMagisterOrDoctoralOrIntegratedStudy) {
       for (var i = 0; i < $scope.thesis.supervisors.length; i++) {
@@ -200,14 +219,14 @@ angular.module('hitsaOis').controller('FinalThesisEditController', function ($lo
         }
       }
     }
-    
+
     // For view form
     if ($scope.thesis.isMagisterOrDoctoralOrIntegratedStudy && $scope.thesis.cercses.length === 0) {
       message.error('finalThesis.error.cercsRequired');
       return false;
     }
 
-    if(!$scope.finalThesisForm.$valid) {
+    if(!$scope.formState.finalThesisForm.$valid) {
       message.error('main.messages.form-has-errors');
       return false;
     }
@@ -220,20 +239,43 @@ angular.module('hitsaOis').controller('FinalThesisEditController', function ($lo
       if ($scope.thesis.cercses.length > 0) {
         cercsTypeChanged($scope.thesis.cercses.length - 1, $scope.thesis.cercses[$scope.thesis.cercses.length - 1].cercsType, false, true);
       }
-      var finalThesis = new FinalThesisEndpoint($scope.thesis);
 
       if (angular.isDefined($scope.thesis.id)) {
-        finalThesis.$update().then(function (result) {
-          message.info('main.messages.update.success');
-          entityToForm(result);
-        }).catch(angular.noop);
+        QueryUtils.endpoint(endpoint + '/' + $scope.thesis.id + '/isStudentActive').get().$promise.then(function (result) {
+          if (!result.isActive) {
+            dialogService.confirmDialog({ prompt: 'finalThesis.saveNotActiveStudentConfirm' }, function () {
+              updateFinalThesis();
+            });
+          } else {
+            updateFinalThesis();
+          }
+        });
       } else {
+        var finalThesis = new FinalThesisEndpoint($scope.thesis);
         finalThesis.$save().then(function (result) {
           message.info('main.messages.update.success');
-          $location.url(endpoint + '/' + result.id + '/edit?_noback');
+          $location.url(endpoint + '/' + result.finalThesis.id + '/edit?_noback');
         }).catch(angular.noop);
       }
     }
+  };
+
+  function updateFinalThesis() {
+    var finalThesis = new FinalThesisEndpoint($scope.thesis);
+    finalThesis.$update().then(function (result) {
+      message.info('main.messages.update.success');
+      entityToForm(result);
+    }).catch(angular.noop);
+  }
+
+  $scope.delete = function () {
+    dialogService.confirmDialog({ prompt: 'finalThesis.deleteConfirm' }, function () {
+      var finalThesis = new FinalThesisEndpoint($scope.thesis);
+      finalThesis.$delete().then(function () {
+        message.info('main.messages.delete.success');
+        $location.url(endpoint);
+      });
+    });
   };
 
   $scope.confirm = function () {

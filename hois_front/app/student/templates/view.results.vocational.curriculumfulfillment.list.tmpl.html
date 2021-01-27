@@ -12,15 +12,15 @@
           <div ng-if="moduleResultById[module.curriculumModule.id] && moduleResultById[module.curriculumModule.id].grade && !positiveGrade(moduleResultById[module.curriculumModule.id].grade.code)"
             class="bold" md-colors="{color: 'red-500'}">{{moduleResultById[module.curriculumModule.id].grade | hoisVocationalGrade}} ({{moduleResultById[module.curriculumModule.id].credits}} {{'student.result.ekap' | translate}})</div>
           <div ng-if="(!moduleResultById[module.curriculumModule.id] || !moduleResultById[module.curriculumModule.id].grade) && module.moduleBacklog < 0"
-            md-colors="{color: 'accent'}">{{module.moduleBacklog | number: 1}} {{'student.result.ekap' | translate}}</div>
+            md-colors="{color: 'accent'}">{{module.moduleBacklog | number: 2}} {{'student.result.ekap' | translate}}</div>
           <div ng-if="(!moduleResultById[module.curriculumModule.id] || (moduleResultById[module.curriculumModule.id] && !moduleResultById[module.curriculumModule.id].grade)) && module.moduleBacklog >= 0"
             md-colors="{color: 'accent'}">{{'student.result.moduleNotGraded' | translate}}</div>
         </div>
         <div flex-gt-md="30" flex-offset-gt-md="5" layout="row" layout-align-gt-md="center center">
           <div ng-if="!positiveGrade(moduleResultById[module.curriculumModule.id].grade.code)" layout="row" layout-align-gt-md="center center">
-            <div>{{'student.result.totalRequired' | translate}}: {{module.curriculumModule.credits | number: 1}}&nbsp;&nbsp;</div>
-            <div>{{'student.result.totalSubmitted' | translate}}: {{(moduleResultById[module.curriculumModule.id] ? moduleResultById[module.curriculumModule.id].totalSubmitted : 0) | number: 1}}&nbsp;&nbsp;</div>
-            <div>{{'student.result.difference' | translate}}: <span md-colors="module.moduleBacklog < 0 ? {color: 'warn-A400'} : {}">{{module.moduleBacklog | number: 1}}</span></div>
+            <div>{{'student.result.totalRequired' | translate}}: {{module.curriculumModule.credits | number: 2}}&nbsp;&nbsp;</div>
+            <div>{{'student.result.totalSubmitted' | translate}}: {{(moduleResultById[module.curriculumModule.id] ? moduleResultById[module.curriculumModule.id].totalSubmitted : 0) | number: 2}}&nbsp;&nbsp;</div>
+            <div>{{'student.result.difference' | translate}}: <span md-colors="module.moduleBacklog < 0 ? {color: 'warn-A400'} : {}">{{module.moduleBacklog | number: 2}}</span></div>
           </div>
         </div>
       </div>

@@ -24,7 +24,7 @@ angular.module('hitsaOis').controller('TimetableEditController', ['$scope', 'mes
         $scope.timetable.studyYears = null;
         $scope.timetable.currentStudyPeriod = null;
         $scope.timetable.studyPeriods = null;
-        
+
       });
     } else {
       $scope.timetable = new Endpoint();
@@ -55,7 +55,7 @@ angular.module('hitsaOis').controller('TimetableEditController', ['$scope', 'mes
     }
     $scope.studyYearChanged = function () {
       if (!studyPeriodBelongsToStudyYear($scope.timetable.studyYear, $scope.timetable.studyPeriod)) {
-        $scope.timetable.studyPeriod = null; 
+        $scope.timetable.studyPeriod = null;
       }
     };
 
@@ -67,7 +67,7 @@ angular.module('hitsaOis').controller('TimetableEditController', ['$scope', 'mes
         }
       }
       return false;
-    } 
+    }
 
     $scope.$watch('timetable.startDate', function () {
       var startDate = $scope.timetable.startDate;
@@ -186,7 +186,7 @@ angular.module('hitsaOis').controller('TimetableEditController', ['$scope', 'mes
         message.error('main.messages.form-has-errors');
         return;
       }
-      
+
       if (angular.isDefined(id)) {
         $scope.timetable.$update({id: id}).then(function () {
           message.info('main.messages.update.success');
@@ -203,6 +203,7 @@ angular.module('hitsaOis').controller('TimetableEditController', ['$scope', 'mes
 ]).controller('TimetableViewController', ['$scope', 'message', 'QueryUtils', 'DataUtils', '$route', '$location', '$rootScope', 'Classifier', "USER_ROLES", "AuthService",
   function ($scope, message, QueryUtils, DataUtils, $route, $location, $rootScope, Classifier, USER_ROLES, AuthService) {
     $scope.timetableId = $route.current.params.id;
+    $scope.formState = {};
     $scope.currentLanguageNameField = $rootScope.currentLanguageNameField;
     var clMapper = Classifier.valuemapper({curriculumStudyLevelCode: 'OPPEASTE'});
     $scope.canConfirm = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_K_TEEMAOIGUS_TUNNIPLAAN);
@@ -213,15 +214,33 @@ angular.module('hitsaOis').controller('TimetableEditController', ['$scope', 'mes
       $scope.timetable.startDate = new Date($scope.timetable.startDate);
     });
 
+    $scope.searchTimetableTeachers = function (text) {
+      return DataUtils.filterArrayByText($scope.timetable.teachers, text, function (teacher, regex) {
+        return regex.test($scope.currentLanguageNameField(teacher).toUpperCase());
+      });
+    };
+
+    $scope.teacherChanged = function () {
+      if (angular.isDefined($scope.formState.teacher) && $scope.formState.teacher !== null) {
+        $location.url('/timetable/' + $scope.timetable.id + '/createHigherPlan/teacher/' + $scope.formState.teacher.id);
+      }
+    };
+
     $scope.confirm = function() {
       QueryUtils.endpoint('/timetables/' + $scope.timetableId + '/confirm').put({}, function() {
-        $route.reload();    
+        $route.reload();
       });
     };
 
     $scope.publicize = function() {
       QueryUtils.endpoint('/timetables/' + $scope.timetableId + '/publicize').put({}, function() {
-        $route.reload();    
+        $route.reload();
+      });
+    };
+
+    $scope.backToInserted = function() {
+      QueryUtils.endpoint('/timetables/' + $scope.timetableId + '/backToInserted').put({}, function() {
+        $route.reload();
       });
     };
   }

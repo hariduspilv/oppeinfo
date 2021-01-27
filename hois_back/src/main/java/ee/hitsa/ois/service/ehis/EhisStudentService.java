@@ -870,7 +870,7 @@ public class EhisStudentService extends EhisService {
         qb.requiredCriteria("d.type_code = :directiveTypeValis", "directiveTypeValis", DirectiveType.KASKKIRI_VALIS.name());
         qb.filter("d.status_code = :DIRECTIVE_CONFIRMED");
         qb.filter("ds.canceled = false");
-        qb.filter("c.is_higher");
+//        qb.filter("c.is_higher");
         qb.groupBy("ds.id, VALISKATK.id");
         return qb;
     }
@@ -894,6 +894,8 @@ public class EhisStudentService extends EhisService {
         qb.requiredCriteria(
                 "coalesce(case when VALISKATK.start_date is not null then VALISKATK.start_date - interval '1 day' else null end, spEnd.end_date, ds.end_date) <= :endThru",
                 "endThru", criteria.getThru());
+        // any old vocational directive without abroad program should be ignored
+        qb.filter("ds.abroad_programme_code is not null");
         qb.filter("not (" + SQL_WHERE_CURRICULUM_JOINTMENTOR + ")");
         return JpaQueryUtil.pagingResult(qb, "coalesce(VALISKATK.id, ds.id) as directiveId, " // In case if we have VALISKATK then it should process VALISKATK directive, not just VALIS.
                 // Max nominal study

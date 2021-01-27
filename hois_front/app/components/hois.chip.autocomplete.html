@@ -19,7 +19,7 @@
       md-items="item in haSearch(ngSearchText)"
       placeholder="{{label | translate}}"
       ng-hide="ngHolder.length > maxChips" flex>
-      <span md-highlight-text="ngSearchText" ng-style="{'color': warningParam && item['{{warningParam}}'] ? 'red' : 'inherit'}">{{display ? item[display] : $root.currentLanguageNameField(item)}}</span>
+      <span md-highlight-text="ngSearchText" md-highlight-flags="i" ng-style="{'color': warningParam && item['{{warningParam}}'] ? 'red' : 'inherit'}">{{display ? item[display] : $root.currentLanguageNameField(item)}}</span>
     </md-autocomplete>
     <md-chip-template>
       <span>

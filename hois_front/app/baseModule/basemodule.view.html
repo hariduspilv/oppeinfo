@@ -1,5 +1,7 @@
 <div class="ois-form-layout-padding nomargin">
     <form ng-cloak name="baseModuleForm">
+        <ng-include src="'baseModule/basemodule.view.action.buttons.html'"></ng-include>
+        <div>&nbsp;</div>
         <div layout="column" ng-cloak>
             <div layout="row" flex>
                 <md-input-container flex="90" flex-sm="75" flex-xs="75">
@@ -221,8 +223,7 @@
             </div>
         </div>
         <div>&nbsp;</div>
-        <md-button class="md-raised md-primary" ng-if="canEdit" ng-click="edit()">{{"main.button.edit" | translate}}</md-button>
-        <md-button class="md-raised" ng-click="back('#/basemodule')">{{"main.button.back" | translate}}</md-button>
+        <ng-include src="'baseModule/basemodule.view.action.buttons.html'"></ng-include>
     </form>
 </div>
 <style>

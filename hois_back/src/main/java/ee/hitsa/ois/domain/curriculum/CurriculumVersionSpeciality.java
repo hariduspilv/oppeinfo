@@ -26,6 +26,9 @@ public class CurriculumVersionSpeciality extends BaseEntityWithId {
     @OneToMany(mappedBy = "speciality", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<CurriculumVersionHigherModuleSpeciality> moduleSpecialities;
     
+    @OneToMany(mappedBy = "curriculumVersionSpeciality", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<CurriculumVersionNominalCapacity> nominalCapacities;
+    
     public Set<CurriculumVersionHigherModuleSpeciality> getModuleSpecialities() {
         return moduleSpecialities != null ? moduleSpecialities : (moduleSpecialities = new HashSet<>());
     }
@@ -48,5 +51,13 @@ public class CurriculumVersionSpeciality extends BaseEntityWithId {
     }
     public void setCurriculumSpeciality(CurriculumSpeciality curriculumSpeciality) {
         this.curriculumSpeciality = curriculumSpeciality;
+    }
+
+    public Set<CurriculumVersionNominalCapacity> getNominalCapacities() {
+        return nominalCapacities;
+    }
+
+    public void setNominalCapacities(Set<CurriculumVersionNominalCapacity> nominalCapacities) {
+        this.nominalCapacities = nominalCapacities;
     }
 }

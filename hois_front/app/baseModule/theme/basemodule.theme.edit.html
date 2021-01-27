@@ -8,7 +8,7 @@
         <div layout="row">
           <md-input-container>
             <label>{{'theme.capacity' | translate}} ({{'basemodule.ekap' | translate}})</label>
-            <input ng-model="theme.credits" name="credits" type="number" min="0" max="999" pattern="^\d+(\.\d{1})?$"
+            <input ng-model="theme.credits" name="credits" type="number" min="0" max="999" pattern="^\d+(\.\d{1,2})?$"
               ng-change="setDefaultHours()" required>
             <div ng-messages="themeForm.credits.$error" ng-show="themeForm.credits.$dirty">
               <div ng-message="min">
@@ -18,7 +18,7 @@
                 {{'curriculum.error.max999' | translate}}
               </div>
               <div ng-message="pattern">
-                {{'stateCurriculum.error.decimalPresision' | translate}}
+                {{'stateCurriculum.error.decimalPresision2' | translate}}
               </div>
             </div>
           </md-input-container>

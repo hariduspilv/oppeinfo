@@ -12,12 +12,14 @@ import javax.persistence.OneToMany;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.subject.subjectprogram.SubjectProgram;
+import ee.hitsa.ois.domain.subject.subjectprogram.SubjectProgramTeacher;
 import ee.hitsa.ois.domain.teacher.Teacher;
 
 @Entity
 public class SubjectStudyPeriodTeacher extends BaseEntityWithId {
 
     private Boolean isSignatory;
+    private Boolean isDiplomaSupplement;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(updatable = false, nullable = false)
@@ -28,7 +30,7 @@ public class SubjectStudyPeriodTeacher extends BaseEntityWithId {
     private SubjectStudyPeriod subjectStudyPeriod;
     
     @OneToMany(mappedBy="subjectStudyPeriodTeacher", cascade=CascadeType.ALL, orphanRemoval=true)
-    private Set<SubjectProgram> subjectPrograms = new HashSet<>();
+    private Set<SubjectProgramTeacher> subjectProgramTeachers = new HashSet<>();
     
     @OneToMany(mappedBy="subjectStudyPeriodTeacher", cascade=CascadeType.ALL, orphanRemoval=true)
     private Set<SubjectStudyPeriodTeacherCapacity> capacities = new HashSet<>();
@@ -39,6 +41,14 @@ public class SubjectStudyPeriodTeacher extends BaseEntityWithId {
 
     public void setIsSignatory(Boolean isSignatory) {
         this.isSignatory = isSignatory;
+    }
+
+    public Boolean getIsDiplomaSupplement() {
+        return isDiplomaSupplement;
+    }
+
+    public void setIsDiplomaSupplement(Boolean isDiplomaSupplement) {
+        this.isDiplomaSupplement = isDiplomaSupplement;
     }
 
     public Teacher getTeacher() {
@@ -57,13 +67,13 @@ public class SubjectStudyPeriodTeacher extends BaseEntityWithId {
         this.subjectStudyPeriod = subjectStudyPeriod;
     }
 
-    public Set<SubjectProgram> getSubjectPrograms() {
-        return subjectPrograms == null ? (subjectPrograms = new HashSet<>()) : subjectPrograms;
+    public Set<SubjectProgramTeacher> getSubjectProgramTeachers() {
+        return subjectProgramTeachers != null ? subjectProgramTeachers : (subjectProgramTeachers = new HashSet<>());
     }
 
-    public void setSubjectPrograms(Set<SubjectProgram> subjectPrograms) {
-        getSubjectPrograms().clear();
-        getSubjectPrograms().addAll(subjectPrograms);
+    public void setSubjectProgramTeachers(Set<SubjectProgramTeacher> subjectProgramTeachers) {
+        getSubjectProgramTeachers().clear();
+        getSubjectProgramTeachers().addAll(subjectProgramTeachers);
     }
 
     public Set<SubjectStudyPeriodTeacherCapacity> getCapacities() {

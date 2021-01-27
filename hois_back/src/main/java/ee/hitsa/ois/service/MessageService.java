@@ -4,26 +4,36 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDateTime;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsStringList;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import javax.persistence.TypedQuery;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.enums.Language;
+import ee.hitsa.ois.util.EnumUtil;
+import ee.hitsa.ois.web.commandobject.SearchCommand;
+import ee.hitsa.ois.web.commandobject.message.MessageDeleteCommand;
+import ee.hitsa.ois.web.dto.message.MessageFormDto;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -36,7 +46,6 @@ import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentGroup;
-import ee.hitsa.ois.domain.student.StudentRepresentative;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.domain.timetable.JournalStudent;
 import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodStudentGroup;
@@ -52,15 +61,15 @@ import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.StudentUtil;
-import ee.hitsa.ois.web.commandobject.MessageForm;
-import ee.hitsa.ois.web.commandobject.MessageForm.Receiver;
-import ee.hitsa.ois.web.commandobject.MessageSearchCommand;
+import ee.hitsa.ois.web.commandobject.message.MessageForm;
+import ee.hitsa.ois.web.commandobject.message.MessageForm.Receiver;
+import ee.hitsa.ois.web.commandobject.message.MessageSearchCommand;
 import ee.hitsa.ois.web.commandobject.UsersSearchCommand;
 import ee.hitsa.ois.web.commandobject.student.StudentGroupSearchCommand;
 import ee.hitsa.ois.web.commandobject.student.StudentSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
-import ee.hitsa.ois.web.dto.MessageReceiverDto;
-import ee.hitsa.ois.web.dto.MessageSearchDto;
+import ee.hitsa.ois.web.dto.message.MessageReceiverDto;
+import ee.hitsa.ois.web.dto.message.MessageSearchDto;
 import ee.hitsa.ois.web.dto.SubjectDto;
 import ee.hitsa.ois.web.dto.student.StudentGroupSearchDto;
 import ee.hitsa.ois.web.dto.studymaterial.JournalDto;
@@ -97,6 +106,11 @@ public class MessageService {
     private EntityManager em;
     @Autowired
     private MailService mailService;
+    @Autowired
+    private SchoolService schoolService;
+
+    @Value("${hois.mail.deleteMinDays}")
+    private Integer deleteMinDays;
     
 
     public Page<MessageSearchDto> show(HoisUserDetails user, Pageable pageable) {
@@ -126,6 +140,9 @@ public class MessageService {
         qb.optionalCriteria("m.inserted <= :sentThru", "sentThru", criteria.getSentThru(), DateUtils::lastMomentOfDay);
         qb.optionalContains("m.subject", "subject", criteria.getSubject());
 
+        if (Boolean.TRUE.equals(criteria.getDelete())) {
+            qb.requiredCriteria("m.inserted <= :allowedTime", "allowedTime", LocalDateTime.now().minusDays(deleteMinDays));
+        }
         return fetchSent(qb, pageable);
     }
 
@@ -138,6 +155,9 @@ public class MessageService {
         qb.optionalCriteria("m.inserted <= :sentThru", "sentThru", criteria.getSentThru(), DateUtils::lastMomentOfDay);
         qb.optionalContains("m.subject", "subject", criteria.getSubject());
 
+        if (Boolean.TRUE.equals(criteria.getDelete())) {
+            qb.requiredCriteria("m.inserted <= :allowedTime", "allowedTime", LocalDateTime.now().minusDays(deleteMinDays));
+        }
         return fetchSent(qb, pageable);
     }
 
@@ -160,9 +180,26 @@ public class MessageService {
     }
 
     public Page<MessageSearchDto> searchReceived(HoisUserDetails user, MessageSearchCommand criteria, Pageable pageable) {
+        return searchReceivedInternal(user, criteria, pageable, false);
+    }
+
+    public Page<MessageSearchDto> searchReceivedAutomatic(HoisUserDetails user, MessageSearchCommand criteria, Pageable pageable) {
+        return searchReceivedInternal(user, criteria, pageable, true);
+    }
+
+    private Page<MessageSearchDto> searchReceivedInternal(HoisUserDetails user, MessageSearchCommand criteria,
+                                                          Pageable pageable, boolean automatic) {
+
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(RECEIVED_MESSAGES_FROM).sort(pageable);
+        qb.requiredCriteria("mr.status_code != :deleted", "deleted", MessageStatus.TEATESTAATUS_K.name());
         qb.requiredCriteria("mr.person_id = :personId", "personId", user.getPersonId());
-        /**
+        qb.requiredCriteria("m.person_id" + (automatic ? " = " : " != ") + ":senderId",
+                "senderId", PersonUtil.AUTOMATIC_SENDER_ID);
+        if (Boolean.TRUE.equals(criteria.getDelete())) {
+            qb.requiredCriteria("m.inserted <= :allowedTime", "allowedTime", LocalDateTime.now().minusDays(deleteMinDays));
+            qb.requiredCriteria("mr.status_code != :unread", "unread", MessageStatus.TEATESTAATUS_U.name());
+        }
+        /*
          * Usually users can only view messages sent by others from the same school.
          * However, they also need to have possibility to see messages from users with no school,
          * such as main administrator.
@@ -175,7 +212,9 @@ public class MessageService {
         qb.optionalCriteria("m.inserted >= :sentFrom", "sentFrom", criteria.getSentFrom(), DateUtils::firstMomentOfDay);
         qb.optionalCriteria("m.inserted <= :sentThru", "sentThru", criteria.getSentThru(), DateUtils::lastMomentOfDay);
         Page<Object[]> messages = JpaQueryUtil.pagingResult(qb, RECEIVED_MESSAGES_SELECT, em, pageable);
-        return messages.map(d -> new MessageSearchDto(resultAsLong(d, 0), resultAsString(d, 1), null, resultAsLocalDateTime(d, 3), PersonUtil.fullname(resultAsString(d, 5), resultAsString(d, 6)), resultAsBoolean(d, 4), resultAsLong(d, 7)));
+        return messages.map(d -> new MessageSearchDto(resultAsLong(d, 0), resultAsString(d, 1),
+                null, resultAsLocalDateTime(d, 3), PersonUtil.fullname(resultAsString(d, 5),
+                resultAsString(d, 6)), resultAsBoolean(d, 4), resultAsLong(d, 7)));
     }
 
     public Map<String, Long> unreadReceivedCount(HoisUserDetails user) {
@@ -196,7 +235,7 @@ public class MessageService {
         message.setSendersSchool(EntityUtil.getOptionalOne(School.class, user.getSchoolId(), em));
         message.setSender(em.getReference(Person.class, user.getPersonId()));
         message.setSendersRole(em.getReference(Classifier.class, user.getRole()));
-        
+
         Student student = null;
         Teacher teacher = null;
         if (user.isStudent()) {
@@ -261,7 +300,7 @@ public class MessageService {
                 receiversByRole.remove(Role.ROLL_O.name());
             }
             
-            Set<Long> otherPersonIds = receiversByRole.values().stream().flatMap(pSet -> pSet.stream()).collect(Collectors.toSet());
+            Set<Long> otherPersonIds = receiversByRole.values().stream().flatMap(Collection::stream).collect(Collectors.toSet());
             
             // Request every person from DB to set it for MessageReceiver.
             personIds.addAll(otherPersonIds);
@@ -273,7 +312,7 @@ public class MessageService {
             saveReceivers(message, persons);
             // email should be sent personally to hide everyone's email.
             emails.forEach(email -> {
-                mailService.sendMail(message, emailSender, Collections.singleton(email), false);
+                mailService.sendMail(message, emailSender, Collections.singleton(email), false, message.getSender().getFullname());
             });
         }
 
@@ -297,6 +336,62 @@ public class MessageService {
         EntityUtil.deleteEntity(message, em);
     }
 
+    public void delete(HoisUserDetails user, MessageDeleteCommand cmd) {
+        EntityUtil.setUsername(user.getUsername(), em);
+        if (Boolean.TRUE.equals(cmd.getReceiver())) {
+            // deleted message receiver
+            TypedQuery<MessageReceiver> query = em.createQuery("select mr from MessageReceiver mr " +
+                    "where mr.person.id = :personId and mr.message.id in :ids " +
+                    "and mr.message.inserted <= :allowedTime and mr.status.code != :unread " +
+                    (!user.isMainAdmin() ? "and (mr.message.sendersSchool is null or mr.message.sendersSchool.id = :schoolId)" : ""),
+                    MessageReceiver.class)
+                    .setParameter("ids", cmd.getIds())
+                    .setParameter("personId", user.getPersonId())
+                    .setParameter("allowedTime", LocalDateTime.now().minusDays(deleteMinDays))
+                    .setParameter("unread", MessageStatus.TEATESTAATUS_U.name());
+            if(!user.isMainAdmin()) {
+                query.setParameter("schoolId", user.getSchoolId());
+            }
+            List<MessageReceiver> receivers = query.getResultList();
+            receivers.forEach(this::delete);
+        } else {
+            // deleted message
+            TypedQuery<Message> query = em.createQuery("select m from Message m " +
+                    "where (m.sender.id = :personId or (m.sender.id = :automaticId and true = :canDeleteAutomatic)) " +
+                    "and m.id in :ids and m.inserted <= :allowedTime " +
+                    (!user.isMainAdmin() ? "and m.sendersSchool.id = :schoolId " : ""),
+                    Message.class)
+                    .setParameter("ids", cmd.getIds())
+                    .setParameter("personId", user.getPersonId())
+                    .setParameter("allowedTime", LocalDateTime.now().minusDays(deleteMinDays))
+                    .setParameter("automaticId", PersonUtil.AUTOMATIC_SENDER_ID)
+                    .setParameter("canDeleteAutomatic", user.isSchoolAdmin());
+            if(!user.isMainAdmin()) {
+                query.setParameter("schoolId", user.getSchoolId());
+            }
+            List<Message> messages = query.getResultList();
+            messages.forEach(this::delete);
+        }
+    }
+
+    private void delete(Message message) {
+        // Cascaded to delete responses and receivers
+        EntityUtil.deleteEntity(message, em);
+    }
+
+    private void delete(MessageReceiver receiver) {
+        receiver.setStatus(em.getReference(Classifier.class, MessageStatus.TEATESTAATUS_K.name()));
+        if (EntityUtil.getId(receiver.getMessage().getSender()).equals(PersonUtil.AUTOMATIC_SENDER_ID)) {
+            boolean somebodyHasUnreadMessage = receiver.getMessage().getReceivers().stream()
+                    .map(MessageReceiver::getStatus)
+                    .map(EntityUtil::getCode)
+                    .anyMatch(status -> MessageStatus.TEATESTAATUS_U.name().equals(status));
+            if (!somebodyHasUnreadMessage) {
+                delete(receiver.getMessage());
+            }
+        }
+    }
+
     public void setRead(Long personId, Message message) {
         MessageReceiver receiver = message.getReceivers().stream().filter(r -> EntityUtil.getId(r.getPerson()).equals(personId)).findFirst().get();
         receiver.setRead(LocalDateTime.now());
@@ -305,6 +400,9 @@ public class MessageService {
     }
 
     public List<MessageReceiverDto> getStudentRepresentatives(Student student) {
+        if (!StudentStatus.STUDENT_STATUS_ACTIVE.contains(EntityUtil.getCode(student.getStatus()))) {
+            return Collections.emptyList();
+        }
         StudentGroup studentGroup = student.getStudentGroup();
 
         final List<MessageReceiverDto> results = new ArrayList<>();
@@ -312,30 +410,31 @@ public class MessageService {
         final List<SubjectStudyPeriodStudentGroup> subjectStudyPeriods = studentGroup != null
                 ? studentGroup.getSubjectStudyPeriods() : new ArrayList<>();
 
-        for (StudentRepresentative studentRepresentative : student.getRepresentatives().stream()
-        .filter(sr -> Boolean.TRUE.equals(sr.getIsStudentVisible())).collect(Collectors.toList())) {
-            // TODO: Change Journal variable in MessageReceiverDto so it could be a list with all journals. Same for subjects
-            for (int i = 0; i < journalStudents.size() || i < subjectStudyPeriods.size() || i < 1; i++) {
-                MessageReceiverDto dto = new MessageReceiverDto();
-                dto.setId(student.getId());
-                dto.setPersonId(studentRepresentative.getPerson().getId());
-                dto.setFullname(studentRepresentative.getPerson().getFullname());
-                dto.setHigher(Boolean.valueOf(StudentUtil.isHigher(student)));
+        student.getRepresentatives().stream()
+            .filter(sr -> Boolean.TRUE.equals(sr.getIsStudentVisible()))
+            .forEach(studentRepresentative -> {
+                // TODO: Change Journal variable in MessageReceiverDto so it could be a list with all journals. Same for subjects
+                for (int i = 0; i < journalStudents.size() || i < subjectStudyPeriods.size() || i < 1; i++) {
+                    MessageReceiverDto dto = new MessageReceiverDto();
+                    dto.setId(student.getId());
+                    dto.setPersonId(studentRepresentative.getPerson().getId());
+                    dto.setFullname(studentRepresentative.getPerson().getFullname());
+                    dto.setHigher(Boolean.valueOf(StudentUtil.isHigher(student)));
 
-                if (studentGroup != null) {
-                    dto.setStudentGroup(AutocompleteResult.of(studentGroup));
-                    Curriculum curriculum = student.getStudentGroup().getCurriculum();
-                    dto.setCurriculum(curriculum != null ? AutocompleteResult.of(curriculum) : null);
+                    if (studentGroup != null) {
+                        dto.setStudentGroup(AutocompleteResult.of(studentGroup));
+                        Curriculum curriculum = student.getStudentGroup().getCurriculum();
+                        dto.setCurriculum(curriculum != null ? AutocompleteResult.of(curriculum) : null);
+                    }
+
+                    dto.setRole(Arrays.asList(Role.ROLL_L.name()));
+                    if (i < journalStudents.size())
+                        dto.setJournal(AutocompleteResult.of(journalStudents.get(i).getJournal()));
+                    if (i < subjectStudyPeriods.size())
+                        dto.setSubject(AutocompleteResult.of(subjectStudyPeriods.get(i).getSubjectStudyPeriod().getSubject()));
+                    results.add(dto);
                 }
-
-                dto.setRole(Arrays.asList(Role.ROLL_L.name()));
-                if (i < journalStudents.size())
-                    dto.setJournal(AutocompleteResult.of(journalStudents.get(i).getJournal()));
-                if (i < subjectStudyPeriods.size())
-                    dto.setSubject(AutocompleteResult.of(subjectStudyPeriods.get(i).getSubjectStudyPeriod().getSubject()));
-                results.add(dto);
-            }
-        }
+            });
         
         return results;
     }
@@ -360,8 +459,9 @@ public class MessageService {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from.toString());
         qb.optionalCriteria("sg.id in (:group)", "group", criteria.getStudentGroupId());
         qb.optionalCriteria("j.id in (:journalIds)", "journalIds", criteria.getJournalId());
-        qb.optionalCriteria("sj.id in :subjectIds", "subjectIds", criteria.getSubjectId());
+        qb.optionalCriteria("ssp.id in :sspIds", "sspIds", criteria.getSubjectId());
         qb.filter("sr.is_student_visible = true");
+        qb.requiredCriteria("s.status_code in :status", "status", StudentStatus.STUDENT_STATUS_ACTIVE);
         List<?> result = qb.select(select.toString(), em).getResultList();
         return StreamUtil.toMappedList(r -> {
             MessageReceiverDto dto = new MessageReceiverDto();
@@ -386,11 +486,80 @@ public class MessageService {
         }, result);
     }
 
+    public List<MessageReceiverDto> getTeachers(HoisUserDetails user, List<Long> journal, List<Long> ssp) {
+        if ((journal == null || journal.isEmpty()) && (ssp == null || ssp.isEmpty())) {
+            return Collections.emptyList();
+        }
+        // only one search type allowed to be executed at the same time
+        boolean isJournal = journal != null && !journal.isEmpty();
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from teacher t " +
+                "join user_ u on t.id = u.teacher_id " +
+                "join person p on u.person_id = p.id " +
+                (isJournal ?
+                "left join journal_teacher jt on t.id = jt.teacher_id " +
+                "left join journal j on jt.journal_id = j.id " +
+                "left join journal_omodule_theme jot on jot.journal_id = j.id " +
+                "left join lesson_plan_module lpm on lpm.id = jot.lesson_plan_module_id "
+                :
+                "left join subject_study_period_teacher sspt on t.id = sspt.teacher_id " +
+                "left join subject_study_period ssp on sspt.subject_study_period_id = ssp.id " +
+                "left join subject s on ssp.subject_id = s.id "
+                ))
+                .sort("p.lastname", "p.firstname");
+        qb.validNowCriteria("u.valid_from", "u.valid_thru");
+        qb.filter("t.is_active");
+
+        if (user.isLeadingTeacher()) {
+            if (isJournal) {
+                qb.requiredCriteria("exists(select 1 from curriculum_version_omodule cvom " +
+                                "join curriculum_module cm on cm.id = cvom.curriculum_module_id " +
+                                "where lpm.curriculum_version_omodule_id = cvom.id and cm.curriculum_id in :userCurriculumIds)",
+                        "userCurriculumIds", user.getCurriculumIds());
+            } else {
+                qb.requiredCriteria("exists(select 1 from curriculum_version_hmodule_subject cvhs " +
+                                "join curriculum_version_hmodule cvh on cvhs.curriculum_version_hmodule_id = cvh.id " +
+                                "join curriculum_version cv on cvh.curriculum_version_id = cv.id " +
+                                "where s.id = cvhs.subject_id and cv.curriculum_id in :userCurriculumIds)",
+                        "userCurriculumIds", user.getCurriculumIds());
+            }
+        }
+
+        qb.optionalCriteria("ssp.id in :sspIds", "sspIds", ssp);
+        qb.optionalCriteria("j.id in :jIds", "jIds", journal);
+
+        List<?> results = qb
+                .select("distinct p.id, p.firstname, p.lastname, p.idcode, u.role_code, " +
+                        (isJournal ? "j.id as jid, j.name_et" : "ssp.id as sspid, s.name_et, s.name_en"), em)
+                .getResultList();
+        return results.stream().map(r -> {
+            MessageReceiverDto dto = new MessageReceiverDto();
+            dto.setPersonId(resultAsLong(r, 0));
+            dto.setFullname(PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)));
+            dto.setIdcode(resultAsString(r, 3));
+            dto.setRole(Arrays.asList(resultAsString(r, 4)));
+            if (isJournal) {
+                Long id = resultAsLong(r, 5);
+                if (id != null) {
+                    dto.setJournal(new AutocompleteResult(id, resultAsString(r, 6), resultAsString(r, 6)));
+                }
+            } else {
+                Long id = resultAsLong(r, 5);
+                if (id != null) {
+                    dto.setSubject(new AutocompleteResult(id, resultAsString(r, 6), resultAsString(r, 7)));
+                }
+            }
+            return dto;
+        }).collect(Collectors.toList());
+    }
+
     public List<MessageReceiverDto> searchPersons(HoisUserDetails user, UsersSearchCommand criteria) {
         if (user.isSchoolAdmin()) {
             return searchAllUsers(user, criteria);
         } else if (user.isLeadingTeacher()) {
-            return searchLeadingTeacherUsers(user, criteria);
+            if (Role.ROLL_T.name().equals(criteria.getRole()) || Role.ROLL_L.name().equals(criteria.getRole())) {
+                return searchLeadingTeacherUsers(user, criteria);
+            }
+            return searchAllUsers(user, criteria);
         } else if (user.isTeacher()) {
             if (Role.ROLL_T.name().equals(criteria.getRole())) {
                 return searchTeachersStudents(user, criteria);
@@ -398,12 +567,20 @@ public class MessageService {
             if (Role.ROLL_L.name().equals(criteria.getRole())) {
                 return searchTeachersParents(user, criteria);
             }
+            if (Role.ROLL_A.name().equals(criteria.getRole()) || Role.ROLL_O.name().equals(criteria.getRole())) {
+                return searchAllUsers(user, criteria);
+            }
         } else if (user.isRepresentative()) {
             return searchParentsTeachers(user, criteria);
         } else if (user.isStudent()) {
-            return searchStudentsTeachers(user, criteria);
+            if (Role.ROLL_O.name().equals(criteria.getRole())) {
+                return searchStudentTeachers(user, criteria);
+            }
+            if (Role.ROLL_T.name().equals(criteria.getRole())) {
+                return searchStudentStudents(user, criteria);
+            }
         }
-        return null;
+        return Collections.emptyList();
     }
 
     /**
@@ -414,6 +591,7 @@ public class MessageService {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from user_ u join "
                 + "person p on u.person_id = p.id "
                 + "left join student s on s.id = u.student_id").sort("p.lastname", "p.firstname");
+        qb.validNowCriteria("u.valid_from", "u.valid_thru");
         qb.optionalContains("p.firstname || ' ' || p.lastname", "name", criteria.getName());
         if(criteria.getRole() != null && !Role.ROLL_P.name().equals(criteria.getRole()) ) {
             qb.requiredCriteria("u.school_id = :schoolId", "schoolId", user.getSchoolId());
@@ -424,6 +602,35 @@ public class MessageService {
             // students, search only active ones
             qb.requiredCriteria("s.status_code in (:active)", "active", StudentStatus.STUDENT_STATUS_ACTIVE);
             sql += ", u.student_id, s.type_code";
+        }
+        if (Role.ROLL_L.name().equals(criteria.getRole())) {
+            // representative should be active and his/her student should be active as well
+            qb.requiredCriteria("s.status_code in :status", "status", StudentStatus.STUDENT_STATUS_ACTIVE);
+            qb.filter("exists(select 1 from student_representative sr where s.id = sr.student_id and sr.is_student_visible = true)");
+        }
+        if (Role.ROLL_O.name().equals(criteria.getRole())) {
+            // teacher should be active
+            qb.filter("exists(select 1 from teacher t where u.teacher_id = t.id and t.is_active)");
+            if (user.isLeadingTeacher()) {
+                qb.filter("(exists(select 1 from curriculum_version_omodule cvom " +
+                        "join curriculum_module cm on cm.id = cvom.curriculum_module_id " +
+                        "join lesson_plan_module lpm on lpm.curriculum_version_omodule_id = cvom.id " +
+                        "join journal_omodule_theme jot on lpm.id = jot.lesson_plan_module_id " +
+                        "join journal j on jot.journal_id = j.id " +
+                        "join journal_teacher jt on jt.journal_id = j.id " +
+                        "join teacher t on jt.teacher_id = t.id " +
+                        "where u.teacher_id = t.id and cm.curriculum_id in :userCurriculumIds) " +
+                        "or " +
+                        "exists(select 1 from curriculum_version_hmodule_subject cvhs " +
+                        "join curriculum_version_hmodule cvh on cvhs.curriculum_version_hmodule_id = cvh.id " +
+                        "join curriculum_version cv on cvh.curriculum_version_id = cv.id " +
+                        "join subject sj on sj.id = cvhs.subject_id " +
+                        "join subject_study_period ssp on ssp.subject_id = s.id " +
+                        "join subject_study_period_teacher sspt on sspt.subject_study_period_id = ssp.id " +
+                        "join teacher t on t.id = sspt.teacher_id " +
+                        "where t.id = u.teacher_id and cv.curriculum_id in :userCurriculumIds))");
+                qb.parameter("userCurriculumIds", user.getCurriculumIds());
+            }
         }
         qb.optionalCriteria("u.role_code = :role", "role", criteria.getRole());
         List<?> result = qb.select(sql, em).getResultList();
@@ -451,6 +658,7 @@ public class MessageService {
                 + " join person p on u.person_id = p.id"
                 + " join student s on s.id = u.student_id"
                 + " join curriculum_version cv on cv.id = s.curriculum_version_id");
+        qb.validNowCriteria("u.valid_from", "u.valid_thru");
         qb.optionalContains("p.firstname || ' ' || p.lastname", "name", criteria.getName());
         qb.requiredCriteria("s.status_code in (:activeStudents)", "activeStudents",
                 StudentStatus.STUDENT_STATUS_ACTIVE);
@@ -475,7 +683,7 @@ public class MessageService {
      * @param criteria
      * @return
      */
-    public List<StudentGroupSearchDto> searchStudentGroups(HoisUserDetails user, StudentGroupSearchCommand criteria) {
+    public List<AutocompleteResult> searchStudentGroups(HoisUserDetails user, StudentGroupSearchCommand criteria) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student_group sg left join curriculum c on sg.curriculum_id=c.id").sort("code");
 
         qb.requiredCriteria("sg.school_id = :schoolId", "schoolId", user.getSchoolId());
@@ -515,62 +723,111 @@ public class MessageService {
                     + ")", "teacherId", user.getTeacherId());
         }
 
-        List<?> data = qb.select("sg.id, sg.code, sg.study_form_code, c.id as curriculum_id, c.name_et, c.name_en, c.is_higher", em).getResultList();
-        return StreamUtil.toMappedList(r -> {
-            StudentGroupSearchDto dto = new StudentGroupSearchDto();
-            dto.setId(resultAsLong(r, 0));
-            dto.setCode(resultAsString(r, 1));
-            dto.setStudyForm(resultAsString(r, 2));
-            dto.setCurriculum(new AutocompleteResult(resultAsLong(r, 3), resultAsString(r, 4), resultAsString(r, 5)));
-            dto.setHigher(resultAsBoolean(r, 6));
-            return dto;
-        }, data);
+        List<?> data = qb.select("sg.id, sg.code", em).getResultList();
+        return StreamUtil.toMappedList(r -> new AutocompleteResult(resultAsLong(r, 0),
+                resultAsString(r, 1), resultAsString(r, 1)), data);
     }
     
-    public List<JournalDto> searchTeacherJournals(HoisUserDetails user) {
+    public List<JournalDto> searchJournals(HoisUserDetails user, SearchCommand cmd) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
             "from journal j " +
-            "join journal_teacher jt on jt.journal_id = j.id " +
+            "left join journal_teacher jt on jt.journal_id = j.id " +
             "left join journal_omodule_theme jot on jot.journal_id = j.id " +
-            "left join lesson_plan_module lpm on lpm.id = jot.lesson_plan_module_id"
+            "left join lesson_plan_module lpm on lpm.id = jot.lesson_plan_module_id " +
+            "left join lesson_plan lp on lpm.lesson_plan_id = lp.id " +
+            "left join student_group sg on lp.student_group_id = sg.id " +
+            "left join teacher t on jt.teacher_id = t.id " +
+            "left join person p on t.person_id = p.id "
         ).sort("j.id");
 
+        qb.optionalContains(Arrays.asList("j.name_et"), "name", cmd.getName());
         qb.requiredCriteria("j.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.requiredCriteria("j.study_year_id = :studyYearId", "studyYearId", studyYearService.getCurrentStudyYear(user.getSchoolId()).getId());
-        if(user.isTeacher()) {
+        if (user.isTeacher()) {
             qb.requiredCriteria(":teacherId in (jt.teacher_id, lpm.teacher_id)", "teacherId", user.getTeacherId());
+        } else if (user.isLeadingTeacher()) {
+            qb.requiredCriteria("exists(select 1 from curriculum_version_omodule cvom " +
+                            "join curriculum_module cm on cm.id = cvom.curriculum_module_id " +
+                            "where lpm.curriculum_version_omodule_id = cvom.id and cm.curriculum_id in :userCurriculumIds)",
+                    "userCurriculumIds", user.getCurriculumIds());
         }
 
-        List<?> data = qb.select("j.id, j.name_et", em, true).getResultList();
+        qb.groupBy("j.id");
+
+        List<?> data = qb.select("j.id, j.name_et, string_agg(distinct sg.code, ', ' order by sg.code) as groups, " +
+                "string_agg(distinct p.firstname || ' ' || p.lastname, ', ') as teachers", em)
+                .getResultList();
         return StreamUtil.toMappedList(r -> {
             JournalDto dto = new JournalDto();
             dto.setId(resultAsLong(r, 0));
-            dto.setNameEt(resultAsString(r, 1));
-            dto.setNameEn(resultAsString(r, 1));
+
+            String groups = resultAsString(r, 2);
+            boolean hasGroups = StringUtils.isNotBlank(groups);
+            if (hasGroups) {
+                groups = " (" + groups + ")";
+            }
+            String teachers = resultAsString(r, 3);
+            boolean hasTeachers = StringUtils.isNotBlank(teachers);
+            if (hasTeachers) {
+                teachers = " - " + teachers;
+            }
+
+            dto.setNameEt(resultAsString(r, 1) + (hasGroups ? groups : "") + (hasTeachers ? teachers : ""));
+            dto.setNameEn(resultAsString(r, 1) + (hasGroups ? groups : "") + (hasTeachers ? teachers : ""));
             return dto;
         }, data);
     }
     
-    public List<SubjectDto> searchTeacherSubjects(HoisUserDetails user) {
+    public List<SubjectDto> searchSubjects(HoisUserDetails user, SearchCommand cmd) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
             "from subject s " +
             "join subject_study_period ssp on s.id = ssp.subject_id " +
-            "join subject_study_period_teacher sspt on sspt.subject_study_period_id = ssp.id"
+            "left join subject_study_period_teacher sspt on sspt.subject_study_period_id = ssp.id " +
+            "left join subject_study_period_student_group sspsg on ssp.id = sspsg.subject_study_period_id " +
+            "left join student_group sg on sspsg.student_group_id = sg.id " +
+            "left join teacher t on sspt.teacher_id = t.id " +
+            "left join person p on t.person_id = p.id "
         ).sort("s.id");
 
+        String name = Language.EN.equals(cmd.getLang()) ? "s.name_en" : "s.name_et";
+        qb.optionalContains(Arrays.asList(name, "s.code"), "name", cmd.getName());
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.requiredCriteria("ssp.study_period_id = :studyPeriodId", "studyPeriodId", studyYearService.getCurrentStudyPeriod(user.getSchoolId()));
-        if(user.isTeacher()) {
+        if (user.isTeacher()) {
             qb.requiredCriteria("sspt.teacher_id = :teacherId", "teacherId", user.getTeacherId());
+        } else if (user.isLeadingTeacher()) {
+            qb.requiredCriteria("exists(select 1 from curriculum_version_hmodule_subject cvhs " +
+                            "join curriculum_version_hmodule cvh on cvhs.curriculum_version_hmodule_id = cvh.id " +
+                            "join curriculum_version cv on cvh.curriculum_version_id = cv.id " +
+                            "where s.id = cvhs.subject_id and cv.curriculum_id in :userCurriculumIds)",
+                    "userCurriculumIds", user.getCurriculumIds());
         }
-
-        List<?> data = qb.select("s.id, s.code, s.name_et, s.name_en", em, true).getResultList();
+        qb.groupBy("s.id, ssp.id");
+        List<?> data = qb.select(
+                "ssp.id, s.code, s.name_et, s.name_en, string_agg(distinct sg.code, ', ' order by sg.code) as groups, " +
+                "string_agg(distinct p.firstname || ' ' || p.lastname, ', ') as teachers", em)
+                .getResultList();
         return StreamUtil.toMappedList(r -> {
             SubjectDto dto = new SubjectDto();
             dto.setId(resultAsLong(r, 0));
             dto.setCode(resultAsString(r, 1));
-            dto.setNameEt(resultAsString(r, 2));
-            dto.setNameEn(resultAsString(r, 3));
+
+            String groups = resultAsString(r, 4);
+            boolean hasGroups = StringUtils.isNotBlank(groups);
+            if (hasGroups) {
+                groups = " (" + groups + ")";
+            }
+            String teachers = resultAsString(r, 5);
+            boolean hasTeachers = StringUtils.isNotBlank(teachers);
+            if (hasTeachers) {
+                teachers = " - " + teachers;
+            }
+
+            dto.setNameEt(resultAsString(r, 1) + " - " + resultAsString(r, 2) + (hasGroups ? groups : "") + (hasTeachers ? teachers : ""));
+            String nameEn = resultAsString(r, 3);
+            if (nameEn != null) {
+                dto.setNameEn(resultAsString(r, 1) + " - " + nameEn + (hasGroups ? groups : "") + (hasTeachers ? teachers : ""));
+            }
             return dto;
         }, data);
     }
@@ -588,6 +845,11 @@ public class MessageService {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from teacher t join person p on p.id = t.person_id").sort("p.lastname", "p.firstname");
         qb.optionalContains("p.firstname || ' ' || p.lastname", "name", criteria.getName());
         qb.requiredCriteria("t.school_id = :schoolId", "schoolId", user.getSchoolId());
+        // teacher should be active user
+        qb.filter("t.is_active");
+        qb.requiredCriteria("exists(select 1 from user_ u where u.teacher_id = t.id " +
+                "and (u.valid_from is null or u.valid_from <= :now) " +
+                "and (u.valid_thru is null or u.valid_thru >= :now))", "now", LocalDate.now());
         
         qb.requiredCriteria(" (exists(select s.id from student s "
                 + "join student_group sg on sg.id = s.student_group_id "
@@ -631,9 +893,14 @@ public class MessageService {
      *  - higher student: teacher, whose subject was declared
      *  - vocational student: lesson plan teacher
      */
-    private List<MessageReceiverDto> searchStudentsTeachers(HoisUserDetails user, UsersSearchCommand criteria) {
+    private List<MessageReceiverDto> searchStudentTeachers(HoisUserDetails user, UsersSearchCommand criteria) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from teacher t join person p on p.id = t.person_id").sort("p.lastname", "p.firstname");
         qb.optionalContains("p.firstname || ' ' || p.lastname", "name", criteria.getName());
+        // teacher should be active user
+        qb.filter("t.is_active");
+        qb.requiredCriteria("exists(select 1 from user_ u where u.teacher_id = t.id " +
+                "and (u.valid_from is null or u.valid_from <= :now) " +
+                "and (u.valid_thru is null or u.valid_thru >= :now))", "now", LocalDate.now());
 
         qb.requiredCriteria(" ("
                 // student group teacher
@@ -664,6 +931,24 @@ public class MessageService {
 
         List<?> result = qb.select(" distinct p.id, p.firstname, p.lastname ", em).getResultList();
         return mapUserSearchDtoPage(result, Role.ROLL_O);
+    }
+
+    private List<MessageReceiverDto> searchStudentStudents(HoisUserDetails user, UsersSearchCommand criteria) {
+        Student student = em.getReference(Student.class, user.getStudentId());
+        if (student.getStudentGroup() == null) {
+            return Collections.emptyList();
+        }
+
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student s " +
+                "join student_group sg on s.student_group_id = sg.id " +
+                "join person p on s.person_id = p.id ")
+                .sort("p.lastname", "p.firstname");
+        qb.optionalContains("p.firstname || ' ' || p.lastname", "name", criteria.getName());
+        qb.requiredCriteria("s.id != :sid", "sid", user.getStudentId());
+        qb.requiredCriteria("s.status_code in :statusCodes", "statusCodes", StudentStatus.STUDENT_STATUS_ACTIVE);
+        qb.requiredCriteria("sg.id = :sgId", "sgId", EntityUtil.getId(student.getStudentGroup()));
+        List<?> result = qb.select(" distinct p.id, p.firstname, p.lastname, s.id as sid, s.type_code ", em).getResultList();
+        return mapUserSearchDtoPage(result, Role.ROLL_T);
     }
 
     private List<MessageReceiverDto> searchTeachersStudents(HoisUserDetails user, UsersSearchCommand criteria) {
@@ -759,6 +1044,8 @@ public class MessageService {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from.toString()).sort("p.lastname", "p.firstname");
         qb.optionalContains("p.firstname || ' ' || p.lastname", "name", criteria.getName());
         qb.requiredCriteria("s.school_id = :studentsSchoolId", "studentsSchoolId", user.getSchoolId());
+        qb.filter("sr.is_student_visible = true");
+        qb.requiredCriteria("s.status_code in :status", "status", StudentStatus.STUDENT_STATUS_ACTIVE);
         
         qb.requiredCriteria(" (sg.teacher_id = :teacherId "
                 
@@ -796,6 +1083,9 @@ public class MessageService {
             dto.setPersonId(resultAsLong(r, 0));
             dto.setFullname(PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)));
             dto.setRole(Arrays.asList(role.name()));
+            if (Role.ROLL_T.equals(role)) {
+                dto.setId(resultAsLong(r, 3));
+            }
             return dto;
         }, result);
     }
@@ -804,7 +1094,7 @@ public class MessageService {
         // only active students
         criteria.setStatus(StudentStatus.STUDENT_STATUS_ACTIVE);
 
-        List<MessageReceiverDto> students = studentService.search(user, criteria, pageable)
+        List<MessageReceiverDto> students = studentService.search(user, criteria, pageable, true)
                 .map(MessageReceiverDto::of).getContent();
         List<Long> studentIds = StreamUtil.toMappedList(MessageReceiverDto::getId, students);
         List<MessageReceiverDto> parents = studentRepresentatives(studentIds, criteria);
@@ -842,6 +1132,7 @@ public class MessageService {
         qb.optionalCriteria("j.id in (:journalIds)", "journalIds", criteria.getJournalId());
         qb.optionalCriteria("sj.id in (:subjectIds)", "subjectIds", criteria.getSubjectId());
         qb.filter("sr.is_student_visible is true");
+        qb.requiredCriteria("s.status_code in :status", "status", StudentStatus.STUDENT_STATUS_ACTIVE);
         List<?> result = qb.select(select.toString(), em).getResultList();
 
         return StreamUtil.toMappedList(r -> {
@@ -880,5 +1171,67 @@ public class MessageService {
             email = teacher.getEmail() != null ? teacher.getEmail() : email;
         }
         return StringUtils.isNotBlank(email);
+    }
+
+    public MessageFormDto newFormData(HoisUserDetails user) {
+        MessageFormDto dto = new MessageFormDto();
+        SchoolService.SchoolType schoolType = schoolService.schoolType(user.getSchoolId());
+        if (user.isSchoolAdmin()) {
+            dto.setTargetGroups(EnumUtil.toNameList(Role.ROLL_O, Role.ROLL_T, Role.ROLL_P, Role.ROLL_J, Role.ROLL_A));
+            if (schoolType.isVocational()) {
+                dto.getTargetGroups().add(Role.ROLL_L.name());
+            }
+            dto.setAdditionalGroup(getAdditionalGroups(schoolType, Role.ROLL_A));
+        } else if (user.isLeadingTeacher()) {
+            dto.setTargetGroups(EnumUtil.toNameList(Role.ROLL_O, Role.ROLL_T, Role.ROLL_P, Role.ROLL_J, Role.ROLL_A));
+            if (schoolType.isVocational()) {
+                dto.getTargetGroups().add(Role.ROLL_L.name());
+            }
+            dto.setAdditionalGroup(getAdditionalGroups(schoolType, Role.ROLL_J));
+        } else if (user.isTeacher()) {
+            dto.setTargetGroups(EnumUtil.toNameList(Role.ROLL_T, Role.ROLL_O, Role.ROLL_A));
+            if (schoolType.isVocational()) {
+                dto.getTargetGroups().add(Role.ROLL_L.name());
+            }
+            dto.setAdditionalGroup(getAdditionalGroups(schoolType, Role.ROLL_O));
+        } else if (user.isRepresentative()) {
+            dto.setTargetGroups(EnumUtil.toNameList(Role.ROLL_O));
+        } else if (user.isStudent()) {
+            dto.setTargetGroups(EnumUtil.toNameList(Role.ROLL_O, Role.ROLL_T));
+        } else {
+            dto.setTargetGroups(Collections.emptyList());
+        }
+
+        if(dto.getTargetGroups().size() == 1) {
+            dto.setDefaultTargetGroup(dto.getTargetGroups().get(0));
+        }
+
+        return dto;
+    }
+
+    private List<MessageFormDto.Group> getAdditionalGroups(SchoolService.SchoolType type, Role role) {
+        List<MessageFormDto.Group> additionalGroups = new ArrayList<>();
+        if (Role.ROLL_O.equals(role)) {
+            additionalGroups.add(new MessageFormDto.Group("SEARCH_STUDENT_GROUP",
+                    EnumUtil.toNameList(Role.ROLL_T, Role.ROLL_L), "message.searchTypeByGroups"));
+        }
+        boolean addTeacher = Role.ROLL_A.equals(role) || Role.ROLL_J.equals(role);
+        if (type.isVocational()) {
+            MessageFormDto.Group group = new MessageFormDto.Group("SEARCH_JOURNAL",
+                    EnumUtil.toNameList(Role.ROLL_T, Role.ROLL_L), "message.searchTypeByJournals");
+            additionalGroups.add(group);
+            if (addTeacher) {
+                group.getRoles().add(Role.ROLL_O.name());
+            }
+        }
+        if (type.isHigher()) {
+            MessageFormDto.Group group = new MessageFormDto.Group("SEARCH_SUBJECTS",
+                    EnumUtil.toNameList(Role.ROLL_T), "message.searchTypeBySubjects");
+            additionalGroups.add(group);
+            if (addTeacher) {
+                group.getRoles().add(Role.ROLL_O.name());
+            }
+        }
+        return additionalGroups;
     }
 }

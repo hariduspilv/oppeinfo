@@ -274,7 +274,7 @@ public class StateCurriculumControllerTests {
         stateCurriculumForm.setOutcomesEt(NAME);
         stateCurriculumForm.setObjectivesEt(NAME);
         stateCurriculumForm.setAdmissionRequirementsEt(NAME);
-        stateCurriculumForm.setCredits(Long.valueOf(1));
+        stateCurriculumForm.setCredits(BigDecimal.valueOf(1));
         stateCurriculumForm.setOptionalStudyCredits(BigDecimal.valueOf(1));
         stateCurriculumForm.setIscedClass("ISCED_RYHM_0522");
         stateCurriculumForm.setStateCurrClass("EHIS_ROK_15744");

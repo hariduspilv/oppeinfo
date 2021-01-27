@@ -9,8 +9,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +19,8 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.util.DateUtils;
+import ee.hitsa.ois.web.commandobject.student.StudentGroupAbsenceJournalDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -49,7 +51,7 @@ public class StudentGroupAbsenceService {
 
     private static final String STUDENT_GROUP_ABSENCE_SELECT = "js.student_id, je.entry_date, je.journal_id as journal_id, "
             + "jes.id as student_entry_id, jesla.id as lesson_absence_id, jesla.lesson_nr + coalesce(je.start_lesson_nr - 1, 0) as lesson_nr, "
-            + "coalesce(jesla.absence_code, jes.absence_code) as absence_code";
+            + "coalesce(jesla.absence_code, jes.absence_code) as absence_code, je.start_lesson_nr, je.lessons";
 
     private static final String STUDENT_GROUP_ABSENCE_FROM = "from journal_entry_student jes "
             + "join journal_entry je on jes.journal_entry_id = je.id "
@@ -70,7 +72,7 @@ public class StudentGroupAbsenceService {
         Map<Long, AutocompleteResult> journals = journals(StreamUtil.toMappedSet(r -> r.getJournal(), studentAbsences));
         List<LocalDate> dates = Boolean.TRUE.equals(criteria.getTodaysAbsences()) ? Arrays.asList(LocalDate.now())
                 : weekDates(criteria.getStudyWeekStart(), criteria.getStudyWeekEnd());
-        Map<LocalDate, List<AutocompleteResult>> journalsByDates = journalsByDates(studentAbsences, journals, dates);
+        Map<LocalDate, List<StudentGroupAbsenceJournalDto>> journalsByDates = journalsByDates(studentAbsences, journals, dates);
 
         container.setStudents(students);
         container.setDates(dates);
@@ -95,11 +97,11 @@ public class StudentGroupAbsenceService {
                 : criteria.getStudyWeekEnd();
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.optionalCriteria("sg.id = :studentGroupId", "studentGroupId", criteria.getStudentGroup());
-        qb.requiredCriteria("je.entry_date >= :from", "from", from);
-        qb.requiredCriteria("je.entry_date <= :thru", "thru", thru);
+        qb.optionalCriteria("je.entry_date >= :from", "from", from, DateUtils::firstMomentOfDay);
+        qb.optionalCriteria("je.entry_date <= :thru", "thru", thru, DateUtils::lastMomentOfDay);
         qb.filter("(jes.absence_code is not null or jesla.absence_code is not null)");
 
-        qb.sort("je.id");
+        qb.sort("je.entry_date, je.start_lesson_nr nulls last, je.lessons nulls last, lesson_nr");
         List<?> data = qb.select(STUDENT_GROUP_ABSENCE_SELECT, em).getResultList();
 
         return StreamUtil.toMappedList(r -> {
@@ -111,10 +113,12 @@ public class StudentGroupAbsenceService {
             dto.setJournalEntryStudentLessonAbsence(resultAsLong(r, 4));
             dto.setLessonNr(resultAsLong(r, 5));
             dto.setAbsence(resultAsString(r, 6));
+            dto.setStartLessonNr(resultAsLong(r, 7));
+            dto.setLessons(resultAsLong(r, 8));
             return dto;
         }, data);
     }
-    
+
     private Map<Long, AutocompleteResult> journals(Set<Long> journalIds) {
         Map<Long, AutocompleteResult> journals = new HashMap<>(); 
         if (!journalIds.isEmpty()) {
@@ -135,21 +139,32 @@ public class StudentGroupAbsenceService {
         return weekDates;
     }
 
-    private static Map<LocalDate, List<AutocompleteResult>> journalsByDates(List<StudentGroupAbsenceDto> studentAbsences,
+    private static Map<LocalDate, List<StudentGroupAbsenceJournalDto>> journalsByDates(List<StudentGroupAbsenceDto> studentAbsences,
             Map<Long, AutocompleteResult> journals, List<LocalDate> dates) {
-        Map<LocalDate, List<AutocompleteResult>> journalsByDates = new LinkedHashMap<>();
+        Map<LocalDate, List<StudentGroupAbsenceJournalDto>> journalsByDates = new LinkedHashMap<>();
+        Map<LocalDate, Set<Long>> journalIdsByDates = new HashMap<>();
         for (LocalDate date : dates) {
             journalsByDates.put(date, new ArrayList<>());
+            journalIdsByDates.put(date, new HashSet<>());
         }
         for (StudentGroupAbsenceDto absence : studentAbsences) {
-            AutocompleteResult absenceJournal = journals.get(absence.getJournal()); 
-            List<AutocompleteResult> journalsByDate = journalsByDates.get(absence.getEntryDate());
+            LocalDate entryDate = absence.getEntryDate();
+            List<StudentGroupAbsenceJournalDto> journalsByDate = journalsByDates.get(absence.getEntryDate());
+
             if (journalsByDate != null) {
-                if (!journalsByDate.contains(absenceJournal)) {
-                    journalsByDate.add(absenceJournal);
+                if (!journalIdsByDates.get(entryDate).contains(absence.getJournal())) {
+                    AutocompleteResult absenceJournal = journals.get(absence.getJournal());
+
+                    journalIdsByDates.get(entryDate).add(absenceJournal.getId());
+                    journalsByDate.add(new StudentGroupAbsenceJournalDto(absenceJournal,
+                            absence.getStartLessonNr(), absence.getLessons()));
                 }
-                journalsByDate.sort(Comparator.comparing(AutocompleteResult::getNameEt));
             }
+        }
+        for (LocalDate date : dates) {
+            journalsByDates.get(date).sort(StreamUtil.comparingWithNullsLast(StudentGroupAbsenceJournalDto::getStartLessonNr)
+                    .thenComparing(StreamUtil.comparingWithNullsLast(StudentGroupAbsenceJournalDto::getLessons))
+                    .thenComparing(AutocompleteResult::getNameEt));
         }
         return journalsByDates;
     }

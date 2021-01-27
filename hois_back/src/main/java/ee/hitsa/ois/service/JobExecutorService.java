@@ -231,6 +231,17 @@ public class JobExecutorService {
     }
     
     /**
+     * Automatic task to update students meal support according to requirements
+     */
+    @Scheduled(cron = "${hois.jobs.meal.support.cron}")
+    public void updateStudentMealSupport() {
+        withAuthentication(() -> {
+            studentService.enableStudentMealSupport();
+            studentService.disableStudentMealSupport();
+        }, AUTHENTICATION_MSG);
+    }
+    
+    /**
      * Automatic task to check TUGI directive and send a notification message.
      */
     @Scheduled(cron = "${hois.jobs.supportService.message.cron}")

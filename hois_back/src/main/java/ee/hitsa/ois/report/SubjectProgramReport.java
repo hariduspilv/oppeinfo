@@ -12,8 +12,11 @@ import java.util.stream.Collectors;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.subject.Subject;
+import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
+import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodTeacher;
 import ee.hitsa.ois.domain.subject.subjectprogram.SubjectProgram;
 import ee.hitsa.ois.domain.subject.subjectprogram.SubjectProgramStudyContent;
+import ee.hitsa.ois.domain.subject.subjectprogram.SubjectProgramTeacher;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.enums.HigherAssessment;
 import ee.hitsa.ois.enums.Language;
@@ -23,6 +26,7 @@ import ee.hitsa.ois.enums.SubjectAssessment;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.ClassifierUtil.ClassifierCache;
 import ee.hitsa.ois.util.EnumUtil;
+import ee.hitsa.ois.util.PersonUtil;
 
 public class SubjectProgramReport {
 
@@ -31,7 +35,7 @@ public class SubjectProgramReport {
     private final Language lang;
     
     private final Subject subject;
-    private final Teacher teacher;
+    private final List<Teacher> teachers;
     private final SubjectProgram program;
     private final Set<String> assessmentMethodKeys;
     private final Map<String, String> assessmentMethods;
@@ -45,9 +49,12 @@ public class SubjectProgramReport {
     public SubjectProgramReport(SubjectProgram program, ClassifierCache classifierCache, Language lang) {
         this.program = program;
         this.lang = lang;
-        period = program.getSubjectStudyPeriodTeacher().getSubjectStudyPeriod().getStudyPeriod();
-        subject = program.getSubjectStudyPeriodTeacher().getSubjectStudyPeriod().getSubject();
-        teacher = program.getSubjectStudyPeriodTeacher().getTeacher();
+        period = program.getSubjectStudyPeriod().getStudyPeriod();
+        subject = program.getSubjectStudyPeriod().getSubject();
+        teachers = program.getTeachers().stream()
+                .map(SubjectProgramTeacher::getSubjectStudyPeriodTeacher)
+                .map(SubjectStudyPeriodTeacher::getTeacher)
+                .collect(Collectors.toList());
         assessmentMethodKeys = new LinkedHashSet<>();
         assessmentMethods = new HashMap<>();
         studyContents = new LinkedList<>();
@@ -155,8 +162,8 @@ public class SubjectProgramReport {
         return subject;
     }
 
-    public Teacher getTeacher() {
-        return teacher;
+    public List<Teacher> getTeachers() {
+        return teachers;
     }
 
     public Map<String, String> getAssessmentMethods() {

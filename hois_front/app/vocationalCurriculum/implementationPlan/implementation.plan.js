@@ -73,6 +73,8 @@ angular.module('hitsaOis')
 
     $scope.curriculumVersionPdfUrl = config.apiUrl + '/curriculum/print/' + id + '/curriculumVersion.pdf';
     $scope.curriculumVersionModulesPdfUrl = config.apiUrl + '/curriculum/print/' + id + '/curriculumVersionModules.pdf';
+    $scope.curriculumVersionSummaryRtfUrl = config.apiUrl + '/curriculum/print/' + id + '/curriculumVersionSummary.rtf';
+
 
     var promises = [];
     if (angular.isArray(curriculumEntity.modules)) {

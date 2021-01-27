@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.dto.basemodule;
 
+import java.math.BigDecimal;
 import java.util.Set;
 
 public class BaseModuleSearchDto {
@@ -10,7 +11,7 @@ public class BaseModuleSearchDto {
     private String addNameEt;
     private Set<String> curriculums;
     private Set<String> curriculumVersions;
-    private Integer credits;
+    private BigDecimal credits;
     private Boolean canEdit;
 
     public Long getId() {
@@ -61,19 +62,19 @@ public class BaseModuleSearchDto {
         this.curriculumVersions = curriculumVersions;
     }
 
-    public Integer getCredits() {
-        return credits;
-    }
-
-    public void setCredits(Integer credits) {
-        this.credits = credits;
-    }
-
     public Boolean getCanEdit() {
         return canEdit;
     }
 
     public void setCanEdit(Boolean canEdit) {
         this.canEdit = canEdit;
+    }
+
+    public BigDecimal getCredits() {
+        return credits;
+    }
+
+    public void setCredits(BigDecimal credits) {
+        this.credits = credits;
     }
 }

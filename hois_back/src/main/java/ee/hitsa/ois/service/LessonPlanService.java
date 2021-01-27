@@ -22,6 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
@@ -35,11 +36,13 @@ import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.domain.StudyPeriodEvent;
 import ee.hitsa.ois.domain.timetable.JournalSub;
 import ee.hitsa.ois.enums.Language;
-import ee.hitsa.ois.service.subjectstudyperiod.SubjectStudyPeriodCapacitiesService;
+import ee.hitsa.ois.enums.StudyPeriodEventType;
 import ee.hitsa.ois.util.JournalUtil;
 import ee.hitsa.ois.util.TranslateUtil;
+import ee.hitsa.ois.web.dto.StudyPeriodEventDto;
 import ee.hitsa.ois.web.dto.StudyPeriodWithWeeksDto;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -140,13 +143,80 @@ public class LessonPlanService {
     @Autowired
     private XlsService xlsService;
 
+    private static final String TEACHER_SSP_LOAD_FROM = "from subject_study_period_teacher sspt "
+            + "join subject_study_period ssp on ssp.id = sspt.subject_study_period_id "
+                + "and (ssp.is_capacity_diff is null or ssp.is_capacity_diff = false) "
+            + "join study_period sp on sp.id = ssp.study_period_id "
+            + "join subject_study_period_capacity sspc on sspc.subject_study_period_id = ssp.id "
+            + "left join (" + SubjectStudyPeriodPlanService.SQL_JOIN_SELECT_PLAN_BY_SSP
+                + ") sspp on ssp.id = sspp.ssp_id and sspp.priority != 999 "
+            + "left join subject_study_period_plan_capacity ssppc on sspp.plan_id = ssppc.subject_study_period_plan_id "
+                + "and sspc.capacity_type_code = ssppc.capacity_type_code";
+
+    private static final String TEACHER_SPECIFIC_SSP_LOAD_FROM = "from (" + SQL_SELECT_TEACHER_CAPACITY + ") ssptc "
+            + "join subject_study_period_teacher sspt on sspt.id = ssptc.subject_study_period_teacher_id "
+            + "join subject_study_period_capacity sspc on sspc.id = ssptc.subject_study_period_capacity_id "
+            + "join subject_study_period ssp on ssp.id = sspt.subject_study_period_id and ssp.is_capacity_diff = true "
+            + "join study_period sp on sp.id = ssp.study_period_id "
+            + "left join (" + SubjectStudyPeriodPlanService.SQL_JOIN_SELECT_PLAN_BY_SSP
+            + ") sspp on ssp.id = sspp.ssp_id and sspp.priority != 999 "
+            + "left join subject_study_period_plan_capacity ssppc on sspp.plan_id = ssppc.subject_study_period_plan_id "
+                + "and sspc.capacity_type_code = ssppc.capacity_type_code";
+
     public LessonPlanDto get(LessonPlan lessonPlan) {
         LessonPlanDto dto = LessonPlanDto.of(lessonPlan, scheduleLegends(lessonPlan));
+        setLessonPlanModuleExtra(lessonPlan, dto);
         setLessonPlanCapacities(lessonPlan, dto);
+        setStudyYearVacations(lessonPlan, dto);
 
         Set<Long> journalTeachers = lessonPlanJournalTeachers(dto.getId());
-        dto.setTeachers(setLessonPlanTeachers(EntityUtil.getId(lessonPlan.getStudyYear()), journalTeachers));
+        dto.setTeachers(getLessonPlanTeachers(EntityUtil.getId(lessonPlan.getStudyYear()), journalTeachers));
         return dto;
+    }
+
+    private void setLessonPlanModuleExtra(LessonPlan lessonPlan, LessonPlanDto dto) {
+        Map<Long, ? extends LessonPlanModuleForm> modulesById = StreamUtil.toMap(
+                LessonPlanModuleForm::getOccupationModuleId, r -> r, dto.getModules());
+        Set<Long> plannedModules = plannedModules(lessonPlan.getId(), modulesById.keySet());
+        Map<Long, Integer> previousHoursById = modulePreviousHours(lessonPlan.getStudyYear(), modulesById.keySet());
+
+        for (Long occupationModuleId : modulesById.keySet()) {
+            LessonPlanModuleDto module = (LessonPlanModuleDto) modulesById.get(occupationModuleId);
+            module.setIsPlanned(Boolean.valueOf(plannedModules.contains(occupationModuleId)));
+            Integer previousHours = previousHoursById.get(occupationModuleId);
+            module.setPreviousHours(previousHours != null ? previousHours : Integer.valueOf(0));
+        }
+    }
+
+    private Set<Long> plannedModules(Long lessonPlanId, Set<Long> moduleIds) {
+        // student group current year number matches atleast one module theme study year number
+        List<?> data = em.createNativeQuery("select cvo.id from curriculum_version_omodule cvo "
+                + "join curriculum_version_omodule_theme cvot on cvot.curriculum_version_omodule_id = cvo.id "
+                + "where cvo.id in (:moduleIds) and cvot.study_year_number = "
+                    + "(select extract(year from lp_sy.start_date) - extract(year from sg_sy.start_date) + 1 from lesson_plan lp "
+                    + "join study_year lp_sy on lp_sy.id = lp.study_year_id "
+                    + "join student_group sg on sg.id = lp.student_group_id "
+                    + "join study_year sg_sy on sg_sy.id = get_study_year(sg.valid_from, sg.school_id) "
+                    + "where lp.id = :lessonPlanId)")
+                .setParameter("moduleIds", moduleIds)
+                .setParameter("lessonPlanId", lessonPlanId)
+                .getResultList();
+        return StreamUtil.toMappedSet(r -> resultAsLong(r, 0), data);
+    }
+
+    private Map<Long, Integer> modulePreviousHours(StudyYear studyYear, Set<Long> moduleIds) {
+        List<?> data = em.createNativeQuery("select cvo.id, sum(jc.hours) from curriculum_version_omodule cvo "
+                + "join lesson_plan_module lpm on lpm.curriculum_version_omodule_id = cvo.id "
+                + "join (select distinct ot.lesson_plan_module_id, journal_id from journal_omodule_theme ot) jot on jot.lesson_plan_module_id = lpm.id "
+                + "join journal_capacity jc on jc.journal_id = jot.journal_id "
+                + "join study_period sp on sp.id = jc.study_period_id "
+                + "join study_year sy on sy.id = sp.study_year_id "
+                + "where cvo.id in (:moduleIds) and sy.end_date <= :lessonPlanSyStart "
+                + "group by cvo.id")
+                .setParameter("moduleIds", moduleIds)
+                .setParameter("lessonPlanSyStart", JpaQueryUtil.parameterAsTimestamp(studyYear.getStartDate()))
+                .getResultList();
+        return StreamUtil.toMap(r -> resultAsLong(r, 0), r -> resultAsInteger(r, 1), data);
     }
 
     private Set<Long> lessonPlanJournalTeachers(Long lessonPlanId) {
@@ -163,7 +233,7 @@ public class LessonPlanService {
         return StreamUtil.toMappedSet(r -> resultAsLong(r, 0), teachers);
     }
 
-    public List<LessonPlanTeacherDto> setLessonPlanTeachers(Long studyYearId, Set<Long> teacherIds) {
+    public List<LessonPlanTeacherDto> getLessonPlanTeachers(Long studyYearId, Set<Long> teacherIds) {
         List<LessonPlanTeacherDto> teacherDtos = new ArrayList<>();
 
         if (!teacherIds.isEmpty()) {
@@ -177,8 +247,12 @@ public class LessonPlanService {
                 .setParameter("studyYearId", studyYearId)
                     .getResultList();
 
-            Map<Long, Map<String, List<Long>>> teacherStudyLoadByWeekAndCapacity = teacherStudyLoadByWeekAndCapacity(
-                    teacherIds, studyYearId);
+            Map<Long, List<LessonPlanTeacherLoadDto>> studyLoadsByTeacher = teacherStudyLoads(teacherIds, studyYearId);
+            // in hybrid schools teachers can give both vocational and higher lessons
+            Map<Long, List<LessonPlanTeacherLoadDto>> subjectStudyLoadsByTeacher = subjectStudyLoads(teacherIds, studyYearId);
+
+            StudyYear studyYear = em.getReference(StudyYear.class, studyYearId);
+            LessonPlanCapacityMapper capacityMapper = LessonPlanUtil.capacityMapper(studyYear);
 
             teacherDtos = StreamUtil.toMappedList(r -> {
                 LessonPlanTeacherDto teacherDto = new LessonPlanTeacherDto();
@@ -187,15 +261,23 @@ public class LessonPlanService {
                 teacherDto.setScheduleLoad(resultAsShort(r, 1));
                 teacherDto.setIsStudyPeriodScheduleLoad(resultAsBoolean(r, 2));
 
-                Map<String, List<Long>> teacherStudyLoadByCapacity = teacherStudyLoadByWeekAndCapacity.get(teacherId);
+                // vocational load
+                List<LessonPlanTeacherLoadDto> teacherStudyLoads = studyLoadsByTeacher.get(teacherId);
+                Map<String, List<Long>> teacherStudyLoadByCapacity = capacityMapper.mapTeacherLoadsByCapacities(teacherStudyLoads);
+                Map<String, List<Long>> teacherContactStudyLoadByCapacity = capacityMapper.mapTeacherLoadsByCapacities(
+                        StreamUtil.toFilteredList(l -> Boolean.TRUE.equals(l.getIsContact()), teacherStudyLoads));
 
                 List<Long> teacherStudyLoad = new ArrayList<>();
                 Map<String, Long> plannedLessonsByCapacity = new HashMap<>();
                 if (teacherStudyLoadByCapacity != null) {
                     for (String capacity : teacherStudyLoadByCapacity.keySet()) {
-                        List<Long> weekLoads = teacherStudyLoadByCapacity.get(capacity);
-                        plannedLessonsByCapacity.put(capacity, sumWeekLoads(weekLoads));
+                        plannedLessonsByCapacity.put(capacity, sumWeekLoads(teacherStudyLoadByCapacity.get(capacity)));
 
+                        // week as well as planned lessons totals are calculated by only contact hours
+                        List<Long> weekLoads = teacherContactStudyLoadByCapacity.get(capacity);
+                        if (weekLoads == null) {
+                            continue;
+                        }
                         if (teacherStudyLoad.isEmpty()) {
                             teacherStudyLoad.addAll(weekLoads);
                         } else {
@@ -208,11 +290,26 @@ public class LessonPlanService {
                     }
                 }
 
-                Long plannedLessons = sumWeekLoads(teacherStudyLoad);
+                // higher load
+                List<LessonPlanTeacherLoadDto> teacherSubjectStudyLoads = subjectStudyLoadsByTeacher.get(teacherId);
+                Long subjectPlannedLessons = Long.valueOf(StreamUtil.nullSafeList(teacherSubjectStudyLoads).stream()
+                        .filter(l -> Boolean.TRUE.equals(l.getIsContact()))
+                        .mapToLong(LessonPlanTeacherLoadDto::getSum).sum());
+
+                if (teacherSubjectStudyLoads != null) {
+                    for (LessonPlanTeacherLoadDto dto : teacherSubjectStudyLoads) {
+                        String capacity = dto.getCapacity();
+                        plannedLessonsByCapacity.put(capacity, plannedLessonsByCapacity.containsKey(capacity)
+                                ? Long.sum(plannedLessonsByCapacity.get(capacity), dto.getSum()) : dto.getSum());
+                    }
+                }
+
+                Long plannedLessons = Long.sum(sumWeekLoads(teacherStudyLoad), subjectPlannedLessons);
                 teacherDto.setStudyLoadByWeekAndCapacity(teacherStudyLoadByCapacity);
                 teacherDto.setStudyLoadByWeek(teacherStudyLoad);
                 teacherDto.setPlannedLessonsByCapacity(plannedLessonsByCapacity);
                 teacherDto.setPlannedLessons(plannedLessons);
+                teacherDto.setSubjectStudyLoads(teacherSubjectStudyLoads);
                 return teacherDto;
             }, teacherScheduleLoads);
         }
@@ -220,69 +317,85 @@ public class LessonPlanService {
     }
 
     private static Long sumWeekLoads(List<Long> loads) {
-        return loads != null ? Long.valueOf(loads.stream().filter(l -> l != null).mapToInt(Long::intValue).sum())
-                : null;
+        return Long.valueOf(StreamUtil.nullSafeList(loads).stream().filter(Objects::nonNull).mapToLong(l -> l).sum());
     }
 
-    private Map<Long, Map<String, List<Long>>> teacherStudyLoadByWeekAndCapacity(Set<Long> teacherIds,
-            Long studyYearId) {
-        Map<Long, Map<String, List<Long>>> result = new HashMap<>();
-        
-        Map<Long, List<LessonPlanTeacherLoadDto>> loads = new HashMap<>();
+    private Map<Long, List<LessonPlanTeacherLoadDto>> teacherStudyLoads(Set<Long> teacherIds, Long studyYearId) {
         List<?> teacherStudyLoads = em.createNativeQuery(
-                "select teacher_id, week_nr, study_period_id, capacity_type_code, sum(hours) from (" +
-                "select jt.teacher_id, week_nr, jc.study_period_id, jct.capacity_type_code, sum(jc.hours) as hours " +
+                "select teacher_id, week_nr, study_period_id, capacity_type_code, is_contact, sum(hours) from (" +
+                "select jt.teacher_id, week_nr, jc.study_period_id, jct.capacity_type_code, sct.is_contact, sum(jc.hours) as hours " +
                     "from journal_teacher jt " +
                     "join journal j on jt.journal_id = j.id " +
                     "join journal_capacity jc on jc.journal_id = j.id and (j.is_capacity_diff is null or j.is_capacity_diff = false) " +
                     "join journal_capacity_type jct on jc.journal_capacity_type_id = jct.id " +
+                    "join school_capacity_type sct on sct.capacity_type_code = jct.capacity_type_code " +
+                        "and sct.school_id = j.school_id and sct.is_higher = false " +
                 "where jt.teacher_id in (:teacherIds) and j.study_year_id = :studyYearId " +
-                    "group by teacher_id, week_nr, study_period_id, capacity_type_code " +
+                    "group by teacher_id, week_nr, study_period_id, jct.capacity_type_code, sct.is_contact " +
                 "union all " +
-                "select jt2.teacher_id, jtc.week_nr, jtc.study_period_id, jct2.capacity_type_code, sum(jtc.hours) as hours " +
+                "select jt2.teacher_id, jtc.week_nr, jtc.study_period_id, jct2.capacity_type_code, sct2.is_contact, sum(jtc.hours) as hours " +
                     "from journal_teacher jt2 " +
                     "join journal j2 on jt2.journal_id = j2.id " +
                     "join journal_teacher_capacity jtc on jt2.id = jtc.journal_teacher_id and j2.is_capacity_diff = true " +
                     "join journal_capacity_type jct2 on jtc.journal_capacity_type_id = jct2.id " +
+                    "join school_capacity_type sct2 on sct2.capacity_type_code = jct2.capacity_type_code " +
+                        "and sct2.school_id = j2.school_id and sct2.is_higher = false " +
                 "where jt2.teacher_id in (:teacherIds) and j2.study_year_id = :studyYearId " +
-                    "group by teacher_id, week_nr, study_period_id, capacity_type_code) as hours " +
-                "group by teacher_id, week_nr, study_period_id, capacity_type_code")
+                    "group by teacher_id, week_nr, study_period_id, jct2.capacity_type_code, sct2.is_contact) as hours " +
+                "group by teacher_id, week_nr, study_period_id, capacity_type_code, is_contact")
             .setParameter("teacherIds", teacherIds)
             .setParameter("studyYearId", studyYearId)
             .getResultList();
 
-        if (!teacherStudyLoads.isEmpty()) {
-            loads = teacherStudyLoads.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0),
-                Collectors.mapping(r -> new LessonPlanTeacherLoadDto(resultAsShort(r, 1), resultAsLong(r, 2), 
-                    resultAsString(r, 3), resultAsLong(r, 4)), Collectors.toList())));
+        return StreamUtil.nullSafeList(teacherStudyLoads).stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0),
+                Collectors.mapping(r -> new LessonPlanTeacherLoadDto(resultAsShort(r, 1), resultAsLong(r, 2),
+                        resultAsString(r, 3), resultAsBoolean(r, 4), resultAsLong(r, 5)),
+                        Collectors.toList())));
+    }
 
-            StudyYear studyYear = em.getReference(StudyYear.class, studyYearId);
-            LessonPlanCapacityMapper capacityMapper = LessonPlanUtil.capacityMapper(studyYear);
+    private Map<Long, List<LessonPlanTeacherLoadDto>> subjectStudyLoads(Set<Long> teacherIds, Long studyYearId) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(TEACHER_SSP_LOAD_FROM);
+        qb.requiredCriteria("sspt.teacher_id in (:teacherIds)", "teacherIds", teacherIds);
+        qb.requiredCriteria("sp.study_year_id = :studyYearId", "studyYearId", studyYearId);
 
-            for (Long teacher : teacherIds) {
-                List<LessonPlanTeacherLoadDto> teacherLoads = loads.get(teacher);
-                result.put(teacher, capacityMapper.mapTeacherLoadsByCapacities(teacherLoads));
-            }
-        }
-        return result;
+        String sspLoad = qb.querySql("sspt.teacher_id, ssp.study_period_id, sspc.capacity_type_code, "
+                + "sspc.hours, coalesce(ssppc.is_contact, false) is_contact", false);
+
+        qb = new JpaNativeQueryBuilder(TEACHER_SPECIFIC_SSP_LOAD_FROM);
+        qb.requiredCriteria("sspt.teacher_id in (:teacherIds)", "teacherIds", teacherIds);
+        qb.requiredCriteria("sp.study_year_id = :studyYearId", "studyYearId", studyYearId);
+
+        String specificSspLoad = qb.querySql("sspt.teacher_id, ssp.study_period_id, sspc.capacity_type_code, "
+                + "ssptc.hours, coalesce(ssppc.is_contact, false) as contact", false);
+        Map<String, Object> parameters = new HashMap<>(qb.queryParameters());
+
+        qb = new JpaNativeQueryBuilder("from (" + sspLoad + " union all " + specificSspLoad + ") as loads");
+        String groupBy = "teacher_id, study_period_id, capacity_type_code, is_contact";
+        qb.groupBy(groupBy);
+
+        List<?> data = qb.select(groupBy + ", sum(hours)", em, parameters).getResultList();
+        return StreamUtil.nullSafeList(data).stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0),
+                Collectors.mapping(r -> new LessonPlanTeacherLoadDto(null, resultAsLong(r, 1),
+                                resultAsString(r, 2), resultAsBoolean(r, 3), resultAsLong(r, 4)),
+                        Collectors.toList())));
     }
 
     private void setLessonPlanCapacities(LessonPlan lessonPlan, LessonPlanDto dto) {
-        List<ClassifierDto> schoolCapacities = lessonPlanSchoolCapacityTypeDtos(EntityUtil.getId(lessonPlan.getSchool()), Boolean.FALSE);
-        
-        if (dto.getModules() != null) {
-            List<LessonPlanModuleJournalForm> journals = new ArrayList<>();
-            journals = dto.getModules().stream().filter(m -> m.getJournals() != null).map(m -> m.getJournals())
-                    .flatMap(m -> m.stream()).collect(Collectors.toList());
+        List<ClassifierDto> schoolCapacities = lessonPlanSchoolCapacityTypeDtos(
+                EntityUtil.getId(lessonPlan.getSchool()), Boolean.FALSE);
 
-            Set<String> journalCapacities = new HashSet<>();
-            journalCapacities = journals.stream().filter(j -> j.getHours() != null).map(j -> j.getHours().keySet())
-                    .flatMap(j -> j.stream()).collect(Collectors.toSet());
+        if (dto.getModules() != null) {
+            List<LessonPlanModuleJournalForm> journals = dto.getModules().stream().filter(m -> m.getJournals() != null)
+                    .map(LessonPlanModuleForm::getJournals).flatMap(Collection::stream).collect(Collectors.toList());
+
+            Set<String> journalCapacities = journals.stream().filter(j -> j.getHours() != null).map(j -> j.getHours().keySet())
+                    .flatMap(Collection::stream).collect(Collectors.toSet());
             addMissingJournalCapacities(schoolCapacities, journalCapacities);
         }
-        
+
         schoolCapacities.sort(Comparator.comparing(ClassifierDto::getNameEt, String.CASE_INSENSITIVE_ORDER));
         dto.setLessonPlanCapacities(schoolCapacities);
+        dto.setVocationalContactCapacities(vocationalContactCapacities(EntityUtil.getId(lessonPlan.getSchool()), schoolCapacities));
     }
     
     private void setTeacherLessonPlanCapacities(LessonPlanByTeacherDto dto, Long schoolId,
@@ -305,6 +418,7 @@ public class LessonPlanService {
 
         schoolCapacities.sort(Comparator.comparing(ClassifierDto::getNameEt, String.CASE_INSENSITIVE_ORDER));
         dto.setLessonPlanCapacities(schoolCapacities);
+        dto.setVocationalContactCapacities(vocationalContactCapacities(schoolId, schoolCapacities));
     }
     
     private List<ClassifierDto> lessonPlanSchoolCapacityTypeDtos(Long schoolId, Boolean isHigher) {
@@ -314,12 +428,40 @@ public class LessonPlanService {
     }
     
     private void addMissingJournalCapacities(List<ClassifierDto> schoolCapacities, Set<String> journalCapacities) {
-        Set<String> schoolCapacityCodes = StreamUtil.toMappedSet(sc -> sc.getCode(), schoolCapacities);
-        for (String code : journalCapacities) {
-            if (!schoolCapacityCodes.contains(code)) {
-                schoolCapacities.add(ClassifierDto.of(em.getReference(Classifier.class, code)));
-            }
+        Set<String> schoolCapacityCodes = StreamUtil.toMappedSet(ClassifierDto::getCode, schoolCapacities);
+        List<String> missingCapacityCodes = StreamUtil.toFilteredList(jc -> !schoolCapacityCodes.contains(jc),
+                journalCapacities);
+        if (!missingCapacityCodes.isEmpty()) {
+            List<Classifier> missingCapacities = em.createQuery("select c from Classifier c " +
+                    "where c.code in (:capacityCodes)", Classifier.class)
+                    .setParameter("capacityCodes", missingCapacityCodes)
+                    .getResultList();
+            schoolCapacities.addAll(StreamUtil.toMappedList(ClassifierDto::of, missingCapacities));
         }
+    }
+
+    private List<String> vocationalContactCapacities(Long schoolId, List<ClassifierDto> schoolCapacities) {
+        Set<String> schoolCapacityCodes = StreamUtil.toMappedSet(ClassifierDto::getCode, schoolCapacities);
+        if (schoolCapacityCodes.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from school_capacity_type sct "
+                + "join classifier c on sct.capacity_type_code = c.code");
+        qb.requiredCriteria("sct.school_id = :schoolId", "schoolId", schoolId);
+        qb.requiredCriteria("c.code in :codes", "codes", schoolCapacityCodes);
+        qb.requiredCriteria("sct.is_contact = :isContact", "isContact", Boolean.TRUE);
+        List<?> data = qb.select("c.code", em).getResultList();
+        return StreamUtil.toMappedList(r -> resultAsString(r, 0), data);
+    }
+
+    private void setStudyYearVacations(LessonPlan lessonPlan, LessonPlanDto dto) {
+        List<StudyPeriodEvent> vacations = em.createQuery("select spe from StudyPeriodEvent spe " +
+                "where spe.studyYear.id = :studyYearId and spe.eventType.code = :eventTypeCode", StudyPeriodEvent.class)
+                .setParameter("studyYearId", EntityUtil.getId(lessonPlan.getStudyYear()))
+                .setParameter("eventTypeCode", StudyPeriodEventType.SYNDMUS_VAHA.name())
+                .getResultList();
+        dto.setVacations(StreamUtil.toMappedList(StudyPeriodEventDto::of, vacations));
     }
 
     public LessonPlan create(HoisUserDetails user, LessonPlanCreateForm form) {
@@ -364,15 +506,19 @@ public class LessonPlanService {
             EntityUtil.save(lessonPlanModuleCopy, em);
             
             Map<Long, CurriculumVersionOccupationModuleTheme> themeEquivalents = occupationalModuleThemeEquivalents(lpm, module);
-            List<Journal> journals = lessonPlanModuleJournals(lpm);
+            Set<Journal> journals = lessonPlanModuleJournals(lpm);
+            Map<Long, JournalSub> journalSubEquivalents = new HashMap<>();
+
             for (Journal j : journals) {
                 List<CurriculumVersionOccupationModuleTheme> occupationModuleThemes = StreamUtil.toMappedList(
-                jt -> jt.getCurriculumVersionOccupationModuleTheme(), j.getJournalOccupationModuleThemes());
+                        JournalOccupationModuleTheme::getCurriculumVersionOccupationModuleTheme, j.getJournalOccupationModuleThemes());
                 List<CurriculumVersionOccupationModuleTheme> journalThemeEquivalents = journalCopyOcupationModuleThemes(
-                lessonPlanModuleCopy, occupationModuleThemes, themeEquivalents);
+                        lessonPlanModuleCopy, occupationModuleThemes, themeEquivalents);
                 
                 if (!journalThemeEquivalents.isEmpty()) {
-                    copyPreviousLessonPlanJournal(form, j, journalThemeEquivalents, lessonPlan, lessonPlanModuleCopy);
+                    JournalSub journalSubCopy = copyPreviousLessonPlanJournalJournalSub(j, journalSubEquivalents);
+                    copyPreviousLessonPlanJournal(form, j, journalThemeEquivalents, lessonPlan, lessonPlanModuleCopy,
+                            journalSubCopy);
                 }
             }
         }
@@ -444,16 +590,16 @@ public class LessonPlanService {
         return themes;
     }
     
-    private List<Journal> lessonPlanModuleJournals(LessonPlanModule lessonPlanModule) {
-        return em.createQuery("select jomt.journal from JournalOccupationModuleTheme jomt "
+    private Set<Journal> lessonPlanModuleJournals(LessonPlanModule lessonPlanModule) {
+        return new HashSet<>(em.createQuery("select jomt.journal from JournalOccupationModuleTheme jomt "
                 + "where jomt.lessonPlanModule.id = ?1", Journal.class)
                 .setParameter(1, EntityUtil.getId(lessonPlanModule))
-                .getResultList().stream().distinct().collect(Collectors.toList());
+                .getResultList());
     }
 
     private void copyPreviousLessonPlanJournal(LessonPlanCreateForm form, Journal journal,
             List<CurriculumVersionOccupationModuleTheme> journalThemeEquivalents, LessonPlan lessonPlan,
-            LessonPlanModule lessonPlanModuleCopy) {
+            LessonPlanModule lessonPlanModuleCopy, JournalSub journalSubCopy) {
         Journal journalCopy = new Journal();
         journalCopy.setSchool(lessonPlan.getSchool());
         journalCopy.setAssessment(journal.getAssessment());
@@ -465,6 +611,7 @@ public class LessonPlanService {
         journalCopy.setAddStudents(journal.getAddStudents());
         journalCopy.setIsIndividual(journal.getIsIndividual());
         journalCopy.setUntisCode(journal.getUntisCode());
+        journalCopy.setJournalSub(journalSubCopy);
 
         copyPreviousLessonPlanJournalCapacities(journal, journalCopy);
         copyPreviousLessonPlanJournalTeachers(journal, journalCopy);
@@ -519,7 +666,7 @@ public class LessonPlanService {
         for (JournalCapacity jc : journal.getJournalCapacities()) {
             if (lessonPlanWeekNrs.contains(jc.getWeekNr())) {
                 StudyPeriod studyPeriod = weekNrsByStudyPeriod.entrySet().stream()
-                        .filter(sp -> sp.getValue().stream().anyMatch(nr -> nr == jc.getWeekNr()))
+                        .filter(sp -> sp.getValue().stream().anyMatch(nr -> nr.equals(jc.getWeekNr())))
                         .map(sp -> sp.getKey()).findFirst().orElse(null);
 
                 JournalCapacity journalCapacityCopy = new JournalCapacity();
@@ -550,6 +697,22 @@ public class LessonPlanService {
                 addedThemes.add(themeId); 
             }
         }
+    }
+
+    private JournalSub copyPreviousLessonPlanJournalJournalSub(Journal journal, Map<Long, JournalSub> journalSubEquivalents) {
+        JournalSub journalSubCopy = null;
+
+        Long journalSubId = EntityUtil.getNullableId(journal.getJournalSub());
+        if (journalSubId != null) {
+            journalSubCopy = journalSubEquivalents.get(journalSubId);
+            if (journalSubCopy == null) {
+                journalSubCopy = new JournalSub();
+                journalSubCopy.setSubJournals(journal.getJournalSub().getSubJournals());
+                EntityUtil.save(journalSubCopy, em);
+                journalSubEquivalents.put(journalSubId, journalSubCopy);
+            }
+        }
+        return journalSubCopy;
     }
 
     public LessonPlan save(LessonPlan lessonPlan, LessonPlanForm form) {
@@ -623,9 +786,48 @@ public class LessonPlanService {
         }
     }
 
+    public boolean lessonPlanHasJournalsWithStudents(LessonPlan lessonPlan) {
+        List<?> data = em.createNativeQuery("select j.id from journal j " +
+                "join journal_student js on js.journal_id = j.id " +
+                "join journal_omodule_theme jot on jot.journal_id = j.id " +
+                "join lesson_plan_module lpm on lpm.id = jot.lesson_plan_module_id " +
+                "where lpm.lesson_plan_id = :lessonPlanId")
+                .setParameter("lessonPlanId", lessonPlan.getId())
+                .setMaxResults(1)
+                .getResultList();
+        return !data.isEmpty();
+    }
+
     public void delete(HoisUserDetails user, LessonPlan lessonPlan) {
+        if (lessonPlanHasJournalsWithEntries(lessonPlan)) {
+            throw new ValidationFailedException("lessonplan.error.connectedJournalsHaveEntries");
+        }
+        Set<Journal> lessonPlanJournals = new HashSet<>(em.createQuery("select j from Journal j "
+                + "join j.journalOccupationModuleThemes jot "
+                + "where jot.lessonPlanModule.lessonPlan.id = :lessonPlanId", Journal.class)
+                .setParameter("lessonPlanId", lessonPlan.getId())
+                .getResultList());
+
         EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(lessonPlan, em);
+
+        // remove journals that don't have connected themes after deleting lesson plan
+        for (Journal journal : lessonPlanJournals) {
+            if (journal.getJournalOccupationModuleThemes().size() == 0) {
+                deleteJournal(user, journal);
+            }
+        }
+    }
+
+    private boolean lessonPlanHasJournalsWithEntries(LessonPlan lessonPlan) {
+        List<?> data = em.createNativeQuery("select j.id from journal j " +
+                "join journal_entry je on je.journal_id = j.id " +
+                "join journal_omodule_theme jot on jot.journal_id = j.id " +
+                "join lesson_plan_module lpm on lpm.id = jot.lesson_plan_module_id " +
+                "where lpm.lesson_plan_id = :lessonPlanId")
+                .setParameter("lessonPlanId", lessonPlan.getId())
+                .getResultList();
+        return !data.isEmpty();
     }
 
     public Page<LessonPlanSearchDto> search(HoisUserDetails user, LessonPlanSearchCommand criteria, Pageable pageable) {
@@ -819,23 +1021,7 @@ public class LessonPlanService {
                 getSubjectTotals(subjects), getSubjectContactTotals(subjects), teacher);
         setTeacherLessonPlanCapacities(dto, EntityUtil.getId(teacher.getSchool()), journals, subjects);
 
-        Set<Long> journalTeachers = lessonPlanByTeacherJournalTeachers(
-                StreamUtil.toMappedList(j -> EntityUtil.getId(j), journals));
-        dto.setTeachers(setLessonPlanTeachers(studyYearId, journalTeachers));
         return dto;
-    }
-
-    private Set<Long> lessonPlanByTeacherJournalTeachers(List<Long> journalIds) {
-        Set<Long> teacherIds = new HashSet<>();
-        if (!journalIds.isEmpty()) {
-            List<?> teachers = em.createNativeQuery("select t.id from journal_teacher jt "
-                    + "join teacher t on jt.teacher_id = t.id " 
-                    + "where jt.journal_id in (?1)")
-                    .setParameter(1, journalIds)
-                    .getResultList();
-            teacherIds = StreamUtil.toMappedSet(r -> resultAsLong(r, 0), teachers); 
-        }
-        return teacherIds;
     }
 
     private List<Journal> getTeacherJournals(HoisUserDetails user, Long teacherId, Long studyYearId) {
@@ -886,24 +1072,14 @@ public class LessonPlanService {
 
         List<?> teacherSubjects = qb.select("distinct s.id, s.name_et, s.name_en, sg.student_group_id, sg.code, ssp.id as ssp_id," +
                 " (select count(*) from subject_study_period_subgroup subgroup where subgroup.subject_study_period_id = ssp.id) as subgroups", em).getResultList();
-        
+
         Query capacityQuery = em.createNativeQuery("select ssp.study_period_id, sspc.capacity_type_code, sspc.hours, coalesce(ssppc.is_contact, false) as contact"
-                + " from subject_study_period_capacity sspc"
-                + " join subject_study_period ssp on ssp.id = sspc.subject_study_period_id"
-                + " left join (" + SubjectStudyPeriodPlanService.SQL_JOIN_SELECT_PLAN_BY_SSP
-                + ") sspp on ssp.id = sspp.ssp_id and sspp.priority != 999"
-                + " left join subject_study_period_plan_capacity ssppc on sspp.plan_id = ssppc.subject_study_period_plan_id and sspc.capacity_type_code = ssppc.capacity_type_code"
-                + " where sspc.subject_study_period_id = ?1 and (ssp.is_capacity_diff is null or ssp.is_capacity_diff = false)"
+                + " " + TEACHER_SSP_LOAD_FROM
+                + " where sspc.subject_study_period_id = ?1 and sspt.teacher_id = ?2"
                 + " union all"
                 + " select ssp.study_period_id, sspc.capacity_type_code, ssptc.hours, coalesce(ssppc.is_contact, false) as contact"
-                + " from (" + SQL_SELECT_TEACHER_CAPACITY + ") ssptc"
-                + " join subject_study_period_teacher sspt on sspt.id = ssptc.subject_study_period_teacher_id"
-                + " join subject_study_period_capacity sspc on sspc.id = ssptc.subject_study_period_capacity_id"
-                + " join subject_study_period ssp on ssp.id = sspt.subject_study_period_id"
-                + " left join (" + SubjectStudyPeriodPlanService.SQL_JOIN_SELECT_PLAN_BY_SSP
-                + ") sspp on ssp.id = sspp.ssp_id and sspp.priority != 999"
-                + " left join subject_study_period_plan_capacity ssppc on sspp.plan_id = ssppc.subject_study_period_plan_id and sspc.capacity_type_code = ssppc.capacity_type_code"
-                + " where sspc.subject_study_period_id = ?1 and sspt.teacher_id = ?2 and ssp.is_capacity_diff = true");
+                + " " + TEACHER_SPECIFIC_SSP_LOAD_FROM
+                + " where sspc.subject_study_period_id = ?1 and sspt.teacher_id = ?2");
 
         Map<Long, LessonPlanByTeacherSubjectDto> subjects = new HashMap<>();
         Map<Long, Long> subjectStudyPeriodToSubject = new HashMap<>();
@@ -1368,12 +1544,21 @@ public class LessonPlanService {
             EntityUtil.getId(p.getCurriculumVersionOccupationModule()).equals(cvom)).findFirst().orElse(null);
     }
 
+    public boolean journalHasStudents(Journal journal) {
+        List<?> data = em.createNativeQuery("select j.id from journal j " +
+                "join journal_student js on js.journal_id = j.id " +
+                "where j.id = :journalId")
+                .setParameter("journalId", journal.getId())
+                .getResultList();
+        return !data.isEmpty();
+    }
+
     public void deleteJournal(HoisUserDetails user, Journal journal) {
-        if (!journal.getJournalStudents().isEmpty()) {
-            throw new ValidationFailedException("lessonplan.journal.hasStudents");
+        if (!journal.getJournalEntries().isEmpty()) {
+            throw new ValidationFailedException("lessonplan.journal.hasEntries");
         }
         EntityUtil.setUsername(user.getUsername(), em);
-        
+
         //  remove timetable objects and groups that do not have any connecting events
         Query objectsQuery = em.createNativeQuery("select tto.id from timetable_object tto where tto.journal_id=?1 " + 
                 "and tto.id not in (select tto.id from timetable_object tto join timetable_event te on te.timetable_object_id=tto.id " +
@@ -1398,19 +1583,21 @@ public class LessonPlanService {
         EntityUtil.deleteEntity(journal, em);
 
         if (journal.getJournalSub() != null) {
+            journal.getJournalSub().getJournals().remove(journal);
             journalSubChangesFromJournalDeletion(journal.getJournalSub());
         }
     }
 
     private void journalSubChangesFromJournalDeletion(JournalSub journalSub) {
         List<Journal> journalSubJournals = journalSub.getJournals();
-        if (journalSubJournals.size() > 1) {
-            Classifier groupProportion = em.find(Classifier.class, MainClassCode.PAEVIK_GRUPI_JAOTUS.name()
-                    + "_" + journalSubJournals.size());
-            if (groupProportion == null) {
-                throw new ValidationFailedException("lessonplan.journal.groupProportionClassifierMissing");
-            }
 
+        Classifier groupProportion = em.find(Classifier.class, MainClassCode.PAEVIK_GRUPI_JAOTUS.name()
+                + "_" + journalSubJournals.size());
+        if (groupProportion == null) {
+            throw new ValidationFailedException("lessonplan.journal.groupProportionClassifierMissing");
+        }
+
+        if (journalSubJournals.size() > 1) {
             for (Journal subJournal : journalSubJournals) {
                 subJournal.setGroupProportion(groupProportion);
                 EntityUtil.save(subJournal, em);
@@ -1419,6 +1606,7 @@ public class LessonPlanService {
             EntityUtil.save(journalSub, em);
         } else {
             Journal leftOverJournal = journalSubJournals.get(0);
+            leftOverJournal.setGroupProportion(groupProportion);
             leftOverJournal.setJournalSub(null);
             EntityUtil.save(leftOverJournal, em);
             EntityUtil.deleteEntity(journalSub, em);
@@ -1494,12 +1682,13 @@ public class LessonPlanService {
         LessonPlanDto dto = get(lessonPlan);
         List<LessonPlanXlsStudyPeriodDto> studyPeriods = lessonplanExcelStudyPeriods(dto.getStudyPeriods());
         List<LessonPlanXlsModuleDto> modules = lessonplanExcelModules(dto);
-        LessonPlanXlsTotalsDto totals = lessonplanExcelTotals(modules, dto.getWeekNrs(), true);
+        LessonPlanXlsTotalsDto totals = lessonplanExcelTotals(modules, dto.getWeekNrs(),
+                dto.getVocationalContactCapacities(), true);
 
         Map<String, Object> data = new HashMap<>();
         data.put("capacities", dto.getLessonPlanCapacities());
 
-        data.put("studyYearCode", dto.getStudyYearCode());
+        data.put("studyYearCode", dto.getStudyYear().getYear());
         data.put("studentGroupCode", dto.getStudentGroupCode());
         data.put("courseNr", dto.getCourseNr());
         data.put("curriculumCode", dto.getCurriculumCode());
@@ -1599,12 +1788,11 @@ public class LessonPlanService {
             }
         });
         module.setHours(sortTotalHourCapacities(hours));
-        
-        List<Double> totalHours = grandProportionTotals(module.getHours(), weekNrs);
-        module.setTotalHours(totalHours);
+        module.setTotalHours(grandProportionTotals(module.getHours(), weekNrs));
     }
     
-    private LessonPlanXlsTotalsDto lessonplanExcelTotals(List<LessonPlanXlsModuleDto> modules, List<Short> weekNrs, boolean useGroupProportion) {
+    private LessonPlanXlsTotalsDto lessonplanExcelTotals(List<LessonPlanXlsModuleDto> modules, List<Short> weekNrs,
+            List<String> contactTypes, boolean useGroupProportion) {
         LessonPlanXlsTotalsDto totals = new LessonPlanXlsTotalsDto();
         
         Map<String, List<Double>> hours = new HashMap<>();
@@ -1630,11 +1818,13 @@ public class LessonPlanService {
                 }
             }
         }));
+
         totals.setHours(sortTotalHourCapacities(hours));
-        
-        List<Double> totalHours = grandProportionTotals(totals.getHours(), weekNrs);
-        totals.setTotalHours(totalHours);
-        
+        totals.setTotalHours(grandProportionTotals(totals.getHours(), weekNrs));
+        Map<String, List<Double>> contactHours = hours.entrySet().stream()
+                .filter(map -> contactTypes.contains(map.getKey()))
+                .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+        totals.setTotalContactHours(grandProportionTotals(contactHours, weekNrs));
         return totals;
     }
     
@@ -1683,8 +1873,10 @@ public class LessonPlanService {
     }
     
     private static Map<String, List<Double>> sortTotalHourCapacities(Map<String, List<Double>> hours) {
-        Map<String, List<Double>> sorted = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-        for (String capacity : hours.keySet()) {
+        Map<String, List<Double>> sorted = new LinkedHashMap<>();
+        List<String> sortedCapacities = StreamUtil.nullSafeSet(hours.keySet()).stream()
+                .sorted(String.CASE_INSENSITIVE_ORDER).collect(Collectors.toList());
+        for (String capacity : sortedCapacities) {
             sorted.put(capacity, hours.get(capacity));
         }
         return sorted;
@@ -1697,7 +1889,8 @@ public class LessonPlanService {
 
         LessonPlanXlsModuleDto totalModule = new LessonPlanXlsModuleDto();
         totalModule.setJournals(journals);
-        LessonPlanXlsTotalsDto totals = lessonplanExcelTotals(Collections.singletonList(totalModule), dto.getWeekNrs(), false);
+        LessonPlanXlsTotalsDto totals = lessonplanExcelTotals(Collections.singletonList(totalModule), dto.getWeekNrs(),
+                dto.getVocationalContactCapacities(), false);
 
         Map<String, Object> data = new HashMap<>();
         data.put("studyYearCode", dto.getStudyYearCode());
@@ -1870,7 +2063,7 @@ public class LessonPlanService {
                 "from study_year sy "
                 + "join lesson_plan lp on sy.id = lp.study_year_id "
                 + "join lesson_plan_module lpm on lp.id = lpm.lesson_plan_id "
-                + "join (select distinct j.id, jot.lesson_plan_module_id, j.group_proportion_code, j.name_et, j.is_capacity_diff "
+                + "join (select distinct j.id, jot.lesson_plan_module_id, j.group_proportion_code, j.name_et, j.is_capacity_diff, j.is_free "
                     + "from journal_omodule_theme jot "
                     + "join journal j on jot.journal_id = j.id) j on j.lesson_plan_module_id = lpm.id "
                 + "join journal_teacher jt on j.id = jt.journal_id "
@@ -1892,7 +2085,7 @@ public class LessonPlanService {
                 + "left join school_capacity_type_load sctl on sctl.school_capacity_type_id = sct.id"
                     + " and sctl.study_year_id = sy.id and coalesce(lp_coefficient.code, 'KOEFITSIENT_K1') = sctl.coefficient_code ");
 
-        qb.requiredCriteria("lp.id in (:lessonPlanIds)", "lessonPlanIds", lessonPlanIds);
+        qb.filter("lp.id in (" + lessonPlanIds.stream().map(p -> String.valueOf(p)).collect(Collectors.joining(", ")) + ")");
         if (user.isTeacher()) {
             qb.requiredCriteria("jt.teacher_id = :teacherId", "teacherId", user.getTeacherId());
         } else {
@@ -1902,11 +2095,11 @@ public class LessonPlanService {
         qb.requiredCriteria("sy.id = :studyYearId", "studyYearId", criteria.getStudyYear());
         qb.parameter("capacityTypes", schoolCapacities.stream().map(p -> p.getCode()).collect(Collectors.toList()));
         qb.groupBy( "journalTeacherId, periodId, periodEt, periodStart, "
-                + "sct.is_contact, capacityType, groupId, sctl.load_percentage");
+                + "sct.is_contact, capacityType, groupId, sctl.load_percentage, j.is_free");
         List<?> data = qb.select(
                 "jt.id as journalTeacherId, sp.id as periodId, sp.name_et as periodEt, sp.start_date as periodStart, "
-                + "sum(coalesce(teacherCap.hours, journalCap.hours)) as hours, sct.is_contact, c_type.value as capacityType, "
-                + "lp.student_group_id as groupId, coalesce(sctl.load_percentage, 100) * coalesce(sum(coalesce(teacherCap.hours, journalCap.hours)), 0) / 100.0 as hoursWithLoad",
+                + "sum(coalesce(teacherCap.hours, journalCap.hours)) as hours, sct.is_contact, c_type.value as capacityType, lp.student_group_id as groupId, "
+                + "coalesce(case when j.is_free = true then 0 end, sctl.load_percentage, 100) * coalesce(sum(coalesce(teacherCap.hours, journalCap.hours)), 0) / 100.0 as hoursWithLoad",
                 em).getResultList();
         return data.stream()
                 .collect(Collectors.groupingBy(r -> resultAsLong(r, 0), Collectors.groupingBy(r -> resultAsLong(r, 7), LinkedHashMap::new, Collectors.mapping(r -> {

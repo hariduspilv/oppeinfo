@@ -9,6 +9,7 @@ public class FinalThesisSearchDto {
     private Long id;
     private String themeEt;
     private String themeEn;
+    private String status;
     private AutocompleteResult student;
     private String idcode;
     private String supervisors;
@@ -41,6 +42,14 @@ public class FinalThesisSearchDto {
 
     public void setThemeEn(String themeEn) {
         this.themeEn = themeEn;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public AutocompleteResult getStudent() {

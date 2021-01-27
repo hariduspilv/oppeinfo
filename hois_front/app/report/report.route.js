@@ -218,5 +218,19 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
         auth: function (AuthResolver) { return AuthResolver.resolve(); },
         translationLoaded: function($translate) { return $translate.onReady(); }
       }
+    }).when('/reports/lunchSupport', {
+      templateUrl: 'report/student.lunch.support.html',
+      controller: 'ReportStudentLunchSupportController',
+      controllerAs: 'controller',
+      data: {
+        authorizedRoles: function(Session, roles) {
+          return Session.vocational && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_PARING) !== -1 &&
+          ['ROLL_A', 'ROLL_J'].indexOf(Session.roleCode) !== -1 && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_LOUNATOETUS) !== -1;
+        }
+      },
+      resolve: {
+        auth: function (AuthResolver) { return AuthResolver.resolve(); },
+        translationLoaded: function($translate) { return $translate.onReady(); }
+      }
     });
 });

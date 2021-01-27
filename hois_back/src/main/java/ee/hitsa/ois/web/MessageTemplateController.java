@@ -31,9 +31,9 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
-import ee.hitsa.ois.web.commandobject.MessageTemplateForm;
-import ee.hitsa.ois.web.commandobject.MessageTemplateSearchCommand;
-import ee.hitsa.ois.web.dto.MessageTemplateDto;
+import ee.hitsa.ois.web.commandobject.message.MessageTemplateForm;
+import ee.hitsa.ois.web.commandobject.message.MessageTemplateSearchCommand;
+import ee.hitsa.ois.web.dto.message.MessageTemplateDto;
 
 @RestController
 @RequestMapping("/messageTemplate")
