@@ -40,11 +40,13 @@ server.port=8091
 
 3. Programm jookseb iseseiva tükina ja tõmbab andmed automaatselt vastavalt seadistatud ajale
 
-4. Kuna tegemist on java programmiga, siis java serverisse keystore'i tuleks lisada nii tahvli kui ka asutuse AD sertifikaadid
+4. Kuna tegemist on java programmiga, siis tuleks teha keystore (võib ka windows'is) ja lisada sinna lisada nii tahvli kui ka asutuse AD sertifikaadid
 
-5. Programmi käivitamiseks tuleb navigeerida ad_demo.jar kausta ja käivitada programm järgmise käsuga:
+5. Kopeerida vastav kestore serverisse demo programmi juurde
 
-nohup java -jar ad_demo.jar &
+6. Programmi käivitamiseks tuleb navigeerida ad_demo.jar kausta ja käivitada programm järgmise käsuga:
+
+nohup java -jar -Djavax.net.ssl.trustStore=keystore -Djavax.net.ssl.trustStorePassword=changeit ad_demo.jar &
 
 
 
