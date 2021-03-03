@@ -15,6 +15,7 @@ public class StudentJournalTaskDto {
     private final String journalName;
     private final LocalDate date;
     private final String taskContent;
+    private final String entryNameEt;
     
     public StudentJournalTaskDto(Object[] row) {
         this.entryId = resultAsLong(row, 0);
@@ -22,6 +23,7 @@ public class StudentJournalTaskDto {
         this.journalName = (String) row[2];
         this.date = resultAsLocalDate(row, 3);
         this.taskContent = (String) row[4];
+        this.entryNameEt = (String) row[5];
     }
 
     public Long getEntryId() {
@@ -43,5 +45,8 @@ public class StudentJournalTaskDto {
     public String getTaskContent() {
         return taskContent;
     }
-    
+
+    public String getEntryNameEt() {
+        return entryNameEt;
+    }
 }

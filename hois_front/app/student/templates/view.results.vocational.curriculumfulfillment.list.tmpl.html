@@ -1,6 +1,7 @@
  <hois-collapsable expanded="module.collapsableOpen">
     <hois-collapsable-header>
-      <div layout="column" layout-gt-md="row" class="curriculum-fulfillment-result">
+      <!-- MODULE WITHOUT MATCHED MODULE RESULT -->
+      <div ng-if="!module.matchedModule" layout="column" layout-gt-md="row" class="curriculum-fulfillment-result">
         <div flex-gt-md="50">
           <span ng-if="moduleResultById[module.curriculumModule.id].isApelTransfer" class="apelAsterisk">*</span>
           <span>{{currentLanguageNameField(module.curriculumModule) + ' (' + currentLanguageNameField(module.curriculumModule.module) + ')'}}</span>
@@ -8,9 +9,9 @@
         </div>
         <div flex-gt-md="15" flex-offset-gt-md="5" layout="row" layout-align-gt-md="center center">
           <div ng-if="moduleResultById[module.curriculumModule.id] && moduleResultById[module.curriculumModule.id].grade && positiveGrade(moduleResultById[module.curriculumModule.id].grade.code)"
-            class="bold" md-colors="{color: 'green-600'}">{{moduleResultById[module.curriculumModule.id].grade | hoisVocationalGrade}} ({{moduleResultById[module.curriculumModule.id].credits}} {{'student.result.ekap' | translate}})</div>
+            class="bold" md-colors="{color: 'green-600'}">{{moduleResultById[module.curriculumModule.id].grade | hoisVocationalGrade}} ({{moduleResultById[module.curriculumModule.id].credits | number: 2}} {{'student.result.ekap' | translate}})</div>
           <div ng-if="moduleResultById[module.curriculumModule.id] && moduleResultById[module.curriculumModule.id].grade && !positiveGrade(moduleResultById[module.curriculumModule.id].grade.code)"
-            class="bold" md-colors="{color: 'red-500'}">{{moduleResultById[module.curriculumModule.id].grade | hoisVocationalGrade}} ({{moduleResultById[module.curriculumModule.id].credits}} {{'student.result.ekap' | translate}})</div>
+            class="bold" md-colors="{color: 'red-500'}">{{moduleResultById[module.curriculumModule.id].grade | hoisVocationalGrade}} ({{moduleResultById[module.curriculumModule.id].credits | number: 2}} {{'student.result.ekap' | translate}})</div>
           <div ng-if="(!moduleResultById[module.curriculumModule.id] || !moduleResultById[module.curriculumModule.id].grade) && module.moduleBacklog < 0"
             md-colors="{color: 'accent'}">{{module.moduleBacklog | number: 2}} {{'student.result.ekap' | translate}}</div>
           <div ng-if="(!moduleResultById[module.curriculumModule.id] || (moduleResultById[module.curriculumModule.id] && !moduleResultById[module.curriculumModule.id].grade)) && module.moduleBacklog >= 0"
@@ -24,10 +25,29 @@
           </div>
         </div>
       </div>
+
+      <!-- MODULE WITH MATCHED MODULE RESULT -->
+      <div ng-if="module.matchedModule" layout="column" layout-gt-md="row" class="curriculum-fulfillment-result">
+        <div flex-gt-md="50">
+          <span>{{currentLanguageNameField(module.curriculumModule) + ' (' + currentLanguageNameField(module.curriculumModule.module) + ')'}}</span>
+        </div>
+        <div flex-gt-md="15" flex-offset-gt-md="5" layout="row" layout-align-gt-md="center center">
+          <div class="bold" md-colors="{color: 'green-600'}">
+            <span>{{moduleResultById[module.matchedModule.curriculumModule.id].grade | hoisVocationalGrade}}</span>
+            <span>({{module.curriculumModule.credits | number: 2}} {{'student.result.ekap' | translate}})</span>
+          </div>
+        </div>
+        <div flex-gt-md="30" flex-offset-gt-md="5" layout="row" layout-align-gt-md="center center"></div>
+      </div>
     </hois-collapsable-header>
     <md-table-container>
       <table md-table class="secondary-table">
         <thead md-head>
+          <tr ng-if="module.matchedModule" md-row class="curriculum-matched-module">
+            <td md-cell>{{currentLanguageNameField(module.matchedModule.curriculumModule)}}</td>
+            <td md-cell>{{module.matchedModule.curriculumModule.credits}}</td>
+            <td md-cell colspan="5"></td>
+          </tr>
           <tr md-row>
             <th md-column>{{'student.result.themeOutcome' | translate}}</th>
             <th md-column>{{'student.result.ekap' | translate}}</th>
@@ -38,15 +58,44 @@
           </tr>
         </thead>
         <tbody md-body>
-          <tr md-row ng-class-odd="'odd'" ng-class-even="'even'" ng-repeat-start="row in module.themes"
+          <!-- THEME -->
+          <tr md-row ng-class-odd="'odd'" ng-class-even="'even'" ng-repeat-start="row in module.themes | orderBy: ['-otherCurriculumVersionModuleTheme', 'nameEt']"
             ng-include="'student/templates/view.results.vocational.curriculumfulfillment.theme.tmpl.html'"></tr>
-          <tr ng-if="formState.showOutcomes" md-row ng-repeat-end ng-repeat="outcome in row.curriculumModuleOutcomes | orderBy: 'orderNr' track by $index"
-            ng-include="'student/templates/view.results.vocational.curriculumfulfillment.theme.outcome.tmpl.html'"></tr>
+
+          <!-- THEME OUTCOMES -->
+          <tr ng-if="formState.showOutcomes" md-row class="curriculum-outcome" ng-repeat="outcome in row.curriculumModuleOutcomes | orderBy: 'orderNr' track by $index">
+            <td md-cell>{{'student.result.outcome' | translate}}{{outcome.orderNr + 1}} {{currentLanguage()==='en' ? outcome.outcomeEn : outcome.outcomeEt}}</td>
+            <td md-cell></td>
+            <td md-cell>
+              <hois-vocational-result value="moduleResultById[module.curriculumModule.id].outcomeResultById[outcome.id].grade"
+                exists-grading-schema="existsSchoolGradingSchema"></hois-vocational-result>
+            </td>
+            <td md-cell>{{moduleResultById[module.curriculumModule.id].outcomeResultById[outcome.id].date | hoisDate}}</td>
+            <td md-cell>{{displayTeachers(moduleResultById[module.curriculumModule.id].outcomeResultById[outcome.id].teachers)}}</td>
+            <td md-cell></td>
+            <td md-cell></td>
           </tr>
-          <tr md-row ng-class-odd="'odd'" ng-class-even="'even'" ng-repeat-start="row in module.otherCurriculumVersionModuleThemes"
-            ng-include="'student/templates/view.results.vocational.curriculumfulfillment.theme.tmpl.html'"></tr>
-          <tr ng-if="formState.showOutcomes" md-row ng-repeat-end ng-repeat="outcome in row.curriculumModuleOutcomes | orderBy: 'orderNr' track by $index"
-            ng-include="'student/templates/view.results.vocational.curriculumfulfillment.theme.outcome.tmpl.html'"></tr>
+
+          <!-- MATCHED THEME -->
+          <tr ng-if="row.matchedTheme" md-row class="curriculum-matched-theme">
+            <td md-cell>{{row.matchedTheme.nameEt}}</td>
+            <td md-cell>{{row.matchedTheme.credits}}</td>
+            <td md-cell colspan="5"></td>
+          </tr>
+
+          <!-- MATCHED THEME OUTCOMES -->
+          <tr ng-if="row.matchedTheme && formState.showOutcomes" md-row class="curriculum-matched-theme-outcome"
+            ng-repeat-end ng-repeat="outcome in row.matchedTheme.curriculumModuleOutcomes | orderBy: 'orderNr' track by $index">
+            <td md-cell>{{'student.result.outcome' | translate}}{{outcome.orderNr + 1}} {{currentLanguage()==='en' ? outcome.outcomeEn : outcome.outcomeEt}}</td>
+            <td md-cell></td>
+            <td md-cell>
+              <hois-vocational-result value="moduleResultById[row.matchedTheme.curriculumModuleId].outcomeResultById[outcome.id].grade"
+                exists-grading-schema="existsSchoolGradingSchema"></hois-vocational-result>
+            </td>
+            <td md-cell>{{moduleResultById[row.matchedTheme.curriculumModuleId].outcomeResultById[outcome.id].date | hoisDate}}</td>
+            <td md-cell>{{displayTeachers(moduleResultById[row.matchedTheme.curriculumModuleId].outcomeResultById[outcome.id].teachers)}}</td>
+            <td md-cell colspan="2"></td>
+          </tr>
         </tbody>
       </table>
     </md-table-container>

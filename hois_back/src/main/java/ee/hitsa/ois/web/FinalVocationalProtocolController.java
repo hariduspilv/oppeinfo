@@ -196,7 +196,7 @@ public class FinalVocationalProtocolController {
 
         httpSession.removeAttribute(BDOC_TO_SIGN);
         httpSession.removeAttribute(BDOC_CONT);
-        return get(user, finalProtocolService.confirm(user, protocol, null));
+        return get(user, finalProtocolService.confirm(user, protocol));
     }
 
     @PostMapping("/{id:\\d+}/mobileIdSignatureRequest")
@@ -235,7 +235,7 @@ public class FinalVocationalProtocolController {
             OisFile signedBdoc = bdocService.mobileIdSign(session, "protokoll");
             if (signedBdoc != null) {
                 protocol.setOisFile(signedBdoc);
-                protocol = finalProtocolService.confirm(user, protocol, null);
+                protocol = finalProtocolService.confirm(user, protocol);
             }
             httpSession.removeAttribute(MOBILE_SESSIONID);
             httpSession.removeAttribute(BDOC_TO_SIGN);

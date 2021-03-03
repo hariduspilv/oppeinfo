@@ -525,13 +525,64 @@ md-input-container:not(.md-input-invalid) .md-select-value > span:not(.md-select
 }
 
 .odd {
-background-color: #fcfcfc;
+  background-color: #fcfcfc;
 }
 
 .even {
   background-color: #f5f5f5;
 }
 
+md-table-container[fixed-column-table] table.directive.secondary-table {
+  position: relative;
+}
+
+md-table-container[fixed-column-table] table.directive.secondary-table.md-table th {
+  z-index: 15;
+}
+
+md-table-container[fixed-column-table] table.directive.secondary-table.md-table td.fixed-cell {
+  z-index: 10;
+}
+
+md-table-container[fixed-column-table] table.directive.secondary-table.md-table td.fixed-cell,
+md-table-container[fixed-column-table] table.directive.secondary-table.md-table th {
+  position: relative;
+}
+
+md-table-container[fixed-column-table] table.directive.secondary-table.md-table tr.even td.fixed-cell {
+  background-color: #f5f5f5;
+}
+
+md-table-container[fixed-column-table] table.directive.secondary-table.md-table tr.odd td.fixed-cell {
+  background-color: #fcfcfc;
+}
+
+md-table-container[fixed-column-table] table.directive.secondary-table.md-table th {
+  background-color: #fff;
+}
+
+md-table-container[fixed-column-table] table.directive.fixed3.secondary-table.md-table td:nth-child(3),
+md-table-container[fixed-column-table] table.directive.fixed3.secondary-table.md-table th:nth-child(3),
+md-table-container[fixed-column-table] table.directive.fixed4.secondary-table.md-table td:nth-child(4),
+md-table-container[fixed-column-table] table.directive.fixed4.secondary-table.md-table th:nth-child(4),
+md-table-container[fixed-column-table] table.directive.fixed5.secondary-table.md-table td:nth-child(5),
+md-table-container[fixed-column-table] table.directive.fixed5.secondary-table.md-table th:nth-child(5),
+md-table-container[fixed-column-table] table.directive.fixed6.secondary-table.md-table td:nth-child(6),
+md-table-container[fixed-column-table] table.directive.fixed6.secondary-table.md-table th:nth-child(6) {
+  border-right: 1px solid #ccc;
+  padding-right: 20px !important;
+}
+
+md-table-container[fixed-column-table] table.directive.fixed3.secondary-table.md-table td:nth-child(4),
+md-table-container[fixed-column-table] table.directive.fixed3.secondary-table.md-table th:nth-child(4),
+md-table-container[fixed-column-table] table.directive.fixed4.secondary-table.md-table td:nth-child(5),
+md-table-container[fixed-column-table] table.directive.fixed4.secondary-table.md-table th:nth-child(5),
+md-table-container[fixed-column-table] table.directive.fixed5.secondary-table.md-table td:nth-child(6),
+md-table-container[fixed-column-table] table.directive.fixed5.secondary-table.md-table th:nth-child(6),
+md-table-container[fixed-column-table] table.directive.fixed6.secondary-table.md-table td:nth-child(7),
+md-table-container[fixed-column-table] table.directive.fixed6.secondary-table.md-table th:nth-child(7) {
+  padding-left: 8px !important;
+}
 
 /*md-input-container.md-input-has-value .md-select-value > span:not(.md-select-icon) {
    color: #000;
@@ -619,6 +670,10 @@ md-dialog md-toolbar  h2{
 
 .hois-value {
   word-wrap: break-word;
+}
+
+.hois-table-select {
+  width: 250px;
 }
 
 .horizontal-radio-group {
@@ -1434,7 +1489,7 @@ label.required::after {
   font-weight: normal;
 }
 
-.lessonplan input[type="text"], .lessonplan input[type="number"]
+.lessonplan input[type="text"]:not(.md-input), .lessonplan input[type="number"]
 {
 	width: 30px;
 	text-align: center;
@@ -1455,6 +1510,11 @@ label.required::after {
 
 .lessonplan-module-row, .lessonplan-module-row > .fixed-cell {
   background: rgb(225, 245, 254);
+}
+
+.lessonplan-free-journal {
+  color: blue;
+  border: none !important;
 }
 
 .lessonplan-individual-journal {
@@ -2009,6 +2069,10 @@ tr.scholarship-bottom-border td {
 
 .pointer {
   cursor: pointer;
+}
+
+.journal-is-test md-checkbox{
+  margin: 0;
 }
 
 md-checkbox.md-checked.journal-lesson-absence .md-icon {
@@ -2788,6 +2852,27 @@ label.ui-btn {
   .curriculum-fulfillment-result > div:nth-child(2) {
     text-align: left;
   }
+}
+
+.curriculum-outcome td:first-child {
+  padding-left: 48px !important;
+}
+
+.curriculum-matched-module td, .curriculum-matched-theme td, .curriculum-matched-theme-outcome td {
+  color: rgb(255, 64, 129) !important;
+  font-style: italic;
+}
+
+.curriculum-matched-module {
+  font-weight: bold;
+}
+
+.curriculum-matched-theme td:first-child {
+  padding-left: 48px !important;
+}
+
+.curriculum-matched-theme-outcome td:first-child {
+  padding-left: 72px !important;
 }
 
 .padding-y-0 {

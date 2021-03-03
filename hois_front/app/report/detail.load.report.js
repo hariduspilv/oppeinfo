@@ -8,17 +8,17 @@
     scope.reportData.teacherCapacities = [];
     scope.months = {};
     scope.entriesWithoutCapacity = false;
-    
+
     if (reportData.criteria.byCapacities) {
       setTeacherCapacities(scope, teachers);
     }
-    
-    scope.plannedLessonsColspan = reportData.criteria.showPlannedLessons ? 
+
+    scope.plannedLessonsColspan = reportData.criteria.showPlannedLessons ?
       (scope.reportData.teacherCapacities.length != 0 ? scope.reportData.teacherCapacities.length + 2 : (2 + (scope.reportData.criteria.byCapacities ? 0 : 1))) : 0;
-    
+
     scope.journalOccurredLessonsColspan = 0;
     if (!reportData.criteria.isHigher) {
-      scope.journalOccurredLessonsColspan = (scope.reportData.teacherCapacities.length != 0 ? scope.reportData.teacherCapacities.length + 2 : 2 + (scope.reportData.criteria.byCapacities ? 0 : 1)) 
+      scope.journalOccurredLessonsColspan = (scope.reportData.teacherCapacities.length != 0 ? scope.reportData.teacherCapacities.length + 2 : 2 + (scope.reportData.criteria.byCapacities ? 0 : 1))
       + (scope.entriesWithoutCapacity ? 1 : 0);
     }
     // last addition is because of substitutable lessons
@@ -27,7 +27,7 @@
       scope.timetableOccurredLessonsColspan = (scope.reportData.teacherCapacities.length) + (scope.entriesWithoutCapacity ? 1 : 0) +
         (reportData.criteria.showSingleEvents ? 1 : 0) + 3 + (scope.reportData.criteria.byCapacities ? 0 : 1);
     }
-    
+
     scope.periodColspan = scope.plannedLessonsColspan + scope.journalOccurredLessonsColspan + scope.timetableOccurredLessonsColspan;
     // last addition is because of timetable occured lessons totals
     scope.totalsColspan = scope.periodColspan + (scope.reportData.criteria.byCapacities ? 1 : 0) + 1;
@@ -140,8 +140,8 @@
         colspan: scope.journalOccurredLessonsColspan,
         divider: !criteria.showTimetableLoad
       });
-    } 
-    
+    }
+
     if (criteria.isHigher || criteria.showTimetableLoad) {
       scope.periodTypesRow.push({
         index: periodIndex,
@@ -161,26 +161,26 @@
         scope.periodCapacitiesRow.push({ index: periodIndex, name: 'contactLesson', plannedContactLessons: true });
         scope.periodCapacitiesRow.push({ index: periodIndex, name: 'koefLesson', plannedKoefLessons: true });
       }
-      
+
       if (!criteria.isHigher) {
         scope.periodCapacitiesRow = scope.periodCapacitiesRow.concat(teacherCapacities.map(function (c) {
           return { index: periodIndex, journalOccurredLessons: true, value: c.value, code: c.code };
         }));
         if (scope.entriesWithoutCapacity) {
-          scope.periodCapacitiesRow.push({ index: periodIndex, value: NO_CAPACITY_TYPE, code: NO_CAPACITY_TYPE, 
+          scope.periodCapacitiesRow.push({ index: periodIndex, value: NO_CAPACITY_TYPE, code: NO_CAPACITY_TYPE,
             journalOccurredLessons: true});
         }
         scope.periodCapacitiesRow.push({ index: periodIndex, name: 'contactLesson', journalOccurredContactLessons: true });
         scope.periodCapacitiesRow.push({ index: periodIndex, name: 'koefLesson', journalOccurredKoefLessons: true, divider: !criteria.showSingleEvents && !criteria.showSingleEvents && !(criteria.isHigher || criteria.showTimetableLoad)});
       }
-  
+
       if (criteria.isHigher || criteria.showTimetableLoad) {
-        
+
         scope.periodCapacitiesRow = scope.periodCapacitiesRow.concat(teacherCapacities.map(function (c) {
           return { index: periodIndex, timetableOccurredLessons: true, value: c.value, code: c.code };
         }));
         if (scope.entriesWithoutCapacity) {
-          scope.periodCapacitiesRow.push({ index: periodIndex, value: NO_CAPACITY_TYPE, code: NO_CAPACITY_TYPE, 
+          scope.periodCapacitiesRow.push({ index: periodIndex, value: NO_CAPACITY_TYPE, code: NO_CAPACITY_TYPE,
             timetableOccurredLessons: true });
         }
         scope.periodCapacitiesRow.push({ index: periodIndex, name: 'contactLesson', timetableOccurredContactLessons: true });
@@ -198,7 +198,7 @@
         scope.periodCapacitiesRow.push({ index: periodIndex, name: 'contactLesson', journalOccurredContactLessons: true });
         scope.periodCapacitiesRow.push({ index: periodIndex, name: 'koefLesson', journalOccurredKoefLessons: true, divider: !criteria.isHigher && !criteria.showTimetableLoad});
       }
-  
+
       if (criteria.isHigher || criteria.showTimetableLoad) {
         scope.periodCapacitiesRow.push({ index: periodIndex, name: 'study', timetableOccurredLessons: true});
         scope.periodCapacitiesRow.push({ index: periodIndex, name: 'contactLesson', timetableOccurredContactLessons: true });
@@ -229,7 +229,7 @@
         allStudyPeriods: QueryUtils.endpoint('/autocomplete/studyPeriods').query(),
         studyPeriods: {},
         xlsUrl: 'reports/teachers/detailload/teachersdetailload.xlsx',
-        xlsUrlDetail: 'reports/teachers/detailload/teachersdetailloadsubjectjournal.xlsx'
+        xlsUrlDetail: 'reports/teachers/detailload/teachersdetailloadsubjectjournal'
       };
 
       function loadReportData() {
@@ -346,7 +346,7 @@
           $scope.criteria.isHigher = false;
           var criteria = angular.copy($scope.reportData.criteria);
           criteria.showSingleEvents = false;
-          ExcelUtils.get($scope.excel($scope.formState.xlsUrlDetail, criteria), 'teachersdetailloadsubjectjournal.xlsx', $scope);
+          ExcelUtils.get($scope.excel($scope.formState.xlsUrlDetail, criteria), 'teachersdetailloadsubjectjournal', $scope);
         });
       };
 
@@ -402,7 +402,7 @@
         allStudyPeriods: QueryUtils.endpoint('/autocomplete/studyPeriods').query(),
         studyPeriods: {},
         xlsUrl: 'reports/teachers/detailload/teachersdetailload.xlsx',
-        xlsUrlDetail: 'reports/teachers/detailload/teachersdetailloadsubjectjournal.xlsx'
+        xlsUrlDetail: 'reports/teachers/detailload/teachersdetailloadsubjectjournal'
       };
 
       function loadReportData() {
@@ -499,7 +499,7 @@
           $scope.criteria.isHigher = true;
           var criteria = angular.copy($scope.reportData.criteria);
           criteria.showSingleEvents = false;
-          ExcelUtils.get($scope.excel($scope.formState.xlsUrlDetail, criteria), 'teachersdetailloadsubjectjournal.xlsx', $scope);
+          ExcelUtils.get($scope.excel($scope.formState.xlsUrlDetail, criteria), 'teachersdetailloadsubjectjournal', $scope);
         });
       };
 

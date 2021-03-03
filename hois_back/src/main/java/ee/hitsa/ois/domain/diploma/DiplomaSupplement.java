@@ -12,6 +12,7 @@ import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.OrderBy;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
@@ -110,6 +111,7 @@ public class DiplomaSupplement extends BaseEntityWithId {
     @Column(name = "is_duplicate_en")
     private Boolean duplicateEn;
     @OneToMany(mappedBy = "diplomaSupplement", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("id")
     private List<DiplomaSupplementStudyResult> studyResults;
     @OneToMany(mappedBy = "diplomaSupplement")
     private List<DiplomaSupplement> duplicateSupplements;

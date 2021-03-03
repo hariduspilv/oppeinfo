@@ -13,6 +13,8 @@
       {{'teacher.rtipAbsence.label' | translate}}</md-nav-item>
   <md-nav-item ng-if="((auth.isAdmin() && teacher.id) || auth.isTeacher()) && teacher.isHigher" md-nav-href="#/teachers/{{::teacher.id}}/programs?_noback" name="teacher.programs">
       {{'teacher.subjectPrograms.label' | translate}}</md-nav-item>
+  <md-nav-item ng-if="((auth.isAdmin() && teacher.id) || auth.isTeacher())" md-nav-href="#/teachers/{{::teacher.id}}/load?_noback" name="teacher.load">
+    {{'teacher.load.label' | translate}}</md-nav-item>
 </md-nav-bar>
 
 <div layout-padding>

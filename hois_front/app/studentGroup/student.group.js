@@ -89,12 +89,12 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$route',
     var baseUrl = '/studentgroups';
     var Endpoint = QueryUtils.endpoint(baseUrl);
     var clMapper = Classifier.valuemapper({studyForm: 'OPPEVORM', studyLevel: 'OPPEASTE', status: 'OPPURSTAATUS'});
-    var clSpecMapper = Classifier.valuemapper({code: 'SPETSKUTSE'});
 
     var school = Session.school || {};
     var onlyvocational = !school.higher && school.vocational;
-    $scope.formState = {allCurriculumVersions: Curriculum.queryVersions({userId: $scope.auth.isLeadingTeacher() ? $scope.auth.user : null}), curriculumVersions: [],
-                        languages: [], studyForms: [], specialities: [], selectedStudents: [], order: 'rowno',
+    $scope.formState = {allCurriculumVersions: Curriculum.queryVersions({userId: $scope.auth.isLeadingTeacher() ? $scope.auth.user : null}),
+                        curriculumVersions: [], curriculumAddresses: [],
+                        languages: [], studyForms: [], selectedStudents: [], order: 'rowno',
                         curriculumVersionLabel: 'studentGroup.curriculumVersionBoth',
                         onlyvocational: onlyvocational, isVocational: school.vocational};
 
@@ -115,29 +115,32 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$route',
       $scope.formState.studyForm = $scope.record.studyForm;
       $scope.formState.speciality = $scope.record.speciality;
       $scope.formState.curriculumVersion = $scope.record.curriculumVersion;
+      $scope.formState.curriculumAddress = $scope.record.curriculumAddress;
 
       var afterCurriculumChange = function(result) {
         $scope.formState.curriculumVersions = $scope.formState.allCurriculumVersions.filter(function(cv) { return cv.curriculum === curriculumId;});
         $scope.formState.languages = result.languages || [];
         $scope.formState.studyForms = result.studyForms || [];
         $scope.formState.origStudyLevel = result.origStudyLevel;
-        $scope.formState.specialities = result.specialities || [];
         $scope.formState.isVocational = result.isVocational;
         $scope.formState.studyPeriodInYears = result.studyPeriodInYears;
+        $scope.formState.curriculumAddresses = result.curriculumAddresses || [];
+        $scope.formState.hasSpecialities = result.hasSpecialities;
 
-        $q.all(clSpecMapper.promises).then(function () {
-          clSpecMapper.objectmapper($scope.formState.specialities);
-          $scope.formState.specialities.forEach(function (r) {
-            r.code.validFrom = r.validFrom;
-            r.code.validThru = r.validThru;
-          });
-          $scope.record.speciality = $scope.formState.specialities.find(function(it) { return it.code.code === $scope.formState.speciality; }) !== undefined ? $scope.formState.speciality : null;
-        });
         if (!$scope.record.isGuest) {
           // try to restore values
           $scope.record.language = $scope.formState.languages.indexOf($scope.formState.language) !== -1 ? $scope.formState.language : null;
           $scope.record.studyForm = $scope.formState.studyForms.indexOf($scope.formState.studyForm) !== -1 ? $scope.formState.studyForm : null;
           $scope.record.curriculumVersion = $scope.formState.curriculumVersions.find(function(it) {return it.id === $scope.formState.curriculumVersion;}) !== undefined ? $scope.formState.curriculumVersion : null;
+          if ($scope.formState.isVocational) {
+            $scope.record.curriculumAddress = null;
+          } else {
+            $scope.record.ehisSchool = null;
+            $scope.record.curriculumAddress = $scope.formState.curriculumAddresses.find(function (it) {
+              return it.id === $scope.formState.curriculumAddress;
+            }) !== undefined ? $scope.formState.curriculumAddress : null;
+          }
+
         }
       };
       if(curriculumId) {
@@ -196,6 +199,7 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$route',
       $scope.formState.selectedStudents = angular.copy($scope.formState.students);
       $scope.formState.readonly = $scope.record.id && $scope.formState.students && $scope.formState.students.length > 0;
       $scope.formState.currentCurriculumVersion = $scope.record.curriculumVersion;
+      $scope.record.curriculumAddress = ($scope.record.curriculumAddress || {}).id;
       $scope.curriculumChanged();
       $scope.validThruChanged();
       $scope.record.members.forEach(function(it, i) { it.rowno = i + 1; });
@@ -234,6 +238,8 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$route',
 
     function updateStudentGroup() {
       $scope.record.students = $scope.formState.selectedStudents.map(function(item) { return item.id; });
+      // hois-select sets "" empty value
+      $scope.record.curriculumAddress = !!$scope.record.curriculumAddress ? $scope.record.curriculumAddress : null;
       if ($scope.record.id) {
         $scope.record.$update().then(afterLoad).then(message.updateSuccess).catch(angular.noop);
       } else {
@@ -350,16 +356,7 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$route',
         QueryUtils.endpoint(baseUrl+'/curriculumdata').get({id: result.curriculum.id}, function(result) {
           $scope.formState.origStudyLevel = result.origStudyLevel;
           $scope.formState.isVocational = result.isVocational;
-          var spec = result.specialities.find(function (r) {
-            return r.code === (angular.isObject($scope.record.speciality) ? $scope.record.speciality.code : $scope.record.speciality);
-          });
-          $q.all(clMapperSpec.promises).then(function () {
-            clMapperSpec.objectmapper($scope.record);
-            if (spec) {
-              $scope.record.speciality.validFrom = spec.validFrom;
-              $scope.record.speciality.validThru = spec.validThru;
-            }
-          });
+          $scope.formState.hasSpecialities = result.hasSpecialities;
         });
       }
       if(result.curriculumVersion) {

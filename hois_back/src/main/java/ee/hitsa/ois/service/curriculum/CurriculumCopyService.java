@@ -1,6 +1,7 @@
 package ee.hitsa.ois.service.curriculum;
 
 import java.time.LocalDate;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
@@ -17,8 +18,10 @@ import ee.hitsa.ois.domain.curriculum.CurriculumModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumModuleCompetence;
 import ee.hitsa.ois.domain.curriculum.CurriculumModuleOccupation;
 import ee.hitsa.ois.domain.curriculum.CurriculumModuleOutcome;
+import ee.hitsa.ois.domain.curriculum.CurriculumModuleStudyField;
 import ee.hitsa.ois.domain.curriculum.CurriculumOccupation;
 import ee.hitsa.ois.domain.curriculum.CurriculumOccupationSpeciality;
+import ee.hitsa.ois.domain.curriculum.CurriculumStudyField;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.enums.CurriculumDraft;
 import ee.hitsa.ois.enums.CurriculumStatus;
@@ -41,7 +44,7 @@ public class CurriculumCopyService {
         (copiedCurriculum, newCurriculum, "id", "school", "inserted", "insertedBy", "changed", "changedBy", "version", 
                 "ehisStatus", "ehisChanged", "higher", "code", "merCode", "validFrom", "validThru", "stateCurriculum", 
                 "studyLanguages", "departments", "files", "grades", "jointPartners", "specialities", 
-                "studyForms", "modules", "occupations", "versions");
+                "studyForms", "modules", "occupations", "versions", "studyFields");
 
         String oldCode = copiedCurriculum.getCode() != null ? copiedCurriculum.getCode() : "";
         newCurriculum.setCode(oldCode + " COPY");
@@ -54,7 +57,8 @@ public class CurriculumCopyService {
         curriculumService.updateLanguages(newCurriculum, StreamUtil.toMappedSet(l -> EntityUtil.getCode(l.getStudyLang()), copiedCurriculum.getStudyLanguages()));
         curriculumService.updateStudyForms(newCurriculum, StreamUtil.toMappedSet(sf -> EntityUtil.getCode(sf.getStudyForm()), copiedCurriculum.getStudyForms()));
         curriculumService.updateDepartments(newCurriculum, StreamUtil.toMappedSet(d -> EntityUtil.getId(d.getSchoolDepartment()), copiedCurriculum.getDepartments()));
-
+        curriculumService.updateStudyFields(newCurriculum, StreamUtil.toMappedSet(l -> EntityUtil.getId(l), copiedCurriculum.getStudyFields()));
+        
         copyJointPartners(newCurriculum, copiedCurriculum.getJointPartners());
         copyOccupations(newCurriculum, copiedCurriculum.getOccupations());
         copyModules(newCurriculum, copiedCurriculum.getModules());
@@ -103,15 +107,32 @@ public class CurriculumCopyService {
                 
                 CurriculumModule newModule = new CurriculumModule();
                 BeanUtils.copyProperties(copied, newModule, 
-                        "id", "changed", "changedBy", "inserted", "insertedBy", "version", 
+                        "id", "changed", "changedBy", "inserted", "insertedBy", "version", "studyFields", 
                         "curriculum", "occupations", "competences", "outcomes", "curriculumVersionOccupationModules");
                 newModule.setCurriculum(newCurriculum);
                 
                 copyOccupations(newModule, copied.getOccupations());
                 copyOutcomes(newModule, copied.getOutcomes());
                 copyCompetences(newModule, copied.getCompetences());
-                
+                copeStudyFields(newModule, copied.getStudyFields(), newCurriculum);
                 newCurriculum.getModules().add(newModule);
+            }
+        }
+    }
+
+    private static void copeStudyFields(CurriculumModule newModule, Set<CurriculumModuleStudyField> studyFields, Curriculum newCurriculum) {
+        if(studyFields != null && !newCurriculum.getStudyFields().isEmpty()) {
+            for(CurriculumModuleStudyField copied : studyFields) {
+                CurriculumStudyField copiedCurriculumStudyField = copied.getCurriculumStudyField();
+                Optional<CurriculumStudyField> attachedNewCurriculumStudyField = newCurriculum.getStudyFields().stream()
+                        .filter(p -> p.getNameEt().equals(copiedCurriculumStudyField.getNameEt()) && 
+                                (p.getNameEn() == null || p.getNameEn().equals(copiedCurriculumStudyField.getNameEn()))).findFirst();
+                if (attachedNewCurriculumStudyField.isPresent()) {
+                    CurriculumModuleStudyField newStudyField = new CurriculumModuleStudyField();
+                    newStudyField.setCurriculumModule(newModule);
+                    newStudyField.setCurriculumStudyField(attachedNewCurriculumStudyField.get());
+                    newModule.getStudyFields().add(newStudyField);
+                }
             }
         }
     }

@@ -175,8 +175,10 @@ public class DirectiveStudent extends BaseEntityWithId implements Period {
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier secondarySchoolCountry;
 
-    @OneToOne(mappedBy = "directiveStudent")
-    private StudentAbsence studentAbsence;
+//    @OneToOne(mappedBy = "directiveStudent")
+    // unnecessary request
+    @OneToMany(mappedBy = "directiveStudent", fetch = FetchType.LAZY)
+    private List<StudentAbsence> studentAbsences;
     @OneToMany(mappedBy = "directiveStudent", orphanRemoval = true, cascade = CascadeType.ALL)
     private List<DirectiveStudentDuplicateForm> forms;
 
@@ -513,12 +515,13 @@ public class DirectiveStudent extends BaseEntityWithId implements Period {
         this.isAbsence = isAbsence;
     }
 
-    public StudentAbsence getStudentAbsence() {
-        return studentAbsence;
+    public List<StudentAbsence> getStudentAbsences() {
+        return studentAbsences != null ? studentAbsences : (studentAbsences = new ArrayList<>());
     }
 
-    public void setStudentAbsence(StudentAbsence studentAbsence) {
-        this.studentAbsence = studentAbsence;
+    public void setStudentAbsences(List<StudentAbsence> studentAbsences) {
+        getStudentAbsences().clear();
+        getStudentAbsences().addAll(studentAbsences);
     }
 
     public Classifier getDormitory() {

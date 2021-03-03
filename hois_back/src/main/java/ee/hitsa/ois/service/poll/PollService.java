@@ -2677,7 +2677,7 @@ public class PollService {
                 + "SUBJECT_JOURNAL.subjectCode || ' - ' || SUBJECT_JOURNAL.subjectEt || ' (' || SUBJECT_JOURNAL.teacherNames || ')' as subjectEt , "
                 + "SUBJECT_JOURNAL.subjectCode || ' - ' || SUBJECT_JOURNAL.subjectEn || ' (' || SUBJECT_JOURNAL.teacherNames || ')' as subjectEn , "
                 + "SUBJECT_JOURNAL.teacherId as teacherId, SUBJECT_JOURNAL.teacherName, pt.is_teacher, pt.is_repetitive, "
-                + "string_agg(T4.answer_txt, '`') as textAnswers";
+                + "string_agg(replace(T4.answer_txt, '`', ''''), '`') as textAnswers";
         
         String SEARCH_FROM = "from poll pp" + 
                 " join poll_theme pt on pp.id=pt.poll_id" + 
@@ -3629,7 +3629,7 @@ public class PollService {
     private void setStatisticsResponses(PollXlsDto pollDto, PollResultStatisticsCommand criteria, HoisUserDetails user) {
         String SEARCH_SELECT = "r.poll_id as pollId, ro.student_id, ss.name_et as formEt, ss.name_en as formEn, ss.code as curriculumCode, "
                 + "ro.teacher_id, ro.person_id, r.id as responseId, ee.name, pt.target_code, "
-                + "string_agg(concat(qa.id, ':',rqa.question_id, ':', qa.answer_nr, ':', rqa.answer_txt), '`') as answers, "
+                + "string_agg(concat(qa.id, ':',rqa.question_id, ':', qa.answer_nr, ':', replace(rqa.answer_txt, '`', '''')), '`') as answers, "
                 + "string_agg(distinct nullif(concat(p.firstname, ' ', p.lastname), ' '), ', ') as teachers, "
                 + "s.id as subjectId, s.name_et as subjectEt, s.name_en as subjectEn, s.code as subjectcode, j.id as journalId, j.name_et as journalEt";
         String SEARCH_FROM = "from response r "
@@ -3776,7 +3776,7 @@ public class PollService {
     private void setResponses(PollXlsDto pollDto, PollResultStudentCommand criteria) {
         String SEARCH_SELECT = "ro.student_id, ss.name_et as formEt, ss.name_en as formEn, ss.code as curriculumCode, "
                 + "ro.teacher_id, ro.person_id, r.id as responseId, ee.name, pt.target_code, "
-                + "string_agg(concat(qa.id, ':',rqa.question_id, ':', qa.answer_nr, ':', rqa.answer_txt), '`') as answers, "
+                + "string_agg(concat(qa.id, ':',rqa.question_id, ':', qa.answer_nr, ':', replace(rqa.answer_txt, '`', '''')), '`') as answers, "
                 + "string_agg(distinct nullif(concat(p.firstname, ' ', p.lastname), ' '), ', ') as teachers, "
                 + "s.id as subjectId, s.name_et as subjectEt, s.name_en as subjectEn, s.code as subjectcode, j.id as journalId, j.name_et as journalEt";
         String SEARCH_FROM = "from response r "

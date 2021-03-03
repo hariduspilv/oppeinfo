@@ -1,5 +1,6 @@
 package ee.hitsa.ois.domain.teacher;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -42,6 +43,8 @@ public class Teacher extends BaseEntityWithId {
     private String untisCode;
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier nativeLanguage;
+    private LocalDateTime ehisSentVdt;
+    private LocalDateTime ehisSentHdt;
     @OneToOne(mappedBy = "teacher", fetch = FetchType.LAZY)
     private User user;
 
@@ -59,6 +62,8 @@ public class Teacher extends BaseEntityWithId {
     private Set<TeacherQualification> teacherQualification;
     @OneToMany(mappedBy = "teacher", fetch = FetchType.LAZY)
     private List<SubjectStudyPeriodTeacher> subjectStudyPeriods;
+    @OneToMany(mappedBy = "teacher", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TeacherOtherLoad> loads;
 
     public Person getPerson() {
         return person;
@@ -228,4 +233,29 @@ public class Teacher extends BaseEntityWithId {
 	public void setUntisCode(String untisCode) {
 		this.untisCode = untisCode;
 	}
+
+    public LocalDateTime getEhisSentVdt() {
+        return ehisSentVdt;
+    }
+
+    public void setEhisSentVdt(LocalDateTime ehisSentVdt) {
+        this.ehisSentVdt = ehisSentVdt;
+    }
+
+    public LocalDateTime getEhisSentHdt() {
+        return ehisSentHdt;
+    }
+
+    public void setEhisSentHdt(LocalDateTime ehisSentHdt) {
+        this.ehisSentHdt = ehisSentHdt;
+    }
+
+    public List<TeacherOtherLoad> getLoads() {
+        return loads != null ? loads : (loads = new ArrayList<>());
+    }
+
+    public void setLoads(List<TeacherOtherLoad> loads) {
+        getLoads().clear();
+        getLoads().addAll(loads);
+    }
 }

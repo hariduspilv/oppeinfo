@@ -31,20 +31,18 @@
    */
   HoisTableRow.$inject = [];
   function HoisTableRow() {
-    var directive = {
-        bindToController: true,
-        controller: HoisTableRowController,
-        controllerAs: 'ctrl',
-        link: link,
-        priority: 50,
-        restrict: 'A',
-        scope: {
-        },
-        transclude: true,
-        replace: true,
-        template: '<tr class="hois-table-row" ng-transclude></tr>'
+    return {
+      bindToController: true,
+      controller: HoisTableRowController,
+      controllerAs: 'ctrl',
+      link: link,
+      priority: 50,
+      restrict: 'A',
+      scope: {},
+      transclude: true,
+      replace: true,
+      template: '<tr class="hois-table-row" ng-transclude></tr>'
     };
-    return directive;
 
     function link(_scope, element, attrs, ctrl) {
       if (typeof attrs.excludeClass === 'string' && attrs.excludeClass !== '') {
@@ -177,7 +175,7 @@
         obj[r.index] = r;
         return obj;
       }, {});
-      // Elements which should be rearranged (if we delete them then ngMessages will lose it listener and be ignored)
+      // Elements which should be rearranged (if we delete them then ngMessages will lose its listener and be ignored)
       var oldToNew = {};
       for (var j = 0; j < tr.children().length; j++) {
         for (var key in mapped) {
@@ -189,7 +187,7 @@
       for (var i = 0; i < maxTD; i++) {
         if (tr.children()[i]) {
           if (oldToNew[i]) {
-            // position already accured or it was moved already
+            // position already acquired or it was moved already
             if (oldToNew[i].index <= i) {
               continue;
             }
@@ -284,6 +282,7 @@
         init();
         drawRows(undefined, self.data);
         ordered = false;
+        updateFixedTable();
       });
     }
 
@@ -300,32 +299,36 @@
         init(true);
         drawRows(copy, self.data);
         ordered = false;
+        updateFixedTable();
       });
+    }
+
+    function updateFixedTable() {
+      $scope.$root.$broadcast('refreshFixedColumns');
+      $scope.$root.$broadcast('refreshFixedTableHeight');
     }
   }
 
 
   HoisTableData.$inject = [];
   function HoisTableData() {
-    var directive = {
-        bindToController: true,
-        controller: HoisTableDataController,
-        controllerAs: 'ctrl',
-        link: link,
-        priority: 50.1,
-        restrict: 'A',
-        require: ['hoisTableData', '^hoisTableRow'],
-        replace: true,
-        scope: {
-        },
-        transclude: {
-          master: "hoisTableDataMaster",
-          between: "?hoisTableDataBetween", // in case if we need row between master and detail
-          detail: "?hoisTableDataDetail"
-        },
-        template: '<td class="hois-table-data" ng-transclude="master"></td>'
+    return {
+      bindToController: true,
+      controller: HoisTableDataController,
+      controllerAs: 'ctrl',
+      link: link,
+      priority: 50.1,
+      restrict: 'A',
+      require: ['hoisTableData', '^hoisTableRow'],
+      replace: true,
+      scope: {},
+      transclude: {
+        master: "hoisTableDataMaster",
+        between: "?hoisTableDataBetween", // in case if we need row between master and detail
+        detail: "?hoisTableDataDetail"
+      },
+      template: '<td class="hois-table-data" ng-transclude="master"></td>'
     };
-    return directive;
 
     function link(scope, _element, _attrs, ctrl, transclude) {
       var tdCtrl = ctrl[0];

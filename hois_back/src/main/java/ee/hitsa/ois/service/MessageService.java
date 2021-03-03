@@ -13,11 +13,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
@@ -25,6 +28,10 @@ import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.domain.BaseEntityWithId;
+import ee.hitsa.ois.domain.subject.Subject;
+import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
+import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.web.commandobject.SearchCommand;
@@ -32,6 +39,7 @@ import ee.hitsa.ois.web.commandobject.message.MessageDeleteCommand;
 import ee.hitsa.ois.web.dto.message.MessageFormDto;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -95,6 +103,30 @@ public class MessageService {
             + "sr.person_id as representativesId, "
             + "p.firstname, p.lastname, p.idcode,"
             + "c.id as curriculumId, c.name_et as curriculumNameEt, c.name_en as curriculumNameEn, c.is_higher ";
+    private static final String STUDENT_JOURNAL_SELECT_SUBQUERY =
+            ", (select string_agg(j.id\\:\\:varchar, ';') " +
+            "from journal_student js " +
+            "join journal j on j.id = js.journal_id " +
+            "where js.student_id = s.id) as journal_ids";
+    private static final String STUDENT_SUBJECT_SELECT_SUBQUERY =
+            ", (select string_agg(ssp.id\\:\\:varchar, ';') " +
+            "from declaration d " +
+            "join declaration_subject ds on ds.declaration_id = d.id " +
+            "join subject_study_period ssp on ssp.id = ds.subject_study_period_id " +
+            "join subject sj on sj.id = ssp.subject_id " +
+            "where d.student_id = s.id) as subject_ids ";
+    private static final String STUDENT_JOURNAL = "exists(select 1 " +
+            "from journal_student js " +
+            "join journal j on j.id = js.journal_id " +
+            "where js.student_id = s.id " +
+            "and j.id in :journalsIds)";
+    private static final String STUDENT_SSP = "exists(select 1 " +
+            "from declaration d " +
+            "join declaration_subject ds on ds.declaration_id = d.id " +
+            "join subject_study_period ssp on ssp.id = ds.subject_study_period_id " +
+            "join subject sj on sj.id = ssp.subject_id " +
+            "where d.student_id = s.id " +
+            "and ssp.id in :sspIds)";
 
     @Autowired
     private ClassifierRepository classifierRepository;
@@ -405,36 +437,41 @@ public class MessageService {
         }
         StudentGroup studentGroup = student.getStudentGroup();
 
-        final List<MessageReceiverDto> results = new ArrayList<>();
         final List<JournalStudent> journalStudents = student.getJournalStudents();
         final List<SubjectStudyPeriodStudentGroup> subjectStudyPeriods = studentGroup != null
                 ? studentGroup.getSubjectStudyPeriods() : new ArrayList<>();
 
-        student.getRepresentatives().stream()
+        final List<MessageReceiverDto> results = student.getRepresentatives().stream()
             .filter(sr -> Boolean.TRUE.equals(sr.getIsStudentVisible()))
-            .forEach(studentRepresentative -> {
-                // TODO: Change Journal variable in MessageReceiverDto so it could be a list with all journals. Same for subjects
-                for (int i = 0; i < journalStudents.size() || i < subjectStudyPeriods.size() || i < 1; i++) {
-                    MessageReceiverDto dto = new MessageReceiverDto();
-                    dto.setId(student.getId());
-                    dto.setPersonId(studentRepresentative.getPerson().getId());
-                    dto.setFullname(studentRepresentative.getPerson().getFullname());
-                    dto.setHigher(Boolean.valueOf(StudentUtil.isHigher(student)));
+            .map(studentRepresentative -> {
+                MessageReceiverDto dto = new MessageReceiverDto();
+                dto.setId(student.getId());
+                dto.setPersonId(studentRepresentative.getPerson().getId());
+                dto.setFullname(studentRepresentative.getPerson().getFullname());
+                dto.setFirstname(studentRepresentative.getPerson().getFirstname());
+                dto.setLastname(studentRepresentative.getPerson().getLastname());
+                dto.setHigher(Boolean.valueOf(StudentUtil.isHigher(student)));
 
-                    if (studentGroup != null) {
-                        dto.setStudentGroup(AutocompleteResult.of(studentGroup));
-                        Curriculum curriculum = student.getStudentGroup().getCurriculum();
-                        dto.setCurriculum(curriculum != null ? AutocompleteResult.of(curriculum) : null);
-                    }
-
-                    dto.setRole(Arrays.asList(Role.ROLL_L.name()));
-                    if (i < journalStudents.size())
-                        dto.setJournal(AutocompleteResult.of(journalStudents.get(i).getJournal()));
-                    if (i < subjectStudyPeriods.size())
-                        dto.setSubject(AutocompleteResult.of(subjectStudyPeriods.get(i).getSubjectStudyPeriod().getSubject()));
-                    results.add(dto);
+                if (studentGroup != null) {
+                    dto.setStudentGroup(AutocompleteResult.of(studentGroup));
+                    Curriculum curriculum = student.getStudentGroup().getCurriculum();
+                    dto.setCurriculum(curriculum != null ? AutocompleteResult.of(curriculum) : null);
                 }
-            });
+
+                dto.setRole(Arrays.asList(Role.ROLL_L.name()));
+                dto.setJournals(StreamUtil.nullSafeList(journalStudents).stream()
+                        .map(JournalStudent::getJournal)
+                        .distinct()
+                        .map(AutocompleteResult::of)
+                        .collect(Collectors.toList()));
+                dto.setSubjects(StreamUtil.nullSafeList(subjectStudyPeriods).stream()
+                        .map(SubjectStudyPeriodStudentGroup::getSubjectStudyPeriod)
+                        .map(SubjectStudyPeriod::getSubject)
+                        .distinct()
+                        .map(AutocompleteResult::of)
+                        .collect(Collectors.toList()));
+                return dto;
+            }).collect(Collectors.toList());
         
         return results;
     }
@@ -444,46 +481,91 @@ public class MessageService {
         StringBuilder from = new StringBuilder(STUDENT_PARENTS_FROM);
         final boolean isJournalIds = !CollectionUtils.isEmpty(criteria.getJournalId()); 
         final boolean isSubjectUsed = !CollectionUtils.isEmpty(criteria.getSubjectId());
-        if (isJournalIds) {
-            select.append(", j.id as journal_id, j.name_et as journal_name");
-            from.append("left join journal_student js on js.student_id = s.id ");
-            from.append("left join journal j on j.id = js.journal_id ");
-        }
-        if (isSubjectUsed) {
-            select.append(", sj.id as subject_id, sj.name_et as subject_name_et, sj.name_en as subject_name_en");
-            from.append("left join declaration d on d.student_id = s.id ");
-            from.append("left join declaration_subject ds on ds.declaration_id = d.id ");
-            from.append("left join subject_study_period ssp on ssp.id = ds.subject_study_period_id ");
-            from.append("left join subject sj on sj.id = ssp.subject_id ");
-        }
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from.toString());
         qb.optionalCriteria("sg.id in (:group)", "group", criteria.getStudentGroupId());
-        qb.optionalCriteria("j.id in (:journalIds)", "journalIds", criteria.getJournalId());
-        qb.optionalCriteria("ssp.id in :sspIds", "sspIds", criteria.getSubjectId());
         qb.filter("sr.is_student_visible = true");
         qb.requiredCriteria("s.status_code in :status", "status", StudentStatus.STUDENT_STATUS_ACTIVE);
+
+        if (isJournalIds || isSubjectUsed) {
+            //journal
+            select.append(STUDENT_JOURNAL_SELECT_SUBQUERY);
+            qb.optionalCriteria(STUDENT_JOURNAL, "journalsIds", criteria.getJournalId());
+            // subject
+            select.append(STUDENT_SUBJECT_SELECT_SUBQUERY);
+            qb.optionalCriteria(STUDENT_SSP, "sspIds", criteria.getSubjectId());
+        }
+
         List<?> result = qb.select(select.toString(), em).getResultList();
+
+        Set<Long> journals = new HashSet<>();
+        Set<Long> subjectStudyPeriods = new HashSet<>();
+        if (isJournalIds || isSubjectUsed) {
+            for (Object r : result) {
+                if (criteria.getJournalId() != null && !criteria.getJournalId().isEmpty()) {
+                    journals.addAll(resultAsStringList(r, 12, ";").stream()
+                            .map(Long::valueOf)
+                            .filter(v -> criteria.getJournalId().contains(v))
+                            .collect(Collectors.toList()));
+                }
+                if (criteria.getSubjectId() != null && !criteria.getSubjectId().isEmpty()) {
+                    subjectStudyPeriods.addAll(resultAsStringList(r, 13, ";").stream()
+                            .map(Long::valueOf)
+                            .filter(v -> criteria.getSubjectId().contains(v))
+                            .collect(Collectors.toList()));
+                }
+            }
+        }
+
+        Map<Long, Journal> journalsById = queryJournalsByIds(journals);
+        Map<Long, Subject> subjectsById = querySubjectsByIds(subjectStudyPeriods);
+
         return StreamUtil.toMappedList(r -> {
             MessageReceiverDto dto = new MessageReceiverDto();
             dto.setId(resultAsLong(r, 2));
             dto.setPersonId(resultAsLong(r, 4));
             dto.setFullname(PersonUtil.fullname(resultAsString(r, 5), resultAsString(r, 6)));
+            dto.setFirstname(resultAsString(r, 5));
+            dto.setLastname(resultAsString(r, 6));
             dto.setHigher(resultAsBoolean(r, 11));
             String studentGroupCode = resultAsString(r, 1);
             dto.setStudentGroup(new AutocompleteResult(resultAsLong(r, 0), studentGroupCode, studentGroupCode));
             dto.setCurriculum(new AutocompleteResult(resultAsLong(r, 8), resultAsString(r, 9), resultAsString(r, 10)));
-            if (isJournalIds) {
-                dto.setJournal(new AutocompleteResult(resultAsLong(r, 12), resultAsString(r, 13), resultAsString(r, 13)));
-                if (isSubjectUsed) {
-                    dto.setSubject(new AutocompleteResult(resultAsLong(r, 14), resultAsString(r, 15), resultAsString(r, 16)));
-                }
-            } else {
-                if (isSubjectUsed) {
-                    dto.setSubject(new AutocompleteResult(resultAsLong(r, 12), resultAsString(r, 13), resultAsString(r, 14)));
-                }
+            if (isJournalIds || isSubjectUsed) {
+                dto.setJournals(resultAsStringList(r, 12, ";").stream()
+                        .map(Long::valueOf)
+                        .map(journalsById::get)
+                        .filter(Objects::nonNull)
+                        .map(AutocompleteResult::of)
+                        .collect(Collectors.toList()));
+                dto.setSubjects(resultAsStringList(r, 13, ";").stream()
+                        .map(Long::valueOf)
+                        .map(subjectsById::get)
+                        .filter(Objects::nonNull)
+                        .distinct()
+                        .map(AutocompleteResult::of)
+                        .collect(Collectors.toList()));
             }
             return dto;
         }, result);
+    }
+
+    @NotNull
+    private Map<Long, Subject> querySubjectsByIds(Set<Long> subjectStudyPeriods) {
+        return !subjectStudyPeriods.isEmpty()
+                ? em.createQuery("select ssp.id, ssp.subject from SubjectStudyPeriod ssp " +
+                        "where ssp.id in :sspIds",
+                Object[].class).setParameter("sspIds", subjectStudyPeriods).getResultList()
+                .stream().collect(Collectors.toMap(r -> resultAsLong(r, 0), r -> (Subject) r[1]))
+                : Collections.emptyMap();
+    }
+
+    @NotNull
+    private Map<Long, Journal> queryJournalsByIds(Set<Long> journals) {
+        return !journals.isEmpty()
+                ? em.createQuery("select j from Journal j where j.id in :jIds",
+                Journal.class).setParameter("jIds", journals).getResultList()
+                .stream().collect(Collectors.toMap(BaseEntityWithId::getId, Function.identity()))
+                : Collections.emptyMap();
     }
 
     public List<MessageReceiverDto> getTeachers(HoisUserDetails user, List<Long> journal, List<Long> ssp) {
@@ -535,17 +617,21 @@ public class MessageService {
             MessageReceiverDto dto = new MessageReceiverDto();
             dto.setPersonId(resultAsLong(r, 0));
             dto.setFullname(PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)));
+            dto.setFirstname(resultAsString(r, 1));
+            dto.setLastname(resultAsString(r, 2));
             dto.setIdcode(resultAsString(r, 3));
             dto.setRole(Arrays.asList(resultAsString(r, 4)));
             if (isJournal) {
                 Long id = resultAsLong(r, 5);
                 if (id != null) {
-                    dto.setJournal(new AutocompleteResult(id, resultAsString(r, 6), resultAsString(r, 6)));
+                    dto.setJournals(Collections.singletonList(new AutocompleteResult(id,
+                            resultAsString(r, 6), resultAsString(r, 6))));
                 }
             } else {
                 Long id = resultAsLong(r, 5);
                 if (id != null) {
-                    dto.setSubject(new AutocompleteResult(id, resultAsString(r, 6), resultAsString(r, 7)));
+                    dto.setSubjects(Collections.singletonList(new AutocompleteResult(id,
+                            resultAsString(r, 6), resultAsString(r, 7))));
                 }
             }
             return dto;
@@ -649,6 +735,8 @@ public class MessageService {
             } else {
                 dto.setFullname(PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)));
             }
+            dto.setFirstname(resultAsString(r, 1));
+            dto.setLastname(resultAsString(r, 2));
             return dto;
         }, result);
     }
@@ -960,17 +1048,6 @@ public class MessageService {
                 + "join person p on s.person_id = p.id "
                 +" left join student_group sg on sg.id = s.student_group_id "
                 + "left join curriculum c on sg.curriculum_id = c.id ");
-
-        // Journals
-        select.append(", j.id as journal_id, j.name_et as journal_name");
-        from.append("left join journal_student js on js.student_id = s.id ");
-        from.append("left join journal j on j.id = js.journal_id ");
-        // Subjects
-        select.append(", sj.id as subject_id, sj.name_et as subject_name_et, sj.name_en as subject_name_en");
-        from.append("left join declaration d on d.student_id = s.id ");
-        from.append("left join declaration_subject ds on ds.declaration_id = d.id ");
-        from.append("left join subject_study_period ssp on ssp.id = ds.subject_study_period_id ");
-        from.append("left join subject sj on sj.id = ssp.subject_id ");
         
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from.toString()).sort("p.lastname", "p.firstname");
         qb.optionalContains("p.firstname || ' ' || p.lastname", "name", criteria.getName());
@@ -996,24 +1073,47 @@ public class MessageService {
                 + "where jt.teacher_id = :teacherId and js.student_id = s.id)"
                 +")", "teacherId", user.getTeacherId());
 
+        select.append(STUDENT_JOURNAL_SELECT_SUBQUERY);
+        select.append(STUDENT_SUBJECT_SELECT_SUBQUERY);
+
         List<?> result = qb.select(select.toString(), em).getResultList();
+
+        Set<Long> journals = new HashSet<>();
+        Set<Long> subjectStudyPeriods = new HashSet<>();
+        for (Object r : result) {
+            journals.addAll(resultAsStringList(r, 11, ";").stream().map(Long::valueOf).collect(Collectors.toList()));
+            subjectStudyPeriods.addAll(resultAsStringList(r, 12, ";").stream().map(Long::valueOf).collect(Collectors.toList()));
+        }
+
+        Map<Long, Journal> journalsById = queryJournalsByIds(journals);
+        Map<Long, Subject> subjectsById = querySubjectsByIds(subjectStudyPeriods);
+
         return StreamUtil.toMappedList(r -> {
             MessageReceiverDto dto = new MessageReceiverDto();
             dto.setPersonId(resultAsLong(r, 0));
             dto.setId(resultAsLong(r, 1));
             dto.setFullname(PersonUtil.fullname(resultAsString(r, 2), resultAsString(r, 3)));
+            dto.setFirstname(resultAsString(r, 2));
+            dto.setLastname(resultAsString(r, 3));
             dto.setRole(Arrays.asList(Role.ROLL_T.name()));
             AutocompleteResult studentGroup = new AutocompleteResult(resultAsLong(r, 5), resultAsString(r, 6), resultAsString(r, 6));
             dto.setStudentGroup(studentGroup);
             AutocompleteResult curriculum = new AutocompleteResult(resultAsLong(r, 7), resultAsString(r, 8), resultAsString(r, 9));
             dto.setCurriculum(curriculum);
             dto.setHigher(resultAsBoolean(r, 10));
-            if (resultAsLong(r, 11) != null) {
-                dto.setJournal(new AutocompleteResult(resultAsLong(r, 11), resultAsString(r, 12), resultAsString(r, 12)));
-            }
-            if (resultAsLong(r, 13) != null) {
-                dto.setSubject(new AutocompleteResult(resultAsLong(r, 13), resultAsString(r, 14), resultAsString(r, 15)));
-            }
+            dto.setJournals(resultAsStringList(r, 11, ";").stream()
+                    .map(Long::valueOf)
+                    .map(journalsById::get)
+                    .filter(Objects::nonNull)
+                    .map(AutocompleteResult::of)
+                    .collect(Collectors.toList()));
+            dto.setSubjects(resultAsStringList(r, 12, ";").stream()
+                    .map(Long::valueOf)
+                    .map(subjectsById::get)
+                    .filter(Objects::nonNull)
+                    .distinct()
+                    .map(AutocompleteResult::of)
+                    .collect(Collectors.toList()));
             return dto;
         }, result);
     }
@@ -1029,17 +1129,6 @@ public class MessageService {
                 + "join student s on s.id = sr.student_id "
                 + "left join student_group sg on sg.id = s.student_group_id "
                 + "left join curriculum c on sg.curriculum_id = c.id ");
-
-        // Journals
-        select.append(", j.id as journal_id, j.name_et as journal_name");
-        from.append("left join journal_student js on js.student_id = s.id ");
-        from.append("left join journal j on j.id = js.journal_id ");
-        // Subjects
-        select.append(", sj.id as subject_id, sj.name_et as subject_name_et, sj.name_en as subject_name_en");
-        from.append("left join declaration d on d.student_id = s.id ");
-        from.append("left join declaration_subject ds on ds.declaration_id = d.id ");
-        from.append("left join subject_study_period ssp on ssp.id = ds.subject_study_period_id ");
-        from.append("left join subject sj on sj.id = ssp.subject_id ");
         
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from.toString()).sort("p.lastname", "p.firstname");
         qb.optionalContains("p.firstname || ' ' || p.lastname", "name", criteria.getName());
@@ -1059,20 +1148,47 @@ public class MessageService {
                 + "join lesson_plan_module lpm on lpm.lesson_plan_id = lp.id "
                 + "where lpm.teacher_id = :teacherId "
                 + "and lp.student_group_id = sg.id ) )", "teacherId", user.getTeacherId());
-        
+
+        select.append(STUDENT_JOURNAL_SELECT_SUBQUERY);
+        select.append(STUDENT_SUBJECT_SELECT_SUBQUERY);
+
         List<?> result = qb.select(select.toString(), em).getResultList();
+
+        Set<Long> journals = new HashSet<>();
+        Set<Long> subjectStudyPeriods = new HashSet<>();
+        for (Object r : result) {
+            journals.addAll(resultAsStringList(r, 10, ";").stream().map(Long::valueOf).collect(Collectors.toList()));
+            subjectStudyPeriods.addAll(resultAsStringList(r, 11, ";").stream().map(Long::valueOf).collect(Collectors.toList()));
+        }
+
+        Map<Long, Journal> journalsById = queryJournalsByIds(journals);
+        Map<Long, Subject> subjectsById = querySubjectsByIds(subjectStudyPeriods);
+
         return StreamUtil.toMappedList(r -> {
             MessageReceiverDto dto = new MessageReceiverDto();
             dto.setPersonId(resultAsLong(r, 0));
             dto.setId(resultAsLong(r, 9));
             dto.setFullname(PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)));
+            dto.setFirstname(resultAsString(r, 1));
+            dto.setLastname(resultAsString(r, 2));
             dto.setRole(Arrays.asList(Role.ROLL_L.name()));
             AutocompleteResult studentGroup = new AutocompleteResult(resultAsLong(r, 4), resultAsString(r, 5), resultAsString(r, 5));
             dto.setStudentGroup(studentGroup);
             AutocompleteResult curriculum = new AutocompleteResult(resultAsLong(r, 6), resultAsString(r, 7), resultAsString(r, 8));
             dto.setCurriculum(curriculum);
-            dto.setJournal(new AutocompleteResult(resultAsLong(r, 10), resultAsString(r, 11), resultAsString(r, 11)));
-            dto.setSubject(new AutocompleteResult(resultAsLong(r, 12), resultAsString(r, 13), resultAsString(r, 14)));
+            dto.setJournals(resultAsStringList(r, 10, ";").stream()
+                    .map(Long::valueOf)
+                    .map(journalsById::get)
+                    .filter(Objects::nonNull)
+                    .map(AutocompleteResult::of)
+                    .collect(Collectors.toList()));
+            dto.setSubjects(resultAsStringList(r, 11, ";").stream()
+                    .map(Long::valueOf)
+                    .map(subjectsById::get)
+                    .filter(Objects::nonNull)
+                    .distinct()
+                    .map(AutocompleteResult::of)
+                    .collect(Collectors.toList()));
             return dto;
         }, result);
     }
@@ -1082,6 +1198,8 @@ public class MessageService {
             MessageReceiverDto dto = new MessageReceiverDto();
             dto.setPersonId(resultAsLong(r, 0));
             dto.setFullname(PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)));
+            dto.setFirstname(resultAsString(r, 1));
+            dto.setLastname(resultAsString(r, 2));
             dto.setRole(Arrays.asList(role.name()));
             if (Role.ROLL_T.equals(role)) {
                 dto.setId(resultAsLong(r, 3));
@@ -1114,47 +1232,72 @@ public class MessageService {
         StringBuilder from = new StringBuilder(STUDENT_PARENTS_FROM);
         final boolean isJournalIds = !CollectionUtils.isEmpty(criteria.getJournalId()); 
         final boolean isSubjectUsed = !CollectionUtils.isEmpty(criteria.getSubjectId());
-        if (isJournalIds) {
-            select.append(", j.id as journal_id, j.name_et as journal_name");
-            from.append("left join journal_student js on js.student_id = s.id ");
-            from.append("left join journal j on j.id = js.journal_id ");
-        }
-        if (isSubjectUsed) {
-            select.append(", sj.id as subject_id, sj.name_et as subject_name_et, sj.name_en as subject_name_en");
-            from.append("left join declaration d on d.student_id = s.id ");
-            from.append("left join declaration_subject ds on ds.declaration_id = d.id ");
-            from.append("left join subject_study_period ssp on ssp.id = ds.subject_study_period_id ");
-            from.append("left join subject sj on sj.id = ssp.subject_id ");
-        }
 
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from.toString());
         qb.optionalCriteria("sr.student_id in (:studentIds)", "studentIds", studentIds);
-        qb.optionalCriteria("j.id in (:journalIds)", "journalIds", criteria.getJournalId());
-        qb.optionalCriteria("sj.id in (:subjectIds)", "subjectIds", criteria.getSubjectId());
         qb.filter("sr.is_student_visible is true");
         qb.requiredCriteria("s.status_code in :status", "status", StudentStatus.STUDENT_STATUS_ACTIVE);
+
+        if (isJournalIds || isSubjectUsed) {
+            //journal
+            select.append(STUDENT_JOURNAL_SELECT_SUBQUERY);
+            qb.optionalCriteria(STUDENT_JOURNAL, "journalsIds", criteria.getJournalId());
+            // subject
+            select.append(STUDENT_SUBJECT_SELECT_SUBQUERY);
+            qb.optionalCriteria(STUDENT_SSP, "sspIds", criteria.getSubjectId());
+        }
+
         List<?> result = qb.select(select.toString(), em).getResultList();
+
+        Set<Long> journals = new HashSet<>();
+        Set<Long> subjectStudyPeriods = new HashSet<>();
+        if (isJournalIds || isSubjectUsed) {
+            for (Object r : result) {
+                if (criteria.getJournalId() != null && !criteria.getJournalId().isEmpty()) {
+                    journals.addAll(resultAsStringList(r, 12, ";").stream()
+                            .map(Long::valueOf)
+                            .filter(v -> criteria.getJournalId().contains(v))
+                            .collect(Collectors.toList()));
+                }
+                if (criteria.getSubjectId() != null && !criteria.getSubjectId().isEmpty()) {
+                    subjectStudyPeriods.addAll(resultAsStringList(r, 13, ";").stream()
+                            .map(Long::valueOf)
+                            .filter(v -> criteria.getSubjectId().contains(v))
+                            .collect(Collectors.toList()));
+                }
+            }
+        }
+
+        Map<Long, Journal> journalsById = queryJournalsByIds(journals);
+        Map<Long, Subject> subjectsById = querySubjectsByIds(subjectStudyPeriods);
 
         return StreamUtil.toMappedList(r -> {
             MessageReceiverDto dto = new MessageReceiverDto();
             dto.setId(resultAsLong(r, 2));
             dto.setPersonId(resultAsLong(r, 4));
             dto.setFullname(PersonUtil.fullname(resultAsString(r, 5), resultAsString(r, 6)));
+            dto.setFirstname(resultAsString(r, 5));
+            dto.setLastname(resultAsString(r, 6));
             dto.setHigher(resultAsBoolean(r, 11));
             String studentGroupCode = resultAsString(r, 1);
             dto.setStudentGroup(new AutocompleteResult(resultAsLong(r, 0), studentGroupCode, studentGroupCode));
             dto.setCurriculum(new AutocompleteResult(resultAsLong(r, 8), resultAsString(r, 9), resultAsString(r, 10)));
             dto.setStudyForm(resultAsString(r, 3));
             dto.setRole(Arrays.asList(Role.ROLL_L.name()));
-            if (isJournalIds) {
-                dto.setJournal(new AutocompleteResult(resultAsLong(r, 12), resultAsString(r, 13), resultAsString(r, 13)));
-                if (isSubjectUsed) {
-                    dto.setSubject(new AutocompleteResult(resultAsLong(r, 14), resultAsString(r, 15), resultAsString(r, 16)));
-                }
-            } else {
-                if (isSubjectUsed) {
-                    dto.setSubject(new AutocompleteResult(resultAsLong(r, 12), resultAsString(r, 13), resultAsString(r, 14)));
-                }
+            if (isJournalIds || isSubjectUsed) {
+                dto.setJournals(resultAsStringList(r, 12, ";").stream()
+                        .map(Long::valueOf)
+                        .map(journalsById::get)
+                        .filter(Objects::nonNull)
+                        .map(AutocompleteResult::of)
+                        .collect(Collectors.toList()));
+                dto.setSubjects(resultAsStringList(r, 13, ";").stream()
+                        .map(Long::valueOf)
+                        .map(subjectsById::get)
+                        .filter(Objects::nonNull)
+                        .distinct()
+                        .map(AutocompleteResult::of)
+                        .collect(Collectors.toList()));
             }
             return dto;
         }, result);

@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web.dto.student;
 
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.ClassifierDto;
 import ee.hitsa.ois.web.dto.SpecialityAutocompleteResult;
 
 public class StudentSpecialitySearchDto {
@@ -10,6 +11,7 @@ public class StudentSpecialitySearchDto {
     private String idcode;
     private AutocompleteResult group;
     private SpecialityAutocompleteResult speciality;
+    private SpecialityAutocompleteResult occupationSpeciality;
     
     public Long getId() {
         return id;
@@ -49,5 +51,13 @@ public class StudentSpecialitySearchDto {
     
     public void setSpeciality(SpecialityAutocompleteResult speciality) {
         this.speciality = speciality;
+    }
+
+    public SpecialityAutocompleteResult getOccupationSpeciality() {
+        return occupationSpeciality;
+    }
+
+    public void setOccupationSpeciality(SpecialityAutocompleteResult occupationSpeciality) {
+        this.occupationSpeciality = occupationSpeciality;
     }
 }

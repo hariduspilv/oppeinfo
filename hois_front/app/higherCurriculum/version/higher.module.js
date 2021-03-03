@@ -203,7 +203,7 @@ angular.module('hitsaOis')
           module1.compulsoryStudyCredits = Math.round((module1.compulsoryStudyCredits + e.credits) * 100) / 100;
         }
       });
-      module1.totalCredits = module1.compulsoryStudyCredits = Math.round((module1.compulsoryStudyCredits + module1.optionalStudyCredits) * 100) / 100;
+      module1.totalCredits = Math.round((module1.compulsoryStudyCredits + module1.optionalStudyCredits) * 100) / 100;
     };
 
     $scope.setTotalCredits = function() {

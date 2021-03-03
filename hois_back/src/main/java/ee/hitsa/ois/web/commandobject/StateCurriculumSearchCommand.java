@@ -18,6 +18,7 @@ public class StateCurriculumSearchCommand extends SearchCommand {
 	private String iscedVald;
 	private Boolean valid;
 	private Boolean expired;
+	private Boolean isVocational;
 
 	public List<String> getEkrLevel() {
 		return ekrLevel;
@@ -89,6 +90,14 @@ public class StateCurriculumSearchCommand extends SearchCommand {
 
     public void setExpired(Boolean expired) {
         this.expired = expired;
+    }
+
+    public Boolean getIsVocational() {
+        return isVocational;
+    }
+
+    public void setIsVocational(Boolean isVocational) {
+        this.isVocational = isVocational;
     }
 
 }

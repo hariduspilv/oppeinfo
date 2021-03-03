@@ -5,6 +5,7 @@ import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.PersonUtil;
+import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public class StudentGroupStudentDto {
@@ -14,6 +15,8 @@ public class StudentGroupStudentDto {
     private String idcode;
     private AutocompleteResult curriculumVersion;
     private String status;
+    // higher/vocational speciality without id (!!!)
+    private AutocompleteResult speciality;
 
     public Long getId() {
         return id;
@@ -55,6 +58,14 @@ public class StudentGroupStudentDto {
         this.status = status;
     }
 
+    public AutocompleteResult getSpeciality() {
+        return speciality;
+    }
+
+    public void setSpeciality(AutocompleteResult speciality) {
+        this.speciality = speciality;
+    }
+
     public static StudentGroupStudentDto of(HoisUserDetails user, Student student) {
         StudentGroupStudentDto dto = new StudentGroupStudentDto();
         Person p = student.getPerson();
@@ -65,6 +76,15 @@ public class StudentGroupStudentDto {
         }
         dto.setCurriculumVersion(AutocompleteResult.of(student.getCurriculumVersion()));
         dto.setStatus(EntityUtil.getCode(student.getStatus()));
+        if (student.getCurriculumVersion() != null) {
+            if (StudentUtil.isHigher(student) && student.getCurriculumSpeciality() != null) {
+                dto.setSpeciality(new AutocompleteResult(null, student.getCurriculumSpeciality().getNameEt(),
+                        student.getCurriculumSpeciality().getNameEn()));
+            } else if (StudentUtil.isVocational(student) && student.getSpeciality() != null) {
+                dto.setSpeciality(new AutocompleteResult(null, student.getSpeciality().getNameEt(),
+                        student.getSpeciality().getNameEn()));
+            }
+        }
         return dto;
     }
 }

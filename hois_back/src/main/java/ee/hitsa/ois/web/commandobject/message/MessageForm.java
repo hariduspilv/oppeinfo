@@ -14,7 +14,7 @@ public class MessageForm extends VersionedCommand {
     @Size(max=1000)
     private String subject;
     @Required
-    @Size(max=2000)
+    @Size(max=5000)
     private String content;
     private Long responseTo;
     @Required

@@ -42,16 +42,20 @@ public class StateCurriculum extends BaseEntityWithId implements Translatable {
 	private String description;
 	private String riigiteatajaUrl;
 	private String finalExamDescription;
+	private Long courses;
+	private Boolean isVocational;
 
 	@Transient
 	private String ekrLevel;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	private Classifier status;
-
+	
+	// in secondary school used to determine EKR level
 	@ManyToOne(fetch = FetchType.LAZY)
 	private Classifier iscedClass;
 	
+	// in secondary school used to determine if its basic or highschool curriculum
 	@ManyToOne(optional = false, fetch = FetchType.LAZY)
 	private Classifier stateCurrClass;
 	
@@ -268,4 +272,24 @@ public class StateCurriculum extends BaseEntityWithId implements Translatable {
 		this.getOccupations().clear();
 		this.getOccupations().addAll(occupations);
 	}
+
+    public Long getCourses() {
+        return courses;
+    }
+
+    public void setCourses(Long courses) {
+        this.courses = courses;
+    }
+
+    public Boolean getIsVocational() {
+        return isVocational;
+    }
+
+    public void setIsVocational(Boolean isVocational) {
+        this.isVocational = isVocational;
+    }
+
+    public static long getSerialversionuid() {
+        return serialVersionUID;
+    }
 }

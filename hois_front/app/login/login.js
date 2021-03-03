@@ -162,7 +162,7 @@ angular.module('hitsaOis')
           School.getLdap().$promise.then(function (schools) {
             $scope.schools = schools;
             $scope.schools.sort(function (a, b) {
-              return $rootScope.currentLanguageNameField(a).localeCompare($rootScope.currentLanguageNameField(b));
+              return $rootScope.currentLanguageNameField(a).hoisLocaleCompare($rootScope.currentLanguageNameField(b));
             });
           });
           $scope.visibleIndex = 1;

@@ -3,6 +3,7 @@ package ee.hitsa.ois.service;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -13,7 +14,6 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,14 +24,17 @@ import org.springframework.util.CollectionUtils;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.statecurriculum.StateCurriculum;
 import ee.hitsa.ois.domain.statecurriculum.StateCurriculumModule;
+import ee.hitsa.ois.domain.statecurriculum.StateCurriculumModuleCompetence;
 import ee.hitsa.ois.domain.statecurriculum.StateCurriculumModuleOccupation;
 import ee.hitsa.ois.domain.statecurriculum.StateCurriculumModuleOutcome;
 import ee.hitsa.ois.domain.statecurriculum.StateCurriculumOccupation;
 import ee.hitsa.ois.enums.CurriculumStatus;
+import ee.hitsa.ois.enums.EhisRok;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.StateCurriculumRepository;
+import ee.hitsa.ois.service.SchoolService.SchoolType;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.DateUtils;
@@ -44,6 +47,7 @@ import ee.hitsa.ois.web.commandobject.StateCurriculumForm;
 import ee.hitsa.ois.web.commandobject.StateCurriculumModuleForm;
 import ee.hitsa.ois.web.commandobject.StateCurriculumSearchCommand;
 import ee.hitsa.ois.web.dto.StateCurriculumDto;
+import ee.hitsa.ois.web.dto.StateCurriculumModuleCompetenceDto;
 import ee.hitsa.ois.web.dto.StateCurriculumModuleDto;
 import ee.hitsa.ois.web.dto.StateCurriculumModuleOutcomeDto;
 import ee.hitsa.ois.web.dto.StateCurriculumSearchDto;
@@ -55,6 +59,8 @@ public class StateCurriculumService {
 
     @Autowired
     private StateCurriculumRepository stateCurriculumRepository;
+    @Autowired 
+    private StateCurriculumValidationService stateCurriculumValidationService;
     @Autowired
     private ClassifierRepository classifierRepository;
     @Autowired
@@ -65,15 +71,15 @@ public class StateCurriculumService {
     private static final String FROM = "from state_curriculum as sc "
             + "inner join classifier status on status.code = sc.status_code";  // only for sorting by classifier's name
     private static final String SELECT = " sc.id, sc.name_et, sc.name_en, sc.valid_from, sc.valid_thru, sc.credits, "
-            + "sc.status_code, "
+            + "sc.status_code, case when sc.is_vocational = true then "
                 + "(select cc.connect_classifier_code "
                 + "from classifier_connect as cc "
                 + "where cc.main_classifier_code = 'EKR' "
                 + "and cc.classifier_code in "
                     + "(select sco.occupation_code "
                     + "from state_curriculum_occupation as sco "
-                    + "where sc.id = sco.state_curriculum_id order by sco.id limit 1) ) as ekr_level, "
-            + "status.name_et as statusNameEt, status.name_en as statusNameEn";
+                    + "where sc.id = sco.state_curriculum_id order by sco.id limit 1)) else sc.isced_class_code end as ekr_level, "
+            + "status.name_et as statusNameEt, status.name_en as statusNameEn, sc.is_vocational, sc.state_curr_class_code";
 
     /**
      * With this solution StateCurriculumSpecification will not be required anymore.
@@ -91,15 +97,29 @@ public class StateCurriculumService {
 
         qb.optionalCriteria("sc.status_code in (:status)", "status", criteria.getStatus());
         qb.optionalCriteria("sc.isced_class_code in (:iscedRyhm)", "iscedRyhm", criteria.getIscedClass());
-        
-        qb.optionalCriteria("(select cc.connect_classifier_code "
+        qb.optionalCriteria("sc.is_vocational = :isVocational", "isVocational", criteria.getIsVocational());
+        if (user != null && user.isSchoolAdmin()) {
+            SchoolType schoolType = schoolService.schoolType(user.getSchoolId());
+            if (!schoolType.isBasic()) {
+                qb.requiredCriteria("sc.state_curr_class_code != :basicROK", "basicROK", EhisRok.EHIS_ROK_PROK.name());
+            }
+            if (!schoolType.isSecondary()) {
+                qb.requiredCriteria("sc.state_curr_class_code != :highSchoolROK", "highSchoolROK", EhisRok.EHIS_ROK_GROK.name());
+            }
+            if (!schoolType.isVocational()) {
+                qb.filter("sc.is_vocational = false");
+            }
+        }
+        qb.optionalCriteria("(((select cc.connect_classifier_code "
                 + "from classifier_connect as cc "
                 + "where cc.main_classifier_code = 'EKR' "
                 + "and cc.classifier_code in "
                 + "(select sco.occupation_code "
                 + "from state_curriculum_occupation as sco "
                 + "where sc.id = sco.state_curriculum_id "
-                + "order by sco.id limit 1) ) in (:ekrLevel)", "ekrLevel", criteria.getEkrLevel());
+                + "order by sco.id limit 1) ) in (:ekrLevel) and sc.is_vocational = true) "
+                // secondary school isced class code holds EKR level
+                + "or (sc.isced_class_code in (:ekrLevel) and sc.is_vocational = false))", "ekrLevel", criteria.getEkrLevel());
         /*
          * To avoid joins and subqueries, following property of classifiers can be used (look at numbers):
          * ISCED_RYHM_0511 is bound with ISCED_SUUN_051 and it is bound with ISCED_VALD_05
@@ -138,6 +158,8 @@ public class StateCurriculumService {
         if (user != null) {
             dto.setCanChange(Boolean.valueOf(StateCurriculumUtil.canChange(user, dto.getStatus())));
         }
+        dto.setIsVocational(resultAsBoolean(r, 10));
+        dto.setStateCurrClass(resultAsString(r, 11));
         return dto;
     }
 
@@ -171,6 +193,9 @@ public class StateCurriculumService {
             if (!CollectionUtils.isEmpty(command.getStatus())) {
                 filters.add(root.get("status").get("code").in(command.getStatus()));
             }
+            if (Boolean.FALSE.equals(command.getIsVocational())) {
+                filters.add(cb.equal(root.get("isVocational"), Boolean.FALSE));
+            }
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         }, sort);
     }
@@ -182,6 +207,9 @@ public class StateCurriculumService {
     }
 
     public StateCurriculum save(HoisUserDetails user, StateCurriculum stateCurriculum, StateCurriculumForm stateCurriculumForm) {
+        if (Boolean.TRUE.equals(stateCurriculumForm.getIsVocational())) {
+            stateCurriculumValidationService.validateStateCurriculumFormOnVocational(stateCurriculumForm);
+        }
         EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.bindToEntity(stateCurriculumForm, stateCurriculum, classifierRepository, "occupations", "modules");
         updateStateCurriculumOccupations(stateCurriculum, stateCurriculumForm.getOccupations());
@@ -193,6 +221,25 @@ public class StateCurriculumService {
         EntityUtil.bindToEntity(dto, module, classifierRepository, "outcomes", "moduleOccupations");
         updateModuleOutcomes(module, dto.getOutcomes());
         updateModuleOccupations(module, dto.getModuleOccupations());
+        updateModuleCompetences(module, dto.getCompetences());
+    }
+
+    private void updateModuleCompetences(StateCurriculumModule module,
+            Set<StateCurriculumModuleCompetenceDto> competences) {
+        EntityUtil.bindEntityCollection(module.getModuleCompetences(), StateCurriculumModuleCompetence::getId, competences, 
+                StateCurriculumModuleCompetenceDto::getId, dto -> createCompetence(module, dto), this::updateCompetence);
+    }
+
+    private StateCurriculumModuleCompetence createCompetence(StateCurriculumModule module, StateCurriculumModuleCompetenceDto dto) {
+        StateCurriculumModuleCompetence competence = new StateCurriculumModuleCompetence();
+        competence.setModule(module);
+        updateCompetence(dto, competence);
+        return competence;
+    }
+
+    private void updateCompetence(StateCurriculumModuleCompetenceDto dto, StateCurriculumModuleCompetence competence) {
+        EntityUtil.bindToEntity(dto, competence, "competence");
+        competence.setCompetence(em.getReference(Classifier.class, dto.getCompetence()));
     }
 
     private void updateModuleOutcomes(StateCurriculumModule module, Set<StateCurriculumModuleOutcomeDto> outcomes) {

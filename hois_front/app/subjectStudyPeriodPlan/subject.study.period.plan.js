@@ -63,7 +63,7 @@ angular.module('hitsaOis').controller('subjectStudyPeriodPlanSearchController',
               });
         } else {
             mappable.sort(function (a, b) {
-                return $rootScope.currentLanguageNameField(a).localeCompare($rootScope.currentLanguageNameField(b));
+                return $rootScope.currentLanguageNameField(a).hoisLocaleCompare($rootScope.currentLanguageNameField(b));
               });
         }
         return mappable.map(function(it) {return $scope.currentLanguageNameField(it);}).join(", ");

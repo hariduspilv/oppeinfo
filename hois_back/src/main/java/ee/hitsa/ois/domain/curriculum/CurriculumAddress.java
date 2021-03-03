@@ -5,7 +5,13 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+
 import ee.hitsa.ois.domain.BaseEntityWithId;
+import ee.hitsa.ois.domain.student.StudentGroup;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 public class CurriculumAddress extends BaseEntityWithId {
@@ -22,6 +28,9 @@ public class CurriculumAddress extends BaseEntityWithId {
     private String addressOid;
     @Column(nullable = false)
     private String addressOv;
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "curriculumAddress")
+    private List<StudentGroup> studentGroups;
     
     public Curriculum getCurriculum() {
         return curriculum;
@@ -58,4 +67,12 @@ public class CurriculumAddress extends BaseEntityWithId {
         this.addressOv = addressOv;
     }
 
+    public List<StudentGroup> getStudentGroups() {
+        return studentGroups != null ? studentGroups : (studentGroups = new ArrayList<>());
+    }
+
+    public void setStudentGroups(List<StudentGroup> studentGroups) {
+        getStudentGroups().clear();
+        getStudentGroups().addAll(studentGroups);
+    }
 }

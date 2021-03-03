@@ -1,0 +1,124 @@
+<md-dialog aria-label="module add dialog" flex="50" flex-xs="90">
+    <form name="dialogForm" ng-cloak>
+      <md-toolbar>
+        <div class="md-toolbar-tools">
+          <h2>{{(editing ? "stateCurriculum.editSubject" : "stateCurriculum.addSubject") | translate}}</h2>
+          <span flex></span>
+          <md-button class="md-icon-button" ng-click="cancel()">
+            <md-icon md-font-set="material-icons">close</md-icon>
+          </md-button>
+        </div>
+      </md-toolbar>
+      <md-dialog-content>
+        <span flex></span>
+        <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
+          <div layout="column">
+            <md-input-container>
+                <label>{{'stateCurriculum.enter.subject.subjectArea' | translate}}</label>
+                <hois-classifier-select ng-model="data.syllabus" main-classifier-code="AINEVALDKOND" required
+                    model-value-attr="code"></hois-classifier-select>
+            </md-input-container>
+  
+            <md-input-container>
+                <label>{{'stateCurriculum.enter.subject.label' | translate}}</label>
+                <hois-classifier-select ng-model="data.module" main-classifier-code="EHIS_AINE" required 
+                    watch-model="data.syllabus" filter-values search-from-connect connect-main-classifier-code="AINEVALDKOND"
+                    model-value-attr="code"></hois-classifier-select>
+            </md-input-container>
+
+            <md-input-container>
+              <label>{{'stateCurriculum.enter.subject.syllabusLink' | translate}}</label>
+              <input ng-model="data.riigiteatajaUrl" type="text" md-maxlength="4000" required>
+            </md-input-container>
+
+            <div layout="row" layout-align="start center">
+                <md-input-container>
+                    <label>{{highSchool ? ('stateCurriculum.enter.subject.courses' | translate) : 
+                        ('stateCurriculum.enter.subject.weeks' | translate)}}</label>
+                    <input ng-model="data.coursesOrWeeks" type="number" min="0" max="999" required name="coursesOrWeeks" 
+                        ng-readonly="readOnly" pattern="^\d+$">
+                    <div ng-messages="dialogForm.coursesOrWeeks.$error" ng-show="dialogForm.coursesOrWeeks.$dirty">
+                    <div ng-message="min">
+                        {{'stateCurriculum.enter.credits.positive' | translate}}
+                    </div>
+                    <div ng-message="max">
+                        {{'stateCurriculum.enter.credits.max' | translate}}
+                    </div>
+                    <div ng-message="pattern">
+                        {{'stateCurriculum.enter.credits.integer' | translate}}
+                    </div>
+                    </div>
+                </md-input-container>
+
+                <!-- IS REQUIRED -->
+                <md-input-container flex-offset="5">
+                    <md-checkbox ng-model="data.isAdditional" style="margin-bottom: 0px"
+                      aria-label="{{'stateCurriculum.enter.subject.required' | translate}}">
+                        {{'stateCurriculum.enter.subject.required' | translate}}
+                    </md-checkbox>
+                </md-input-container>
+            </div>
+  
+            <div>
+              <fieldset tabindex="2">
+                <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'stateCurriculum.enter.subject.competence.header' | translate}} *</legend>
+                <input style="display:none" type="number" readonly name="competencesLength" ng-model="data.competences.length" min="1"/>
+                <div class="invalid" ng-if="dialogForm.$submitted" ng-messages="dialogForm.competencesLength.$error">
+                    <div ng-message="min">{{'main.messages.error.atLeastOneShouldBeAdded' | translate}}</div>
+                </div>
+                <div layout="row" flex>
+                    <md-input-container  flex="30">
+                        <label>{{'stateCurriculum.enter.subject.competence.label' | translate}}</label>
+                        <hois-classifier-select ng-model="data.competence" main-classifier-code="PADEVUS"
+                            model-value-attr="code"></hois-classifier-select>
+                    </md-input-container>
+                    <md-input-container flex="50" flex-offset="5">
+                        <label>{{'stateCurriculum.enter.subject.competence.description' | translate}}</label>
+                        <textarea ng-model="data.description" md-maxlength="10000" max-rows="10"></textarea>
+                    </md-input-container>
+                    <md-button style="height: 36px" class="md-primary" ng-click="addCompetence()" ng-if="!isEditingCompetence">{{'main.button.add' | translate}}</md-button>
+                    <md-button style="height: 36px" class="md-primary" ng-click="saveCompetence()" ng-if="isEditingCompetence">{{'main.button.change' | translate}}</md-button>
+                </div>
+                <div layout="column">
+                    <div layout="row">
+                        <div flex="45">
+                            <label class="secondary-table-header">{{'stateCurriculum.enter.subject.competence.label' | translate}}</label>
+                        </div>
+                        <div flex="40" flex-offset="5">
+                            <label class="secondary-table-header">{{'stateCurriculum.enter.subject.competence.description' | translate}}</label>
+                        </div>
+                    </div>
+                    <div ng-repeat="item in data.competences | orderBy: 'id' track by $index" class="occupation-row align-center" layout="row" flex>
+
+                        <md-input-container flex="45">
+                          <a ng-click="editCompetence(item)">
+                            <hois-classifier-value ng-model="item.competence" main-classifier-code="PADEVUS"></hois-classifier-value>
+                          </a>
+                        </md-input-container>
+
+                        <div flex="40" flex-offset="5">
+                          <a ng-click="editCompetence(item)">
+                            <p class="scrollable">{{item.description}}</p>
+                          </a>
+                        </div>
+                        <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+                        <div>
+                        <a class="remove" ng-click="removeFromArray(data.competences, item)">&times;&nbsp;&nbsp;</a>
+                        </div>
+                    </div>
+                </div>
+              </fieldset>
+            </div>
+          </div>
+        </div>
+      </md-dialog-content>
+      <md-dialog-actions layout="row" layout-align="start center">
+        <md-button class="md-raised md-primary" ng-click="submit()">{{"main.button.save" | translate}}</md-button>
+        <md-button ng-click="delete()" ng-if="editing" class="md-raised">
+          {{'main.button.delete' | translate}}</md-button>
+        <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+      </md-dialog-actions>
+    </form>
+  </md-dialog>
+  
+  

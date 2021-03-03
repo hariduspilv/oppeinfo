@@ -96,6 +96,14 @@ public class PdfService {
         renderer.setDocumentFromString(xhtml);
         try {
             renderer.getFontResolver().addFont("fonts/GARA.TTF", BaseFont.IDENTITY_H, true/*BaseFont.NOT_EMBEDDED*/);
+            // in case if we need better quality bold Garamond font
+            //renderer.getFontResolver().addFont("fonts/GARABD.TTF", BaseFont.IDENTITY_H, true/*BaseFont.NOT_EMBEDDED*/);
+
+            // calibri default/bold/italic/bold italic(z)
+            renderer.getFontResolver().addFont("fonts/calibri.ttf", BaseFont.IDENTITY_H, true);
+            renderer.getFontResolver().addFont("fonts/calibrib.ttf", BaseFont.IDENTITY_H, true);
+            renderer.getFontResolver().addFont("fonts/calibrii.ttf", BaseFont.IDENTITY_H, true);
+            renderer.getFontResolver().addFont("fonts/calibriz.ttf", BaseFont.IDENTITY_H, true);
         } catch (Exception e) {
             log.error("pdf generation failed, cannot add font", e);
             throw new HoisException(e);

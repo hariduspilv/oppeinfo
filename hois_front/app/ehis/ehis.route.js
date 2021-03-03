@@ -3,7 +3,7 @@
 angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($routeProvider, USER_ROLES) {
   $routeProvider
     .when('/ehis/teacher/export/higher', {
-        templateUrl: 'ehis/teacher.export.html',
+        templateUrl: 'ehis/teacher.export.higher.html',
         controller: 'TeacherExportController',
         controllerAs: 'controller',
         resolve: {
@@ -18,7 +18,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         }
       })
     .when('/ehis/teacher/export/vocational', {
-        templateUrl: 'ehis/teacher.export.html',
+        templateUrl: 'ehis/teacher.export.vocational.html',
         controller: 'TeacherExportController',
         controllerAs: 'controller',
         resolve: {

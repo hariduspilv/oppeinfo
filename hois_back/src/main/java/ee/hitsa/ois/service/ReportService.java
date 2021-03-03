@@ -2025,7 +2025,7 @@ public class ReportService {
                 + "left join curriculum_version cv on s.curriculum_version_id = cv.id "
                 + "left join curriculum c on cv.curriculum_id = c.id "
                 + "left join curriculum_speciality cs1 on cs1.id = s.curriculum_speciality_id and c.is_higher = true "
-                + "left join classifier cs2 on cs2.code = sg.speciality_code and c.is_higher != true "
+                + "left join classifier cs2 on cs2.code = s.speciality_code and c.is_higher != true "
                 + "left join school_department sd1 on (cv.school_department_id is not null and sd1.id = cv.school_department_id) "
                 + "left join student_curriculum_completion scc on scc.student_id = s.id "
                 + "left join (select cd.curriculum_id, string_agg(sd.id\\:\\:text, ', ') as ids, string_agg(sd.name_et, ', ') as nameEt "
@@ -2037,11 +2037,34 @@ public class ReportService {
         if (Boolean.TRUE.equals(criteria.getDirectiveTypesShow()) || (criteria.getDirectiveTypes() != null && !criteria.getDirectiveTypes().isEmpty()) || 
             Boolean.TRUE.equals(criteria.getDirectiveReasonsShow()) || (criteria.getDirectiveReasons() != null && !criteria.getDirectiveReasons().isEmpty()) || 
             Boolean.TRUE.equals(criteria.getDirectiveConfirmDateShow()) || criteria.getDirectiveConfirmDateFrom() != null || criteria.getDirectiveConfirmDateThru() != null) {
-            SEARCH_FROM += "left join (select ds.id, ds.student_id, d.type_code, ds.reason_code, d.confirm_date "
+            SEARCH_FROM += "left join (select ds.id, ds.student_id, d.type_code, ds.reason_code, d.confirm_date, "
+                    + "coalesce(sp1.start_date, ds.start_date) as directiveStart, coalesce(sp2.end_date, ds.end_date) as directiveEnd "
                     + "from directive d "
                     + "join directive_student ds on ds.directive_id = d.id "
+                    + "left join study_period sp1 on sp1.id = ds.study_period_start_id "
+                    + "left join study_period sp2 on sp2.id = ds.study_period_end_id "
                     + "where d.status_code = '" + DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name() + "' "
                     + "and ds.canceled != true) D1 on D1.student_id = s.id ";
+        }
+        
+        if (Boolean.TRUE.equals(criteria.getRepresentativeIdcodeShow()) ||
+            Boolean.TRUE.equals(criteria.getRepresentativeNameShow()) || 
+            Boolean.TRUE.equals(criteria.getRepresentativePhoneShow()) ||
+            Boolean.TRUE.equals(criteria.getRepresentativeEmailShow()) ||
+            Boolean.TRUE.equals(criteria.getRepresentativeRelationShow()) ||
+            Boolean.TRUE.equals(criteria.getRepresentativeVisibleShow()) ||
+            criteria.getRepresentativeIdcode() != null ||
+            criteria.getRepresentativeName() != null ||
+            criteria.getRepresentativePhone() != null ||
+            criteria.getRepresentativeEmail() != null ||
+            criteria.getRepresentativeRelation() != null ||
+            criteria.getRepresentativeVisible() != null) {
+            SEARCH_FROM += "left join student_representative sr on sr.student_id = s.id "
+                        + "left join person srp on srp.id = sr.person_id ";
+        }
+        
+        if (Boolean.TRUE.equals(criteria.getSpecialNeedCodeShow()) || (criteria.getSpecialNeedCode() != null && !criteria.getSpecialNeedCode().isEmpty())) {
+            SEARCH_FROM += "left join student_special_need ssn on ssn.student_id = s.id ";
         }
         
         if (Boolean.TRUE.equals(criteria.getEapSumShow()) || criteria.getEapSum() != null) SEARCH_FROM += creditSubQuery(criteria);
@@ -2061,6 +2084,8 @@ public class ReportService {
         if (Boolean.TRUE.equals(criteria.getDebtPointsShow()) || criteria.getDebtPoints() != null) SEARCH_FROM += debtPointsSubQuery(criteria);
         
         if (Boolean.TRUE.equals(criteria.getDeclaredEapShow()) || criteria.getDeclaredEap() != null) SEARCH_FROM += declaredEAP(criteria);
+        
+        if (Boolean.TRUE.equals(criteria.getApelEapShow()) || criteria.getApelEap() != null) SEARCH_FROM += apelEAP(criteria);
 
         if (Boolean.TRUE.equals(criteria.getDeclaredSubjectShow()) || (criteria.getDeclaredSubject() != null && !criteria.getDeclaredSubject().isEmpty())) SEARCH_FROM += declaredSubject(criteria);
 
@@ -2088,12 +2113,15 @@ public class ReportService {
         
         setContactDataCriteria(qb, criteria);
         
+        setRepresentativeDataCriteria(qb, criteria);
+        
         setStatisticsDataCriteria(qb, criteria);
         
         setAddInfoDataCriteria(qb, criteria);
         
         String PERSON_DATA_SELECT = "s.id, p.firstname, p.lastname, p.sex_code as sex, coalesce(p.idcode, p.foreign_idcode) as idCode, "
-                + "p.bankaccount, p.birthdate, p.residence_country_code as residence_country, p.citizenship_code as citizenship, ";
+                + "p.bankaccount, p.birthdate, p.residence_country_code as residence_country, p.citizenship_code as citizenship, "
+                + "extract(year from age(now(), coalesce(p.birthdate, now()))) >= 18 as age, ";
         
         String STUDY_DATA_SELECT = "s.type_code as student_type, "
                                  + "case when s.status_code = '" + StudentStatus.OPPURSTAATUS_V.name() + "' then true else false end as foreign_student, "
@@ -2116,10 +2144,23 @@ public class ReportService {
                                  + "c.id as curriculumId, c.code || ' ' || c.name_et as curriculum_et, c.code || ' ' || c.name_en as curriculum_en, "
                                  + "c.mer_code as ehis_code, c.orig_study_level_code as study_level, coalesce(cs1.name_et, cs2.name_et) as speciality, coalesce(cs1.name_en, cs2.name_en) as specialityEn, sg.course as study_year_nr, "
                                  + "s.fin_specific_code as fin, s.language_code as language, "
-                                 + (Boolean.TRUE.equals(criteria.getForeignLanguageShow()) ? "foreignLanguage.foreign_language_code as foreign_language, foreignLanguage.langEt as foreign_language_et, coalesce(foreignLanguage.langEn, foreignLanguage.langEt) as foreign_language_en, " : "null as foreign_language, null as foreign_language_et, null as foreign_language_en, ")
-                                 + "case when round((c.credits + scc.study_backlog) * 100 / coalesce(case when c.credits is not null and c.credits != 0 then c.credits else null end, 1)) is null then 0 else round((c.credits + scc.study_backlog) * 100 / coalesce(case when c.credits is not null and c.credits != 0 then c.credits else null end, 1)) end as curriculum_percentage, ";
+                                 + (Boolean.TRUE.equals(criteria.getForeignLanguageShow()) ? "foreignLanguage.foreign_language_code as foreign_language, " : "null as foreign_language, ")
+                                 + "case when round((c.credits + scc.study_backlog) * 100 / coalesce(case when c.credits is not null and c.credits != 0 then c.credits else null end, 1)) is null then 0 else round((c.credits + scc.study_backlog) * 100 / coalesce(case when c.credits is not null and c.credits != 0 then c.credits else null end, 1)) end as curriculum_percentage, "
+                                 + "s.is_special_need as special_need, "
+                                 + (Boolean.TRUE.equals(criteria.getSpecialNeedCodeShow()) ? "ssn.special_need_code, " : "null as special_need_code, ")
+                                 + "s.study_company, "
+                                 + (Boolean.TRUE.equals(criteria.getDirectiveTypesShow()) ? "D1.directiveStart, D1.directiveEnd, " : "null as directiveStart, null as directiveEnd, ");
         
-        String CONTACT_DATA_SELECT = "p.address, p.phone, s.email as official_email, p.email as personal_email, ";
+        String CONTACT_DATA_SELECT = "p.address, p.phone, s.email as official_email, p.email as personal_email, s.other_contact, ";
+        
+        String REPRESENTATIVE_DATA_SELECT = 
+                ((Boolean.TRUE.equals(criteria.getRepresentativeNameShow()) || criteria.getRepresentativeName() != null) ? "srp.firstname || ' ' || srp.lastname as representative_name, " : "null as representative_name, " )
+                + ((Boolean.TRUE.equals(criteria.getRepresentativeIdcodeShow()) || criteria.getRepresentativeIdcode() != null) ? "srp.idcode as representative_idcode, " : "null as representative_idcode, ")
+                + ((Boolean.TRUE.equals(criteria.getRepresentativeRelationShow()) || criteria.getRepresentativeRelation() != null) ? "sr.relation_code as representative_relation, " : "null as representative_relation, ")
+                + ((Boolean.TRUE.equals(criteria.getRepresentativePhoneShow()) || criteria.getRepresentativePhone() != null) ? "srp.phone as representative_phone, " : "null as representative_phone, ")
+                + ((Boolean.TRUE.equals(criteria.getRepresentativeEmailShow()) || criteria.getRepresentativeEmail() != null) ? "srp.email as representative_email, " : "null as representative_email, ")
+                + ((Boolean.TRUE.equals(criteria.getRepresentativeOtherContactShow()) || criteria.getRepresentativeOtherContact() != null) ? "s.representative_other_contact, " : "null as representative_other_contact, ")
+                + ((Boolean.TRUE.equals(criteria.getRepresentativeVisibleShow()) || criteria.getRepresentativeVisible() != null) ? "sr.is_student_visible as representative_visible, " : "null as representative_visible, ");
         
         String STATISTICS_DATA_SELECT = "scc.credits as eap"
                 + ", scc.average_mark as weighted_average_sum"
@@ -2131,7 +2172,8 @@ public class ReportService {
                 + (Boolean.TRUE.equals(criteria.getDebtShow()) ? ", case when debt.debt is null then '0' else debt.debt end as debt" :", null as debt")
                 + (Boolean.TRUE.equals(criteria.getDebtPointsSumShow()) ? ", case when debtPointsSum.debtPointsSum is null then '0' else debtPointsSum.debtPointsSum end as debt_points_sum" : ", null as debt_points_sum")
                 + (Boolean.TRUE.equals(criteria.getDebtPointsShow()) ? ", case when debtPoints.debtPoints is null then '0' else debtPoints.debtPoints end as debt_points" : ", null as debt_points")
-                + (Boolean.TRUE.equals(criteria.getDeclaredEapShow()) ? ", case when declaredEAP.declaredEAP is null then '0' else declaredEAP.declaredEAP end as declared_eap" : ", null as declared_eap");
+                + (Boolean.TRUE.equals(criteria.getDeclaredEapShow()) ? ", case when declaredEAP.declaredEAP is null then '0' else declaredEAP.declaredEAP end as declared_eap" : ", null as declared_eap")
+                + (Boolean.TRUE.equals(criteria.getApelEapShow()) ? ", case when apelEAP.apelEAP is null then '0' else apelEAP.apelEAP end as apel_eap" : ", null as apel_eap");
         
         String ADD_INFO_SELECT = 
                (Boolean.TRUE.equals(criteria.getActiveResultShow()) ? 
@@ -2146,14 +2188,27 @@ public class ReportService {
                 + "s.dormitory_code as dormitory";
         Holder<Integer> i = new Holder<>(Integer.valueOf(0));
         return JpaQueryUtil.pagingResult(qb, 
-                PERSON_DATA_SELECT + STUDY_DATA_SELECT + CONTACT_DATA_SELECT + STATISTICS_DATA_SELECT + ADD_INFO_SELECT, em, pageable).map(r -> {
+                PERSON_DATA_SELECT + STUDY_DATA_SELECT + CONTACT_DATA_SELECT + REPRESENTATIVE_DATA_SELECT + STATISTICS_DATA_SELECT + ADD_INFO_SELECT, em, pageable).map(r -> {
                     i.value ++;
                     return new ReportStudentDataDto(r, criteria, i.value);
                 });
     }
 
+    private void setRepresentativeDataCriteria(JpaNativeQueryBuilder qb, StudentDataCommand criteria) {
+        qb.optionalContains("srp.idcode", "representativeIdcode", criteria.getRepresentativeIdcode());
+        qb.optionalContains(Arrays.asList("srp.firstname", "srp.lastname"), "representativeName", criteria.getRepresentativeName());
+        qb.optionalContains("s.representative_other_contact", "representativeOtherContact", criteria.getRepresentativeOtherContact());
+        qb.optionalContains("srp.phone", "representativePhone", criteria.getRepresentativePhone());
+        qb.optionalContains("srp.email", "representativeEmail", criteria.getRepresentativeEmail());
+        qb.optionalCriteria("sr.relation_code in (:representativeRelations)", "representativeRelations", criteria.getRepresentativeRelation());
+        qb.optionalCriteria("coalesce(sr.is_student_visible, false) = :representativeVisible", "representativeVisible", criteria.getRepresentativeVisible());
+        if (Boolean.TRUE.equals(criteria.getOnlyWithRepresentative())) {
+            qb.filter("exists(select sr1.id from student_representative sr1 where sr1.student_id = s.id)");
+        }
+    }
+
     private static String foreignLanguage() {
-        return "left join (select sl.student_id, sl.foreign_lang_code as foreign_language_code, c_lang.name_et as langEt, c_lang.name_en as langEn "
+        return "left join (select sl.student_id, sl.foreign_lang_code as foreign_language_code "
                 + "from student_languages sl "
                 + "join classifier c_lang on c_lang.code = sl.foreign_lang_code) as foreignLanguage on foreignLanguage.student_id = s.id ";
     }
@@ -2229,6 +2284,32 @@ public class ReportService {
                     (startDate != null ? "and d.confirm_date >= :declaredFrom " : "") +
                     (endDate != null ? "and d.confirm_date <= :declaredThru " : "") +
                     "group by d.student_id) declaredEap on declaredEap.student_id = s.id ";
+    }
+    
+    private String apelEAP(StudentDataCommand criteria) {
+        String formalApel = 
+                "select aa1.id, aafsm.id aafsm_id, aafsm.credits, aa1.student_id " +
+                "from apel_application_formal_subject_or_module aafsm " +
+                "join apel_application_record aar1 on aafsm.apel_application_record_id = aar1.id " +
+                "join apel_application aa1 on aar1.apel_application_id = aa1.id " +
+                "where aa1.status_code = '" + ApelApplicationStatus.VOTA_STAATUS_C.name() +
+                "' and aafsm.transfer = true";
+        String informalApel = 
+                "select aa2.id, aaism.id aaism_id, coalesce(s.credits, cvot.credits, cm.credits) credits, aa2.student_id " +
+                "from apel_application_informal_subject_or_module aaism " +
+                "join apel_application_record aar2 on aaism.apel_application_record_id = aar2.id " +
+                "join apel_application aa2 on aar2.apel_application_id = aa2.id " +
+                "left join subject s on s.id = aaism.subject_id " +
+                "left join curriculum_version_omodule cvo on aaism.curriculum_version_omodule_id = cvo.id " +
+                "left join curriculum_module cm on cvo.curriculum_module_id = cm.id " +
+                "left join curriculum_version_omodule_theme cvot on aaism.curriculum_version_omodule_theme_id = cvot.id " +
+                "where aa2.status_code = '" + ApelApplicationStatus.VOTA_STAATUS_C.name() + 
+                "' and aaism.transfer = true";
+        
+        String fullSelect = "left join (select coalesce(sum(credits), 0) apelEap, student_id from (" + formalApel + " union all " + informalApel + ") apel_eap group by student_id) "
+                + "apelEap on apelEap.student_id = s.id ";
+        
+        return fullSelect;
     }
 
     private String debtPointsSubQuery(StudentDataCommand criteria) {
@@ -2513,6 +2594,9 @@ public class ReportService {
             if (startDate != null) qb.parameter("declaredFrom", JpaQueryUtil.parameterAsTimestamp(startDate));
             if (endDate != null) qb.parameter("declaredThru", JpaQueryUtil.parameterAsTimestamp(endDate));
         }
+        if (criteria.getApelEapSign() != null) {
+            qb.optionalCriteria("apelEap.apelEap " + criteria.getApelEapSign() + " :apelEap", "apelEap", criteria.getApelEap());
+        }
         qb.filter(":vocationalPositiveGrades = :vocationalPositiveGrades");
         qb.filter(":higherPositiveGrades = :higherPositiveGrades");
         qb.parameter("vocationalPositiveGrades", OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE);
@@ -2539,6 +2623,7 @@ public class ReportService {
         qb.optionalContains("p.phone", "phone", criteria.getPhone());
         qb.optionalContains("p.email", "personalEmail", criteria.getPersonalEmail());
         qb.optionalContains("s.email", "officialEmail", criteria.getOfficialEmail());
+        qb.optionalContains("s.other_contact", "otherContact", criteria.getOtherContact());
     }
 
     private static void setStudyDataCriteria(JpaNativeQueryBuilder qb, StudentDataCommand criteria) {
@@ -2610,12 +2695,12 @@ public class ReportService {
         qb.optionalCriteria("c.orig_study_level_code in (:studyLevels)", "studyLevels", criteria.getStudyLevel());
         if (criteria.getSpecialityHigher() != null && criteria.getSpeciality() != null) {
             qb.filter("(s.curriculum_speciality_id in (:specialityIds) "
-                    + "or sg.speciality_code in (:specialityCodes))");
+                    + "or s.speciality_code in (:specialityCodes))");
             qb.parameter("specialityIds", criteria.getSpecialityHigher());
             qb.parameter("specialityCodes", criteria.getSpeciality());
         } else {
             qb.optionalCriteria("s.curriculum_speciality_id in (:specialityIds)", "specialityIds", criteria.getSpecialityHigher());
-            qb.optionalCriteria("sg.speciality_code in (:specialityCodes)", "specialityCodes", criteria.getSpeciality());
+            qb.optionalCriteria("s.speciality_code in (:specialityCodes)", "specialityCodes", criteria.getSpeciality());
         }
         qb.optionalCriteria("sg.course = :studyYearNumber", "studyYearNumber", criteria.getStudyYearNumber());
         qb.optionalCriteria("s.fin_specific_code in (:finCodes)", "finCodes", criteria.getFin());
@@ -2623,6 +2708,21 @@ public class ReportService {
         qb.optionalCriteria("foreignLanguage.foreign_language_code in (:foreignLanguages)", "foreignLanguages", criteria.getForeignLanguage());
         qb.optionalCriteria("round((c.credits + scc.study_backlog) * 100 / coalesce(case when c.credits is not null and c.credits != 0 then c.credits else null end, 1)) > :curriculumPercentageFrom", "curriculumPercentageFrom", criteria.getCurriculumPercentageFrom());
         qb.optionalCriteria("round((c.credits + scc.study_backlog) * 100 / coalesce(case when c.credits is not null and c.credits != 0 then c.credits else null end, 1)) < :curriculumPercentageThru", "curriculumPercentageThru", criteria.getCurriculumPercentageThru());
+        qb.optionalCriteria("s.is_special_need = :specialNeed", "specialNeed", criteria.getSpecialNeed());
+        qb.optionalCriteria("ssn.special_need_code in (:specialNeedCode)", "specialNeedCode", criteria.getSpecialNeedCode());
+        qb.optionalContains("s.study_company", "studyCompany", criteria.getStudyCompany());
+        qb.optionalCriteria("((D1.type_code = '" + DirectiveType.KASKKIRI_AKAD.name() + "' and D1.directiveEnd >= :akadDateFrom) "
+                + "or D1.type_code != '" + DirectiveType.KASKKIRI_AKAD.name() + "')", "akadDateFrom", criteria.getAkadDateFrom());
+        qb.optionalCriteria("((D1.type_code = '" + DirectiveType.KASKKIRI_AKAD.name() + "' and D1.directiveStart <= :akadDateThru) "
+                + "or D1.type_code != '" + DirectiveType.KASKKIRI_AKAD.name() + "')", "akadDateThru", criteria.getAkadDateThru());
+        qb.optionalCriteria("((D1.type_code = '" + DirectiveType.KASKKIRI_VALIS.name() + "' and D1.directiveEnd >= :valisDateFrom) "
+                + "or D1.type_code != '" + DirectiveType.KASKKIRI_VALIS.name() + "')", "valisDateFrom", criteria.getValisDateFrom());
+        qb.optionalCriteria("((D1.type_code = '" + DirectiveType.KASKKIRI_VALIS.name() + "' and D1.directiveStart <= :valisDateThru) "
+                + "or D1.type_code != '" + DirectiveType.KASKKIRI_VALIS.name() + "')", "valisDateThru", criteria.getValisDateThru());
+        qb.optionalCriteria("((D1.type_code = '" + DirectiveType.KASKKIRI_KYLALIS.name() + "' and D1.directiveEnd >= :guestDateFrom) "
+                + "or D1.type_code != '" + DirectiveType.KASKKIRI_KYLALIS.name() + "')", "guestDateFrom", criteria.getGuestDateFrom());
+        qb.optionalCriteria("((D1.type_code = '" + DirectiveType.KASKKIRI_KYLALIS.name() + "' and D1.directiveStart <= :guestDateThru) "
+                + "or D1.type_code != '" + DirectiveType.KASKKIRI_KYLALIS.name() + "')", "guestDateThru", criteria.getGuestDateThru());
     }
 
     private static void setPersonDataCriteria(JpaNativeQueryBuilder qb, StudentDataCommand criteria) {
@@ -2635,6 +2735,13 @@ public class ReportService {
         qb.optionalCriteria("p.birthdate <= :birthDayThru", "birthDayThru", criteria.getBirthdateThru());
         qb.optionalCriteria("p.residence_country_code in :residenceCountryCodes", "residenceCountryCodes", criteria.getResidenceCountry());
         qb.optionalCriteria("p.citizenship_code in :citizenshipCodes", "citizenshipCodes", criteria.getCitizenship());
+        if (criteria.getAge() != null) {
+            if (Boolean.TRUE.equals(criteria.getAge())) {
+                qb.filter("extract(year from age(now(), p.birthdate)) >= 18");
+            } else {
+                qb.filter("extract(year from age(now(), p.birthdate)) < 18");
+            }
+        }
     }
 
     public byte[] studentsDataAsExcel(HoisUserDetails user, StudentDataCommand criteria, Pageable pageable) {
@@ -2652,8 +2759,8 @@ public class ReportService {
         ClassifierUtil.ClassifierCache classifierCache = new ClassifierUtil.ClassifierCache(classifierService);
         List<String> classifierFields = Arrays.asList("sex", "residenceCountry", "citizenship", "directiveTypes", "fin", 
                 "speciality", "studentStatuses", "studyForm", "studyLoad", "studyLevel", "language", "activeResult", "studyYear",
-                "previousStudyLevel", "dormitory");
-        List<String> booleanTranslatable = Arrays.asList("guestStudent", "foreignStudent", "cumLaude");
+                "previousStudyLevel", "dormitory", "specialNeedCode", "representativeRelation");
+        List<String> booleanTranslatable = Arrays.asList("guestStudent", "foreignStudent", "cumLaude", "specialNeed", "representativeVisible", "age");
         List<List<Object>> result = new ArrayList<>();
         for (Object student : students) {
             List<Object> studentData = new ArrayList<>();
@@ -2676,13 +2783,37 @@ public class ReportService {
                         } else if ("foreignLanguage".equals(fieldName)) {
                             value = classifierCache.getByCode((String)value, MainClassCode.valueOf("EHIS_VOORKEEL"));
                         } else if (classifierFields.contains(fieldName)) {
-                            value = classifierCache.getByCode((String)value, MainClassCode.valueOf(((String)value).split("\\_")[0]));
+                            boolean addDates = false;
+                            if (EnumUtil.toNameList(DirectiveType.KASKKIRI_AKAD, DirectiveType.KASKKIRI_KYLALIS, DirectiveType.KASKKIRI_VALIS).contains((String)value)) {
+                                addDates = true;
+                            }
+                            Classifier classifier = classifierCache.getByCode((String)value, MainClassCode.valueOf(((String)value).split("\\_")[0]));
+                            if (classifier != null) {
+                                value = ClassifierDto.of(classifier);
+                                if (addDates) {
+                                    if (student instanceof ReportStudentDataDto) {
+                                        ReportStudentDataDto stud = (ReportStudentDataDto) student;
+                                        if (stud.getDirectiveStart() != null && stud.getDirectiveEnd() != null) {
+                                            ((ClassifierDto) value).setNameEt(((ClassifierDto) value).getNameEt() + " (" + DateUtils.date(stud.getDirectiveStart()) + " - " + DateUtils.date(stud.getDirectiveEnd()) + ")");
+                                            ((ClassifierDto) value).setNameEn(((ClassifierDto) value).getNameEn() + " (" + DateUtils.date(stud.getDirectiveStart()) + " - " + DateUtils.date(stud.getDirectiveEnd()) + ")");
+                                        }
+                                    }
+                                }
+                            }
                         }
                     } else if (value instanceof Boolean && booleanTranslatable.contains(fieldName)) {
                         if (Boolean.TRUE.equals(value)) {
-                            value = TranslateUtil.translate("yes", Language.ET);
+                            if ("age".equals(fieldName)) {
+                                value = TranslateUtil.translate("report.studentData.adult", Language.ET);
+                            } else {
+                                value = TranslateUtil.translate("yes", Language.ET);
+                            }
                         } else {
-                            value = TranslateUtil.translate("no", Language.ET);
+                            if ("age".equals(fieldName)) {
+                                value = TranslateUtil.translate("report.studentData.underAge", Language.ET);
+                            } else {
+                                value = TranslateUtil.translate("no", Language.ET);
+                            }
                         }
                     }
                     studentData.add(value);
@@ -2789,7 +2920,10 @@ public class ReportService {
      */
     private void saveQueryCriteria(SchoolQuery schoolQuery, Object criteria) {
         List<Method> methods = Arrays.asList(criteria.getClass().getDeclaredMethods());
-        List<Method> mainMethods = methods.stream().filter(p -> p.getName().endsWith("Show") && p.getName().startsWith("get")).collect(Collectors.toList());
+        List<String> methodsWithoutShow = Arrays.asList("getOnlyWithRepresentative", "getAkadDateFrom", "getAkadDateThru",
+                "getValisDateFrom", "getValisDateThru", "getGuestDateFrom", "getGuestDateThru");
+        List<Method> mainMethods = methods.stream().filter(p -> (p.getName().endsWith("Show") && p.getName().startsWith("get")) 
+                || methodsWithoutShow.contains(p.getName())).collect(Collectors.toList());
         List<SchoolQueryCriteria> schoolQueryCriterias = new ArrayList<>();
         for (Method mainMethodShow : mainMethods) {
             try {

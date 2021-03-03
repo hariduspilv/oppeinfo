@@ -85,12 +85,7 @@
   		<tr>
   			<td><b>{{'report.subjectprogram.teacher' | translate}}:</b></td>
   			<td colspan="2">
-				{% for teacher in content.teachers %}
-					{% if not loop.first %}, {% endif %}
-					{{ teacher.person.fullname }}
-					{% if lang == "ET" %} ({{ teacher.teacherOccupation.occupationEt }}) {% endif %}
-					{% if lang == "EN" %} ({{ teacher.teacherOccupation.occupationEn }}) {% endif %}
-				{% endfor %}
+				{% for teacher in content.teachers %}{% if not loop.first %}, {% endif %}{{ teacher.person.fullname }}{% if lang == "ET" %} ({{ teacher.teacherOccupation.occupationEt }}){% endif %}{% if lang == "EN" %} ({{ teacher.teacherOccupation.occupationEn }}){% endif %}{% endfor %}
   			</td>
   		</tr>
   		<tr>

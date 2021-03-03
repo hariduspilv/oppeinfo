@@ -1,5 +1,5 @@
-<md-table-container>
-  <table md-table class="secondary-table">
+<md-table-container fixed-column-table fixed-columns="3" resize-table search-criteria-height="250">
+  <table md-table class="secondary-table directive fixed3">
     <thead md-head>
       <tr md-row>
         <th md-column>{{'directive.student.order' | translate}}</th>
@@ -14,14 +14,14 @@
       </tr>
     </thead>
     <tbody md-body>
-      <tr md-row hois-table-row ng-repeat="row in record.students" ng-class-odd="'odd'" ng-class-even="'even'">
+      <tr md-row hois-table-row ng-repeat="row in record.students" ng-init="$last && removeLoadingWheel()" ng-class-odd="'odd'" ng-class-even="'even'">
         <td md-cell>{{$index + 1}}.</td>
         <td md-cell>{{::row.fullname}}</td>
         <td md-cell>{{::row.idcode}}</td>
         <td md-cell>{{::currentLanguageNameField(row.studentGroupObject)}}</td>
         <td md-cell hois-table-data>
           <hois-table-data-master>
-            <md-input-container style="width: 250px">
+            <md-input-container class="hois-table-select">
               <md-select ng-model="row.directiveStudent" ng-change="scholarshipDirectiveChanged(row)" name="students[{{$index}}].directiveStudent"
                 ng-disabled="row.directiveStudent && row.existingDirectiveStudents.length === 1">
                 <md-option ng-value="existingDirective.id" ng-repeat="existingDirective in row.existingDirectiveStudents">
@@ -49,7 +49,7 @@
           <hois-table-data-master>
             <hois-classifier-select ng-model="row.reason" name="students[{{$index}}].reason" ignore-preselected
               criteria="{higher: formState.school.higher ? true : undefined, vocational: formState.school.vocational ? true : undefined}"
-              model-value-attr="code" main-classifier-code="KASKKIRI_STIPTOETL_POHJUS" aria-label="{{'directive.student.reason' | translate}}" 
+              model-value-attr="code" main-classifier-code="KASKKIRI_STIPTOETL_POHJUS" aria-label="{{'directive.student.reason' | translate}}"
               only-valid style="width: 200px"></hois-classifier-select>
           </hois-table-data-master>
           <hois-table-data-detail>

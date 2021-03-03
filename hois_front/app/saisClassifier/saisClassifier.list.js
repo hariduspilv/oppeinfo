@@ -1,11 +1,28 @@
 'use strict';
 
-angular.module('hitsaOis').controller('SaisClassifierListController', ['$scope', 'message', 'QueryUtils',
-  function ($scope, message, QueryUtils) {
+angular.module('hitsaOis').controller('SaisClassifierListController',
+  ['$scope', 'message', 'QueryUtils', 'PollingService',
+  function ($scope, message, QueryUtils, PollingService) {
 
     $scope.saisImport = function() {
-      QueryUtils.endpoint('/saisClassifier/saisImport').save().$promise.then(function() {
-        message.info('saisClassifier.importFinished');
+      QueryUtils.loadingWheel($scope, true);
+      PollingService.sendRequest({
+        url: '/saisClassifier/saisImport',
+        pollUrl: '/saisClassifier/saisImportStatus',
+        successCallback: function (pollResult) {
+          message.info('saisClassifier.importFinished');
+          QueryUtils.loadingWheel($scope, false);
+          $scope.loadData();
+        },
+        failCallback: function (pollResult) {
+          if (pollResult) {
+            message.error('main.async.taskStatus.' + pollResult.status, {error: pollResult.error});
+          }
+          QueryUtils.loadingWheel($scope, false);
+          $scope.loadData();
+        },
+        updateProgress: function (pollResult) {
+        }
       });
     };
 

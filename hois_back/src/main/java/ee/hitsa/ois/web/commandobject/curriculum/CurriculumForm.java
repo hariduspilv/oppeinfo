@@ -29,6 +29,7 @@ import ee.hitsa.ois.web.dto.curriculum.CurriculumGradeDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumJointPartnerDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumModuleDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumSpecialityDto;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumStudyFieldDto;
 
 @DateRange
 public class CurriculumForm extends VersionedCommand {
@@ -86,6 +87,8 @@ public class CurriculumForm extends VersionedCommand {
     private String finalExamDescription;
     @Size(max = 4000)
     private String optionalStudyDescription;
+    @Size(max = 20000)
+    private String gradingSystemDescription;
     @Size(max = 20000)
     private String description;
     private LocalDate ehisChanged;
@@ -190,6 +193,8 @@ public class CurriculumForm extends VersionedCommand {
     @NotEmpty(groups = {ConfirmedVocational.class})
     @Valid
     private Set<CurriculumModuleDto> modules;
+    @Valid
+    private Set<CurriculumStudyFieldDto> studyFields;
 
     private String contractEt;
     private String contractEn;
@@ -777,5 +782,22 @@ public class CurriculumForm extends VersionedCommand {
 
     public void setSupervisor(String supervisor) {
         this.supervisor = supervisor;
+    }
+
+    public Set<CurriculumStudyFieldDto> getStudyFields() {
+        return studyFields;
+    }
+
+    public void setStudyFields(Set<CurriculumStudyFieldDto> studyFields) {
+        this.studyFields = studyFields;
+    }
+
+
+    public String getGradingSystemDescription() {
+        return gradingSystemDescription;
+    }
+
+    public void setGradingSystemDescription(String gradingSystemDescription) {
+        this.gradingSystemDescription = gradingSystemDescription;
     }
 }

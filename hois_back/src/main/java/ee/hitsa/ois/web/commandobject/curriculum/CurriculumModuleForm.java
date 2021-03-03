@@ -48,6 +48,7 @@ public class CurriculumModuleForm extends VersionedCommand {
     private Set<String> occupations;
     @ClassifierRestriction(MainClassCode.KOMPETENTS)
     private Set<String> competences;
+    private Set<Long> studyFields;
     
     /**
      * It is not obligatory, but it is false by default
@@ -64,6 +65,8 @@ public class CurriculumModuleForm extends VersionedCommand {
     
     @Required
     private List<CurriculumModuleOutcomeDto> outcomes;
+    
+    private Long coursesOrWeeks;
 
     public String getModule() {
         return module;
@@ -232,5 +235,21 @@ public class CurriculumModuleForm extends VersionedCommand {
         public void setNameEn(String nameEn) {
             this.nameEn = nameEn;
         }
+    }
+
+    public Set<Long> getStudyFields() {
+        return studyFields;
+    }
+
+    public void setStudyFields(Set<Long> studyFields) {
+        this.studyFields = studyFields;
+    }
+
+    public Long getCoursesOrWeeks() {
+        return coursesOrWeeks;
+    }
+
+    public void setCoursesOrWeeks(Long coursesOrWeeks) {
+        this.coursesOrWeeks = coursesOrWeeks;
     }
 }

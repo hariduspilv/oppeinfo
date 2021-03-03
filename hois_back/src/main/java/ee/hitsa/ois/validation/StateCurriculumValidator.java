@@ -2,5 +2,11 @@ package ee.hitsa.ois.validation;
 
 public interface StateCurriculumValidator {
     
-    interface Confirmed{}    
+    interface ConfirmedVocational{}   
+    
+    interface ConfirmedSecondary{}  
+    
+    interface Vocational{} 
+    
+    interface Secondary{}
 }

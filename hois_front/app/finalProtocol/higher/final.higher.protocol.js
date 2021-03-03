@@ -7,7 +7,6 @@ function ($route, $location, $scope, $q, GRADING_SCHEMA_TYPE, Classifier, DataUt
   $scope.letterGrades = $scope.auth.school.letterGrades;
   $scope.record = $route.current.locals.entity;
   var FORBIDDEN_GRADES = ['KORGHINDAMINE_MI'];
-  var PROFESSIONAL_DIPLOMA_STUDY_LEVEL = 'OPPEASTE_514';
   var clMapper = Classifier.valuemapper({ status: 'PROTOKOLL_STAATUS', studyLevel: 'OPPEASTE' });
   var gradingSchema, gradeMapper;
   $scope.formState = {};
@@ -135,33 +134,18 @@ function ($route, $location, $scope, $q, GRADING_SCHEMA_TYPE, Classifier, DataUt
     });
   }
 
-  function validationPassed(confirmValidation) {
+  function validationPassed() {
     if (!$scope.finalProtocolForm.$valid) {
       message.error('main.messages.form-has-errors');
       $scope.finalProtocolForm.$setSubmitted();
       return false;
     }
-
-    if (confirmValidation && $scope.protocol.studyLevel.code !== PROFESSIONAL_DIPLOMA_STUDY_LEVEL &&
-        angular.isArray($scope.protocol.protocolStudents)) {
-      for (var i = 0; i < $scope.protocol.protocolStudents.length; i++) {
-        var student = $scope.protocol.protocolStudents[i];
-        if (HigherGradeUtil.isPositive(student.grade) && !student.curriculumGrade) {
-          message.error('finalProtocol.error.curriculumGradeRequired');
-          return false;
-        } else if (!HigherGradeUtil.isPositive(student.grade) && student.curriculumGrade) {
-          message.error('finalProtocol.error.curriculumGradeNotAllowed');
-          return false;
-        }
-      }
-    }
-
     return true;
   }
 
   $scope.confirm = function () {
     deferredEntityToDto = $q.defer();
-    if(!validationPassed(true)) {
+    if(!validationPassed()) {
       resolveDeferredIfExists();
       return deferredEntityToDto.promise;
     }
@@ -243,7 +227,7 @@ function ($route, $location, $scope, $q, GRADING_SCHEMA_TYPE, Classifier, DataUt
 
   var FinalHigherProtocolEndpoint = QueryUtils.endpoint(endpoint);
   $scope.save = function () {
-    if(!validationPassed(false)) {
+    if(!validationPassed()) {
       return false;
     }
 

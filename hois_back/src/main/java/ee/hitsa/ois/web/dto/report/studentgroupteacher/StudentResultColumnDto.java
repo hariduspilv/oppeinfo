@@ -7,6 +7,7 @@ public class StudentResultColumnDto {
     private StudentModuleResultDto practiceModuleResult;
     private StudentModuleResultDto outcomeResult;
     private StudentModuleResultDto moduleResult;
+    private Long moduleId;
     private Boolean intendedModule = Boolean.TRUE;
 
     public StudentResultColumnDto() {
@@ -25,6 +26,7 @@ public class StudentResultColumnDto {
         } else if (studentResult.getModuleResult() != null) {
             this.moduleResult = new StudentModuleResultDto(studentResult.getModuleResult());
         }
+        this.moduleId = studentResult.getModuleId();
         this.intendedModule = studentResult.getIntendedModule();
     }
 
@@ -66,6 +68,14 @@ public class StudentResultColumnDto {
 
     public void setModuleResult(StudentModuleResultDto moduleResult) {
         this.moduleResult = moduleResult;
+    }
+
+    public Long getModuleId() {
+        return moduleId;
+    }
+
+    public void setModuleId(Long moduleId) {
+        this.moduleId = moduleId;
     }
 
     public Boolean getIntendedModule() {

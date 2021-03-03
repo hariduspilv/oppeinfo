@@ -47,6 +47,7 @@
               <th md-column style="min-width: 300px;">{{'student.supportService.content' | translate}}</th>
               <th md-column md-order-by="validity_code">{{'student.supportService.validity' | translate}}</th>
               <th md-column md-order-by="is_public">{{'student.supportService.public' | translate}}</th>
+              <th md-column ng-if="auth.isAdmin()" md-order-by="is_visible">{{'student.supportService.visible' | translate}}</th>
               <th md-column>{{'student.supportService.file' | translate}}</th>
               <th md-column md-order-by="submitter">{{'student.supportService.entrySubmitter' | translate}}</th>
             </tr>
@@ -80,6 +81,7 @@
                 <hois-classifier-value ng-model="row.validity" main-classifier-code="TUGIKEHTIV"></hois-classifier-value>
               </td>
               <td md-cell>{{::((row.isPublic ? 'main.yes' : 'main.no') | translate)}}</td>
+              <td md-cell ng-if="auth.isAdmin()">{{::((row.visible ? 'main.yes' : 'main.no') | translate)}}</td>
               <td md-cell>
                 {{row.file.fname}}
                 <a ng-if="row.file" ng-href="{{getUrl(row.file, 'supportservice')}}" download target="_blank" rel="noopener noreferrer">

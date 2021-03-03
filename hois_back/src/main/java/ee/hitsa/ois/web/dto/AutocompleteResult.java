@@ -17,10 +17,12 @@ import ee.hitsa.ois.domain.UserSchoolRole;
 import ee.hitsa.ois.domain.basemodule.BaseModule;
 import ee.hitsa.ois.domain.basemodule.BaseModuleOutcomes;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
+import ee.hitsa.ois.domain.curriculum.CurriculumAddress;
 import ee.hitsa.ois.domain.curriculum.CurriculumGrade;
 import ee.hitsa.ois.domain.curriculum.CurriculumModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumModuleOutcome;
 import ee.hitsa.ois.domain.curriculum.CurriculumSpeciality;
+import ee.hitsa.ois.domain.curriculum.CurriculumStudyField;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
@@ -39,12 +41,12 @@ import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.studymaterial.StudyMaterial;
 import ee.hitsa.ois.domain.subject.Subject;
-import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodTeacher;
 import ee.hitsa.ois.domain.subject.subjectprogram.SubjectProgram;
 import ee.hitsa.ois.domain.subject.subjectprogram.SubjectProgramTeacher;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.domain.teacher.TeacherOccupation;
+import ee.hitsa.ois.domain.teacher.TeacherPositionEhis;
 import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.domain.timetable.LessonTimeBuilding;
 import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodSubgroup;
@@ -205,6 +207,10 @@ public class AutocompleteResult extends EntityConnectionCommand implements Trans
         return new CurriculumVersionOccupationModuleResult(id, nameEt, nameEn);
     }
 
+    public static AutocompleteResult of(CurriculumAddress address) {
+        return new AutocompleteResult(address.getId(), address.getAddress(), address.getAddress());
+    }
+
     public static AutocompleteResult of(Directive directive) {
         return new AutocompleteResult(directive.getId(), directive.getHeadline(), null);
     }
@@ -345,6 +351,16 @@ public class AutocompleteResult extends EntityConnectionCommand implements Trans
                 teacherOccupation.getOccupationEn());
     }
 
+    public static AutocompleteResult of(TeacherPositionEhis positionEhis) {
+        if (positionEhis.getPosition() == null) {
+            return null;
+        }
+        String nameEt = positionEhis.getPosition().getNameEt() + " (" + positionEhis.getContractType().getNameEt() + ")";
+        String nameEn = TranslateUtil.getNonNullableNameEn(positionEhis.getPosition()) +
+                " (" + TranslateUtil.getNonNullableNameEn(positionEhis.getContractType()) + ")";
+        return new AutocompleteResult(positionEhis.getId(), nameEt, nameEn);
+    }
+
     public static AutocompleteResult of(CurriculumVersionOccupationModuleTheme theme) {
         return new AutocompleteResult(theme.getId(), theme.getNameEt(), theme.getNameEt());
     }
@@ -406,5 +422,9 @@ public class AutocompleteResult extends EntityConnectionCommand implements Trans
         return new AutocompleteResult(userCurriculum.getId(),
                 CurriculumUtil.curriculumName(merCode, code, userCurriculum.getCurriculum().getNameEt()),
                 CurriculumUtil.curriculumName(merCode, code, userCurriculum.getCurriculum().getNameEn()));
+    }
+    
+    public static AutocompleteResult of(CurriculumStudyField studyField) {
+        return new AutocompleteResult(studyField.getId(), studyField.getNameEt(), studyField.getNameEn());
     }
 }

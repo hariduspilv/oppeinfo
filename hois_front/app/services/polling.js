@@ -17,13 +17,13 @@ PollingService.$inject = ['POLLING_STATUS', 'QueryUtils', '$timeout', 'resourceE
 function PollingService(POLLING_STATUS, QueryUtils, $timeout, resourceErrorHandler) {
 
   /**
-   * 
+   *
    * @param {string} config.url
    * @param {Object} config.data
    * @param {string} config.pollUrl
    * @param {Function} config.successCallback
    * @param {Function} config.failCallback
-   * @param {Function} config.updateCallback
+   * @param {Function} config.updateProgress
    */
   this.sendRequest = function (config) {
     QueryUtils.endpoint(config.url).save2(config.data).$promise.then(function(result) {

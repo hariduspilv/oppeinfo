@@ -1,6 +1,7 @@
 'use strict';
 
-angular.module('hitsaOis').controller('ReceptionSaisApplicationImportController', function ($scope, Classifier, QueryUtils, message) {
+angular.module('hitsaOis').controller('ReceptionSaisApplicationImportController',
+  function ($scope, Classifier, QueryUtils, message, PollingService, POLLING_STATUS, $translate, busyHandler) {
   $scope.statusList = Classifier.queryForDropdown({mainClassCode: 'SAIS_AVALDUSESTAATUS', order: 'code'});
   $scope.statusList.$promise.then(function() {
     Classifier.setSelectedCodes($scope.statusList, ['SAIS_AVALDUSESTAATUS_T']);
@@ -12,16 +13,44 @@ angular.module('hitsaOis').controller('ReceptionSaisApplicationImportController'
       var selectedCodes = Classifier.getSelectedCodes($scope.statusList);
       $scope.criteria.status = selectedCodes.length > 0 ? selectedCodes : undefined;
 
-      QueryUtils.endpoint('/saisApplications/importSais').save($scope.criteria).$promise.then(function(result) {
-        clMapper.objectmapper(result.successful);
-        $scope.failed = result.failed;
-        $scope.successful = result.successful;
-        $scope.result = true;
-        message.info('reception.application.importFinished');
+      QueryUtils.loadingWheel($scope, true, false,
+        $translate.instant('reception.application.requestInProgress'), true);
+      PollingService.sendRequest({
+        url: '/saisApplications/importSais',
+        data: $scope.criteria,
+        pollUrl: '/saisApplications/importSaisStatus',
+        successCallback: function (pollResult) {
+          clMapper.objectmapper(pollResult.result.successful);
+          $scope.failed = pollResult.result.failed;
+          $scope.successful = pollResult.result.successful;
+          $scope.result = true;
+          message.info('reception.application.importFinished');
+          busyHandler.setProgress(100);
+          QueryUtils.loadingWheel($scope, false);
+        },
+        failCallback: function (pollResult) {
+          if (pollResult) {
+            message.error('main.async.taskStatus.' + pollResult.status, {error: pollResult.error});
+            if ((pollResult.status === POLLING_STATUS.CANCELLED || pollResult.status === POLLING_STATUS.INTERRUPTED) && pollResult.result) {
+              $scope.failed = pollResult.result.failed;
+              $scope.successful = pollResult.result.successful;
+              $scope.result = true;
+            }
+          }
+          QueryUtils.loadingWheel($scope, false);
+        },
+        updateProgress: function (pollResult) {
+          if (pollResult) {
+            busyHandler.setProgress(Math.round(pollResult.progress * 100));
+            if (pollResult.message) {
+              busyHandler.setText($translate.instant(pollResult.message));
+            }
+          }
+        }
       });
     } else {
       message.error('reception.application.form-has-errors');
     }
   };
-  
+
 });

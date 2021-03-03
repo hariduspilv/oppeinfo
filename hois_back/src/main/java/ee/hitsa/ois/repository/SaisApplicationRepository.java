@@ -6,5 +6,5 @@ import ee.hitsa.ois.domain.sais.SaisApplication;
 
 public interface SaisApplicationRepository extends JpaRepository<SaisApplication, Long> {
 
-    SaisApplication findByApplicationNrAndSaisAdmissionCode(String applicationNr, String code);
+    SaisApplication findByApplicationNrAndSaisAdmissionCodeAndSaisAdmissionCurriculumVersionCurriculumSchoolIdAndSaisIdIsNull(String applicationNr, String code, Long schoolId);
 }

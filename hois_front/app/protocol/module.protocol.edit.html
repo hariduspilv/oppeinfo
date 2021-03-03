@@ -46,7 +46,7 @@
                   md-select="row.id" md-select-id="row.id">
                   <td md-cell ng-if="formState.canEditProtocol">
                     <md-input-container>
-                      <md-checkbox ng-model="calculateGrades.protocolStudents[row.id]" ng-hide="!row.canChangeGrade" aria-label="selectStudent">
+                      <md-checkbox ng-model="calculateGrades.protocolStudents[row.id]" ng-hide="!row.canBeEdited" aria-label="selectStudent">
                       </md-checkbox>
                     </md-input-container>
                   </td>
@@ -83,7 +83,7 @@
                   </td>
                   <td md-cell>
                     <hois-grade-select class="protocolGradeSelect" ng-model="row.grade" values="grades" aria-label="grade" ng-change="gradeChanged(row)"
-                      ng-disabled="!formState.canEditProtocol || !row.canChangeGrade"></hois-grade-select>
+                      ng-disabled="!formState.canEditProtocol || !row.canBeEdited"></hois-grade-select>
                   </td>
                   <td md-cell ng-if="formState.canChangeConfirmedProtocolGrade">
                     <md-input-container ng-if="row.gradeHasChanged">

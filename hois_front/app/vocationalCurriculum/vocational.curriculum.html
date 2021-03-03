@@ -1,3 +1,8 @@
+<style>
+    .subtable tr:first-child td {
+      border-top: none;
+    }
+</style>
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
    <form name="vocationalCurriculumForm" layout="column" >
 	<div layout="row" layout-sm="column" layout-xs="column">
@@ -38,7 +43,7 @@
 		<fieldset tabindex="3" flex="66" flex-offset="5" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0">
 			<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.mainData' | translate}}</legend>
 			<div layout="row" flex>
-				<md-input-container layout="row" flex="45" layout-align="start center">
+				<md-input-container layout="row" layout-xs="column" flex="45" layout-align="start center">
 					<hois-classifier-radio layout="row" name="consecution" ng-model="curriculum.consecution" model-value-attr="code" main-classifier-code="OPPEKAVA_TYPE"
             			filter-values watch-model="curriculum.origStudyLevel" connect-main-classifier-code="OPPEASTE" search-from-connect select-first-value default-value="OPPEKAVA_TYPE_E" required disabled></hois-classifier-radio>
 				</md-input-container>
@@ -295,9 +300,41 @@
 			</md-table-container>
 		</fieldset>
 
+		<div>&nbsp;</div>
+        <fieldset tabindex="6" flex>
+            <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.studyField.label' | translate}}</legend>
+            <div layout="row">
+              <md-button class="md-raised" ng-click="openAddStudyFieldDialog()">{{'curriculum.studyField.add' | translate}}</md-button>
+            </div>
+            <md-table-container>
+              <table md-table class="secondary-table">
+                <thead md-head>
+                  <tr md-row>
+                    <th md-column>{{'curriculum.studyField.nameEt' | translate}}</th>
+                    <th md-column>{{'curriculum.studyField.nameEn' | translate}}</th>
+                  </tr>
+                </thead>
+                <tbody md-body ng-repeat="studyField in curriculum.studyFields | orderBy: currentLanguageNameField()">
+					<tr md-row>
+						<td md-cell>
+							<a ng-click="openAddStudyFieldDialog(studyField)">
+								{{studyField.nameEt}}
+							</a>
+						</td>
+						<td md-cell>
+							<a ng-click="openAddStudyFieldDialog(studyField)">
+								{{studyField.nameEn}}
+							</a>
+						</td>
+					</tr>
+                </tbody>
+              </table>
+            </md-table-container>
+        </fieldset>
+
 
 		<div>&nbsp;</div>
-		<fieldset tabindex="6">
+		<fieldset tabindex="7">
 			<legend md-colors="{color: 'primary-800'}" class="md-title-small" ng-class="{invalid: vocationalCurriculumForm.$submitted && strictValidation() && !modulesValid()}">{{'curriculum.modulesTought' | translate}}</legend>
 			<md-button class="md-raised" ng-click="openAddModuleDialog()" ng-if="curriculum.id">{{'curriculum.addModule' | translate}}</md-button>
             <!--MODULES WITHOUT OCCUPATIONS-->
@@ -313,6 +350,15 @@
                             layout="row" class="align-center occupation-module-row" ng-class-odd="'odd'" ng-class-even="'even'">
                             <a flex="30" flex-xs="70" style="word-wrap: break-word" ng-click="openAddModuleDialog(module)" href="">{{module.baseModule ? '* ' : ''}}{{currentLanguageNameField(module)}}</a>
                             <span flex="10" flex-xs="30">{{module.credits}}&nbsp; EKAP</span>
+							<table md-table class="subtable">
+								<tbody md-body>
+									<tr md-row ng-repeat="studyField in curriculum.studyFields | filter: filterStudyFields(module) | orderBy: currentLanguageNameField()">
+										<td md-cell style="padding-left: 5px">
+											<span style="word-break: break-all;">{{currentLanguageNameField(studyField)}}</span>
+										</td>
+									</tr>
+								</tbody>
+							</table>
                         </div>
                     </div>
                 </div>
@@ -337,6 +383,15 @@
                                 layout="row" class="align-center occupation-module-row" ng-class-odd="'odd'" ng-class-even="'even'">
                                 <a flex="30" style="word-wrap: break-word" ng-click="openAddModuleDialog(module)" href="">{{module.baseModule ? '* ' : ''}}{{currentLanguageNameField(module)}}</a>
                                 <span flex="10">{{module.credits}}&nbsp; EKAP</span>
+								<table md-table class="subtable">
+									<tbody md-body>
+										<tr md-row ng-repeat="studyField in curriculum.studyFields | filter: filterStudyFields(module) | orderBy: currentLanguageNameField()">
+											<td md-cell style="padding-left: 5px">
+												<span style="word-break: break-all;">{{currentLanguageNameField(studyField)}}</span>
+											</td>
+										</tr>
+									</tbody>
+								</table>
                             </div>
                         </div>
                     </div>
@@ -357,6 +412,15 @@
                                     layout="row" class="align-center occupation-module-row" ng-class-odd="'odd'" ng-class-even="'even'">
                                     <a flex="30" style="word-wrap: break-word" ng-click="openAddModuleDialog(module)" href="">{{module.baseModule ? '* ' : ''}}{{currentLanguageNameField(module)}}</a>
                                     <span flex="10">{{module.credits}}&nbsp; EKAP</span>
+									<table md-table class="subtable">
+										<tbody md-body>
+											<tr md-row ng-repeat="studyField in curriculum.studyFields | filter: filterStudyFields(module) | orderBy: currentLanguageNameField()">
+												<td md-cell style="padding-left: 5px">
+													<span style="word-break: break-all;">{{currentLanguageNameField(studyField)}}</span>
+												</td>
+											</tr>
+										</tbody>
+									</table>
                                 </div>
                             </div>
                         </div>
@@ -378,6 +442,15 @@
                                     layout="row" class="align-center occupation-module-row" ng-class-odd="'odd'" ng-class-even="'even'">
                                     <a flex="30" style="word-wrap: break-word" ng-click="openAddModuleDialog(module)" href="">{{module.baseModule ? '* ' : ''}}{{currentLanguageNameField(module)}}</a>
                                     <span flex="10">{{module.credits}}&nbsp; EKAP</span>
+									<table md-table class="subtable">
+										<tbody md-body>
+											<tr md-row ng-repeat="studyField in curriculum.studyFields | filter: filterStudyFields(module) | orderBy: currentLanguageNameField()">
+												<td md-cell style="padding-left: 5px">
+													<span style="word-break: break-all;">{{currentLanguageNameField(studyField)}}</span>
+												</td>
+											</tr>
+										</tbody>
+									</table>
                                 </div>
                             </div>
                         </div>
@@ -386,7 +459,7 @@
             </div>
 		</fieldset>
 		<div>&nbsp;</div>
-		<fieldset tabindex="7">
+		<fieldset tabindex="8">
 			<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.additionalInfo' | translate}}</legend>
 			<md-input-container>
 				<label>{{'curriculum.optionalStudyCredits' | translate}}{{getStar()}}</label>
@@ -428,7 +501,7 @@
 		</fieldset>
 
 		<div ng-show="curriculum.joint">&nbsp;</div>
-		<fieldset tabindex="8" ng-show="curriculum.joint">
+		<fieldset tabindex="9" ng-show="curriculum.joint">
 			<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.jointInfo' | translate}}</legend>
 			<div layout="column">
 				<div layout="row" layout-align="start start" ng-show="curriculum.joint">
@@ -498,7 +571,7 @@
 		</fieldset>
 
 		<div>&nbsp;</div>
-		<fieldset tabindex="9">
+		<fieldset tabindex="10">
 			<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.address' | translate}}</legend>
 			<div layout="column">
 				<div layout="row">
@@ -526,7 +599,7 @@
 		</fieldset>
 
 		<div>&nbsp;</div>
-		<fieldset tabindex="10">
+		<fieldset tabindex="11">
 			<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.approvalInfo' | translate}}</legend>
 			<div layout="row" flex="100">
 				<md-input-container flex="30" flex-sm="100" flex-xs="100">
@@ -541,7 +614,7 @@
 		</fieldset>
 
 		<div>&nbsp;</div>
-		<fieldset tabindex="11">
+		<fieldset tabindex="12">
 			<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.statuses' | translate}}</legend>
 			<div layout="row" flex="100">
 				<md-input-container  flex="30" flex-sm="100" flex-xs="100">
@@ -574,7 +647,7 @@
 		</fieldset>
 
 		<div ng-if="curriculum.id">&nbsp;</div>
-		<fieldset tabindex="12" ng-if="curriculum.id">
+		<fieldset tabindex="13" ng-if="curriculum.id">
 			<legend md-colors="{color: 'primary-800'}" class="md-title-small" ng-class="{invalid: vocationalCurriculumForm.$submitted && strictValidation() && !hasRequiredFiles()}">{{'main.relatedFiles' | translate}}</legend>
 			<md-button class="md-raised" ng-click="openAddFileDialog()">{{'main.button.uploadFile' | translate}}</md-button>
       <md-table-container>
@@ -611,7 +684,7 @@
 		</fieldset>
 
 		<div>&nbsp;</div>
-		<fieldset tabindex="13" ng-if="curriculum.id > 0">
+		<fieldset tabindex="14" ng-if="curriculum.id > 0">
 			<legend md-colors="{color: 'primary-800'}" class="md-title-small" ng-class="{invalid: vocationalCurriculumForm.$submitted && strictValidation() && !hasVerifiedVersions()}">{{'curriculum.moduleImplementationPlans' | translate}}</legend>
 			<md-button class="md-raised" ng-click="goToVersionNewForm()" ng-show="versionCanBeAdded()">{{'main.button.create' | translate}}</md-button>
 			<md-table-container>

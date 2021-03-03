@@ -1,5 +1,6 @@
 package ee.hitsa.ois.util;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import ee.hitsa.ois.domain.curriculum.Curriculum;
@@ -15,6 +16,7 @@ import ee.hitsa.ois.validation.ValidationFailedException;
 public class FinalProtocolUtil {
 
     private static final String PROFESSIONAL_DIPLOMA_STUDY_LEVEL = "OPPEASTE_514";
+    private static final LocalDate PROFESSIONAL_DIPLOMA_CURRICULUM_GRADE_ALLOWED_AFTER = LocalDate.of(2019, 8, 1);
 
     private static boolean hasProtocolViewPermission(HoisUserDetails user, Protocol protocol) {
         return UserUtil.hasPermission(user, Permission.OIGUS_V, protocolPermissionObject(protocol));
@@ -122,6 +124,15 @@ public class FinalProtocolUtil {
         return ps.getGrade() != null;
     }
 
+    public static boolean studentCanSetCurriculumGrade(ProtocolStudent ps) {
+        Curriculum curriculum = ps.getProtocol().getProtocolHdata().getCurriculum();
+        if (PROFESSIONAL_DIPLOMA_STUDY_LEVEL.equals(EntityUtil.getCode(curriculum.getOrigStudyLevel()))) {
+            LocalDate studyStart = ps.getStudent().getStudyStart();
+            return studyStart != null && !studyStart.isBefore(PROFESSIONAL_DIPLOMA_CURRICULUM_GRADE_ALLOWED_AFTER);
+        }
+        return true;
+    }
+
     public static boolean canDelete(HoisUserDetails user, Protocol protocol) {
         if(!hasProtocolEditPermission(user, protocol)) {
             return false;
@@ -170,9 +181,15 @@ public class FinalProtocolUtil {
 
     public static void assertCurriculumGradesInput(Protocol protocol) {
         Curriculum curriculum = protocol.getProtocolHdata().getCurriculum();
-        if (!PROFESSIONAL_DIPLOMA_STUDY_LEVEL.equals(EntityUtil.getCode(curriculum.getOrigStudyLevel()))
-                && !curriculum.getGrades().isEmpty()) {
+        if (!curriculum.getGrades().isEmpty()) {
             for (ProtocolStudent student : protocol.getProtocolStudents()) {
+                if (!studentCanSetCurriculumGrade(student)) {
+                    if (student.getCurriculumGrade() != null) {
+                        throw new ValidationFailedException("finalProtocol.error.curriculumGradeNotAllowedToSet");
+                    }
+                    continue;
+                }
+
                 if (HigherAssessment.isPositive(EntityUtil.getNullableCode(student.getGrade()))
                         && student.getCurriculumGrade() == null) {
                     throw new ValidationFailedException("finalProtocol.error.curriculumGradeRequired");

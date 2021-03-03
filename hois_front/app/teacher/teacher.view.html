@@ -1,4 +1,4 @@
-<md-tabs md-dynamic-height md-border-bottom>
+<md-tabs md-selected="selectedIndex" md-dynamic-height md-border-bottom>
   <md-tab label="{{'teacher.data' | translate}}" md-on-select="changeTab('DATA')">
     <md-content class="md-padding form-readonly">
       <div style="padding-top: 1em">
@@ -218,13 +218,26 @@
     </md-content>
   </md-tab>
   <md-tab label="{{'teacher.subjectPrograms.label' | translate}}" md-on-select="changeTab('SUBJECT_PROGRAMS')" ng-if="teacher.isHigher">
-    <md-content class="md-padding">
+    <md-content>
       <div ng-include="'teacher/teacher.programs.html'"></div>
     </md-content>
   </md-tab>
+  <md-tab label="{{'teacher.load.label' | translate}}" md-on-select="changeTab('LOAD')" ng-if="auth.isAdmin() || auth.isTeacher()">
+    <div ng-include="'teacher/teacher.load.view.html'"></div>
+  </md-tab>
 </md-tabs>
-<div layout="row" ng-if="!auth.isTeacher()" class="md-padding">
-  <md-button ng-if="!isShowingRtipTab && teacher.canEdit" ng-href="{{getUrl()}}" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
+<div layout="row" ng-if="!auth.isTeacher() && showBottomButtons()" class="md-padding" style="padding-top: 0 !important;">
+  <md-button ng-if="showEdit() && teacher.canEdit" ng-href="{{getUrl()}}" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
   <md-button ng-if="isShowingRtipTab && teacher.canEdit && teacher.rtipNr" ng-click="updateData()" class="md-raised md-primary">{{'teacher.rtipAbsence.updateData' | translate}}</md-button>
-  <md-button ng-click="back('#/teachers')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+  <md-button ng-click="customBack('#/teachers')" class="md-raised">{{'main.button.back' | translate}}</md-button>
 </div>
+
+<style>
+  .ois-form-layout-padding {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+  .md-table-pagination > * {
+    height: 32px;
+  }
+</style>

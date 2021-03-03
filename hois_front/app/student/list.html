@@ -16,8 +16,8 @@
         </div>
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="45" flex-sm="100" flex-xs="100">
-            <label>{{'student.curriculum' | translate}}</label> 
-            <hois-select ng-model="criteria.curriculumVersion" name="curriculumVersion" type="curriculumversion" 
+            <label>{{'student.curriculum' | translate}}</label>
+            <hois-select ng-model="criteria.curriculumVersion" name="curriculumVersion" type="curriculumversion"
               criteria="{userId: auth.isLeadingTeacher() ? auth.user : null}" multiple></hois-select>
           </md-input-container>
 
@@ -28,14 +28,14 @@
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="45" flex-sm="100" flex-xs="100">
             <label>{{'student.studyForm' | translate}}</label>
-            <hois-classifier-select ng-model="criteria.studyForm" criteria="{higher: auth.school.higher ? true : undefined, vocational: auth.school.vocational ? true : undefined}" 
+            <hois-classifier-select ng-model="criteria.studyForm" criteria="{higher: auth.school.higher ? true : undefined, vocational: auth.school.vocational ? true : undefined}"
               name="studyForm" model-value-attr="code" main-classifier-code="OPPEVORM" multiple></hois-classifier-select>
           </md-input-container>
 
           <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label>{{'student.status' | translate}}</label>
-            <hois-classifier-select ng-if="auth.isAdmin() || auth.isTeacher() || auth.isLeadingTeacher()" 
-              criteria="{higher: auth.school.higher ? true : undefined, vocational: auth.school.vocational ? true : undefined}" 
+            <hois-classifier-select ng-if="auth.isAdmin() || auth.isTeacher() || auth.isLeadingTeacher()"
+              criteria="{higher: auth.school.higher ? true : undefined, vocational: auth.school.vocational ? true : undefined}"
               ng-model="criteria.status" name="status" model-value-attr="code" main-classifier-code="OPPURSTAATUS" multiple></hois-classifier-select>
             <hois-classifier-select ng-if="auth.isStudent()" criteria="{higher: auth.school.higher ? true : undefined, vocational: auth.school.vocational ? true : undefined}"
               ng-model="criteria.status" name="status" model-value-attr="code" main-classifier-code="OPPURSTAATUS"
@@ -66,7 +66,7 @@
 
             <md-button ng-if="auth.isAdmin() && auth.authorizedRoles.indexOf('ROLE_OIGUS_M_TEEMAOIGUS_OPPUR') !== -1"
               class="md-raised" ng-click="requestPhotoBoxPhotos()">{{'student.photoBox.request' | translate}}</md-button>
-            <md-button ng-if="(auth.isAdmin() || auth.isLeadingTeacher()) && auth.school.higher && auth.authorizedRoles.indexOf('ROLE_OIGUS_M_TEEMAOIGUS_OPPUR') !== -1"
+            <md-button ng-if="(auth.isAdmin() || auth.isLeadingTeacher()) && auth.authorizedRoles.indexOf('ROLE_OIGUS_M_TEEMAOIGUS_OPPUR') !== -1"
               class="md-raised" ng-href="#/students/specialities?_menu">{{'student.speciality.button' | translate}}</md-button>
             <md-checkbox ng-if="auth.isTeacher() && auth.teacherGroupIds.length > 0" layout="row" layout-align="start center" ng-model="criteria.showMyStudentGroups"
               aria-label="{{'student.myStudentGroups' | translate}}" style="margin-bottom: 0;">{{'student.myStudentGroups' | translate}}</md-checkbox>

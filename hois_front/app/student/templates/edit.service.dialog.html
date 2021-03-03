@@ -24,13 +24,27 @@
           <label>{{'student.supportService.content' | translate}}</label>
           <textarea ng-model="service.content" name="content" max-rows="5" md-maxlength="4000" required></textarea>
         </md-input-container>
-        <md-input-container style="width: 150px;">
-          <label>{{'student.supportService.validity' | translate}}</label>
-          <hois-classifier-select ng-model="service.validity" model-value-attr="code" main-classifier-code="TUGIKEHTIV" required></hois-classifier-select>
-        </md-input-container>
-        <md-input-container>
-          <md-checkbox ng-model="service.isPublic" name="public">{{'student.supportService.public' | translate}}</md-checkbox>
-        </md-input-container>
+        <div layout-gt-xs="row" layout="column">
+          <md-input-container style="width: 150px;">
+            <label>{{'student.supportService.validity' | translate}}</label>
+            <hois-classifier-select ng-model="service.validity" model-value-attr="code" main-classifier-code="TUGIKEHTIV" required></hois-classifier-select>
+          </md-input-container>
+          <div layout="row" layout-align="start center" style="margin-left: 16px;">
+            <md-input-container flex>
+              <md-checkbox ng-model="service.isPublic" name="public" aria-label="{{'student.supportService.public' | translate}}"
+                           ng-change="service.isPublic && (service.visible = true)" style="margin-bottom: 0;">
+                <span style="white-space: nowrap;">{{'student.supportService.public' | translate}}</span>
+              </md-checkbox>
+            </md-input-container>
+            <md-input-container flex>
+              <md-checkbox ng-model="service.visible" name="visible" aria-label="{{'student.supportService.visible' | translate}}"
+                           ng-disabled="service.isPublic && service.visible" style="margin-bottom: 0;">
+                <span style="white-space: nowrap;">{{'student.supportService.visible' | translate}}</span>
+                <md-tooltip md-direction="bottom">{{'student.supportService.visibleTooltip' | translate}}</md-tooltip>
+              </md-checkbox>
+            </md-input-container>
+          </div>
+        </div>
         <md-table-container ng-show="service.file">
           <table md-table class="secondary-table">
             <thead md-head>

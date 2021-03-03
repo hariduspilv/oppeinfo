@@ -13,6 +13,7 @@ public class CurriculumVersionOccupationModuleThemeResult extends AutocompleteRe
 
     private Long moduleId;
     private BigDecimal credits;
+    private Short hours;
     private Short studyYearNumber;
     private String assessment;
     private Map<String, Short> capacities = new HashMap<>();
@@ -31,16 +32,17 @@ public class CurriculumVersionOccupationModuleThemeResult extends AutocompleteRe
     }
 
     public CurriculumVersionOccupationModuleThemeResult(Long id, String nameEt, String nameEn, BigDecimal credits,
-            String assessment, Long moduleId) {
+            Short hours, String assessment, Long moduleId) {
         super(id, nameEt, nameEn);
         this.moduleId = moduleId;
         this.credits = credits;
+        this.hours = hours;
         this.assessment = assessment;
     }
 
     public CurriculumVersionOccupationModuleThemeResult(Long id, String nameEt, String nameEn, BigDecimal credits,
-            String assessment, Short studyYearNumber, Long moduleId) {
-        this(id, nameEt, nameEn, credits, assessment, moduleId);
+            Short hours, String assessment, Short studyYearNumber, Long moduleId) {
+        this(id, nameEt, nameEn, credits, hours, assessment, moduleId);
         this.studyYearNumber = studyYearNumber;
     }
 
@@ -82,6 +84,14 @@ public class CurriculumVersionOccupationModuleThemeResult extends AutocompleteRe
 
     public void setCredits(BigDecimal credits) {
         this.credits = credits;
+    }
+
+    public Short getHours() {
+        return hours;
+    }
+
+    public void setHours(Short hours) {
+        this.hours = hours;
     }
 
     public Boolean getExistsInOtherJournals() {

@@ -62,6 +62,9 @@ public class Classifier extends BaseEntity implements Translatable {
     private boolean vocational;
     @Column(name="is_higher")
     private boolean higher;
+    // Üldharidusõpe
+    @Column(name="is_secondary")
+    private boolean secondary;
     private boolean valid;
 
     @JsonIgnore
@@ -232,5 +235,13 @@ public class Classifier extends BaseEntity implements Translatable {
 
     public Set<ClassifierConnect> getChildConnects() {
         return childConnects != null ? childConnects : (childConnects = new HashSet<>());
+    }
+
+    public boolean isSecondary() {
+        return secondary;
+    }
+
+    public void setSecondary(boolean secondary) {
+        this.secondary = secondary;
     }
 }

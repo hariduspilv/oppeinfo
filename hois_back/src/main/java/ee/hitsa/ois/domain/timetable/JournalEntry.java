@@ -41,6 +41,8 @@ public class JournalEntry extends BaseEntityWithId {
     @JoinColumn()
     private JournalStudent journalStudent;
 
+    private Boolean isTest;
+
     @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH}, orphanRemoval = true)
     @JoinColumn(name = "journal_entry_id", nullable = false, updatable = true)
     private Set<JournalEntryCapacityType> journalEntryCapacityTypes = new HashSet<>();
@@ -124,6 +126,12 @@ public class JournalEntry extends BaseEntityWithId {
     }
     public void setJournalStudent(JournalStudent journalStudent) {
         this.journalStudent = journalStudent;
+    }
+    public Boolean getIsTest() {
+        return isTest;
+    }
+    public void setIsTest(Boolean isTest) {
+        this.isTest = isTest;
     }
     public Set<JournalEntryCapacityType> getJournalEntryCapacityTypes() {
         return journalEntryCapacityTypes;

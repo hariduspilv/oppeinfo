@@ -702,7 +702,7 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
 
     function getStudentInformation() {
       $scope.pageLoadingHandler.addPromise("studentTasks",
-        QueryUtils.endpoint('/journals/studentJournalTasks/').search({studentId: Session.studentId}).$promise,
+        QueryUtils.endpoint('/journals/studentJournalTasks/').search({studentId: Session.studentId, presentTasks: true}).$promise,
         function (result) {
           $scope.tasks = {todayTasks: [], tomorrowTasks: [], laterTasks: []};
           if (angular.isDefined(result.tasks) && result.tasks.length > 0) {
@@ -716,8 +716,6 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
           }
         }
       );
-
-      $scope.testTaskTypes = ['SISSEKANNE_H', 'SISSEKANNE_L', 'SISSEKANNE_E', 'SISSEKANNE_I', 'SISSEKANNE_P', 'SISSEKANNE_R'];
 
       $scope.pageLoadingHandler.addPromise("studentAbsences",
         QueryUtils.endpoint('/journals/studentJournalAbsences/').query({studentId: Session.studentId}).$promise,
@@ -787,12 +785,9 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
     }
 
     function getTodayAndTomorrowDate() {
-      var today, tomorrow;
-      today = new Date();
-      today.setHours(0, 0, 0, 0);
-      tomorrow = new Date();
+      var today = new Date().withoutTime();
+      var tomorrow = new Date().withoutTime();
       tomorrow.setDate(today.getDate() + 1);
-      tomorrow.setHours(0, 0, 0, 0);
 
       $scope.todaysDate = today;
       $scope.tomorrowsDate = tomorrow;
@@ -801,8 +796,7 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
     function sortTasksByDate(tasks) {
       $scope.tasks = {todayTasks: [], tomorrowTasks: [], laterTasks: []};
       for (var i = 0; i < tasks.length; i++) {
-        var taskDate = new Date(tasks[i].date);
-        taskDate.setHours(0, 0, 0, 0);
+        var taskDate = new Date(tasks[i].date).withoutTime();
 
         if (taskDate.getTime() === $scope.todaysDate.getTime()) {
           $scope.tasks.todayTasks.push(tasks[i]);

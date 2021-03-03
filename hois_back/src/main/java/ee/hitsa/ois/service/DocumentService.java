@@ -914,11 +914,11 @@ public class DocumentService {
         }
         supplement.setOutcomesEt(curriculum.getOutcomesEt());
         supplement.setCurriculumCompletion(getCurriculumCompletion(student, Language.ET));
-        if (PROFESSIONAL_DIPLOMA_STUDY_LEVEL.equals(EntityUtil.getCode(curriculum.getOrigStudyLevel()))) {
-            supplement.setFinal21(TranslateUtil.translate(PROFESSIONAL_DIPLOMA_KEY, Language.ET));
+        if (curriculumGrade != null) {
+            supplement.setFinal21(curriculumGrade.getNameEt());
         } else {
-            if (curriculumGrade != null) {
-                supplement.setFinal21(curriculumGrade.getNameEt());
+            if (PROFESSIONAL_DIPLOMA_STUDY_LEVEL.equals(EntityUtil.getCode(curriculum.getOrigStudyLevel()))) {
+                supplement.setFinal21(TranslateUtil.translate(PROFESSIONAL_DIPLOMA_KEY, Language.ET));
             }
         }
         supplement.setFinal31(curriculum.getFinal31());
@@ -954,12 +954,12 @@ public class DocumentService {
         }
         supplement.setOutcomesEn(curriculum.getOutcomesEn());
         supplement.setCurriculumCompletionEn(getCurriculumCompletion(student, Language.EN));
-        if (PROFESSIONAL_DIPLOMA_STUDY_LEVEL.equals(EntityUtil.getCode(curriculum.getOrigStudyLevel()))) {
-            supplement.setFinalEn21(TranslateUtil.translate(PROFESSIONAL_DIPLOMA_KEY, Language.ET) + "\n" +
-                    TranslateUtil.translate(PROFESSIONAL_DIPLOMA_KEY, Language.EN));
+        if (curriculumGrade != null) {
+            supplement.setFinalEn21(curriculumGrade.getNameEt() + "\n" + curriculumGrade.getNameEn());
         } else {
-            if (curriculumGrade != null) {
-                supplement.setFinalEn21(curriculumGrade.getNameEt() + "\n" + curriculumGrade.getNameEn());
+            if (PROFESSIONAL_DIPLOMA_STUDY_LEVEL.equals(EntityUtil.getCode(curriculum.getOrigStudyLevel()))) {
+                supplement.setFinalEn21(TranslateUtil.translate(PROFESSIONAL_DIPLOMA_KEY, Language.ET) + "\n" +
+                        TranslateUtil.translate(PROFESSIONAL_DIPLOMA_KEY, Language.EN));
             }
         }
         supplement.setFinalEn31(curriculum.getFinalEn31());

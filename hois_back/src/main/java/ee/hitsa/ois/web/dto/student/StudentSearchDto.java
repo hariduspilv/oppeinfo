@@ -2,18 +2,22 @@ package ee.hitsa.ois.web.dto.student;
 
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
+import java.util.List;
+
 public class StudentSearchDto {
 
     private Long id;
     private String fullname;
+    private String firstname;
+    private String lastname;
     private Long regNr;
     private String idcode;
     private AutocompleteResult curriculumVersion;
     private AutocompleteResult curriculum;
     private Boolean higher;
     private AutocompleteResult studentGroup;
-    private AutocompleteResult journal;
-    private AutocompleteResult subject;
+    private List<AutocompleteResult> journals;
+    private List<AutocompleteResult> subjects;
     private String studyForm;
     private String status;
     private String type;
@@ -34,6 +38,22 @@ public class StudentSearchDto {
 
     public void setFullname(String fullname) {
         this.fullname = fullname;
+    }
+
+    public String getFirstname() {
+        return firstname;
+    }
+
+    public void setFirstname(String firstname) {
+        this.firstname = firstname;
+    }
+
+    public String getLastname() {
+        return lastname;
+    }
+
+    public void setLastname(String lastname) {
+        this.lastname = lastname;
     }
 
     public Long getRegNr() {
@@ -83,21 +103,21 @@ public class StudentSearchDto {
     public void setStudentGroup(AutocompleteResult studentGroup) {
         this.studentGroup = studentGroup;
     }
-    
-    public AutocompleteResult getJournal() {
-        return journal;
+
+    public List<AutocompleteResult> getJournals() {
+        return journals;
     }
 
-    public void setJournal(AutocompleteResult journal) {
-        this.journal = journal;
+    public void setJournals(List<AutocompleteResult> journals) {
+        this.journals = journals;
     }
 
-    public AutocompleteResult getSubject() {
-        return subject;
+    public List<AutocompleteResult> getSubjects() {
+        return subjects;
     }
 
-    public void setSubject(AutocompleteResult subject) {
-        this.subject = subject;
+    public void setSubjects(List<AutocompleteResult> subjects) {
+        this.subjects = subjects;
     }
 
     public String getStudyForm() {

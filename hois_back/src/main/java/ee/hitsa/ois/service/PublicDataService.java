@@ -18,6 +18,7 @@ import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.school.StudyYearSchedule;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.domain.timetable.Journal;
+import ee.hitsa.ois.util.SubjectProgramValidation;
 import ee.hitsa.ois.util.SubjectUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionAutocompleteCommand;
@@ -87,6 +88,8 @@ public class PublicDataService {
     private SubjectService subjectService;
     @Autowired
     private StudyYearScheduleService studyYearScheduleService;
+    @Autowired
+    private SubjectProgramValidation subjectProgramValidation;
 
     public SchoolPublicDataSettingsDto schoolPublicSettings(Long schoolId) {
         School school = em.getReference(School.class, schoolId);
@@ -220,7 +223,7 @@ public class PublicDataService {
                 + " where cvms.subject.id = ?1 and cvms.module.curriculumVersion.status.code = ?2", CurriculumVersion.class)
                 .setParameter(1, subject.getId())
                 .setParameter(2, CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_K.name())
-                .getResultList());
+                .getResultList(), null, subjectProgramValidation);
     }
 
     public SubjectStudyPeriodDto subjectStudyPeriod(SubjectStudyPeriod subjectStudyPeriod) {

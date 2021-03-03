@@ -225,7 +225,7 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       },
       data: {
         authorizedRoles: function (Session, roles) {
-          return Session.school.higher === true && ['ROLL_A', 'ROLL_J'].indexOf(Session.roleCode) !== -1 &&
+          return ['ROLL_A', 'ROLL_J'].indexOf(Session.roleCode) !== -1 &&
             roles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPPUR) !== -1;
         }
       }

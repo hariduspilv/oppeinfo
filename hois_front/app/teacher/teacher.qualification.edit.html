@@ -13,6 +13,8 @@
         {{'teacher.rtipAbsence.label' | translate}}</md-nav-item>
     <md-nav-item ng-if="((auth.isAdmin() && teacher.id) || auth.isTeacher()) && teacher.isHigher" md-nav-href="#/teachers/{{::teacher.id}}/programs?_noback" name="teacher.programs">
         {{'teacher.subjectPrograms.label' | translate}}</md-nav-item>
+    <md-nav-item ng-if="((auth.isAdmin() && teacher.id) || auth.isTeacher())" md-nav-href="#/teachers/{{::teacher.id}}/load?_noback" name="teacher.load">
+      {{'teacher.load.label' | translate}}</md-nav-item>
   </md-nav-bar>
 
 <md-content class="md-padding">
@@ -119,7 +121,7 @@
                     </md-input-container>
                     <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                       <label>{{'teacher.qualification.language' | translate}}</label>
-                      <hois-classifier-select ng-model="qualification.language" main-classifier-code="EHIS_OPETAJA_KEEL" 
+                      <hois-classifier-select ng-model="qualification.language" main-classifier-code="EHIS_OPETAJA_KEEL"
                         model-value-attr="code" required></hois-classifier-select>
                     </md-input-container>
                     <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">

@@ -10,9 +10,9 @@
         while (start < end) {
             var week = {};
             week.weekNr = weekNr++;
-            week.start = start;
+            week.start = start.withoutTime();
             start = new Date(start.getFullYear(), start.getMonth(), start.getDate() + (7 - start.getDay()));
-            week.end = start;
+            week.end = start.withoutTime();
             week.entries = [];
 
             weeks.push(week);
@@ -25,10 +25,9 @@
         var weeks = getStudyYearWeeks(studyYearStartDate, studyYearEndDate);
 
         for (var i = 0; i < entries.length; i++) {
+            var entryDate = new Date(entries[i].date).withoutTime();
             for (var j = 0; j < weeks.length; j++) {
-                var entryDate = new Date(entries[i].date).setHours(0, 0, 0, 0);
-
-                if (weeks[j].start.setHours(0, 0, 0, 0) < entryDate && entryDate < weeks[j].end.setHours(0, 0, 0, 0)) {
+                if (weeks[j].start <= entryDate && entryDate <= weeks[j].end) {
                     weeks[j].entries.push(entries[i]);
                     break;
                 }

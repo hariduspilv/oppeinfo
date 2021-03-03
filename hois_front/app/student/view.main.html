@@ -81,9 +81,10 @@
             <label>{{'student.studyLevel' | translate}}</label>
             <hois-classifier-value ng-model="student.studyLevel" main-classifier-code="OPPEASTE"></hois-classifier-value>
           </md-input-container>
-          <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" ng-if="student.isVocational && student.speciality">
+          <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" ng-if="student.isVocational && (student.curriculumIncludesSpecialities || student.speciality)">
             <label class="textInput">{{'studentGroup.speciality' | translate}}</label>
-            <hois-classifier-value ng-model="student.speciality" main-classifier-code="SPETSKUTSE"></hois-classifier-value>
+            <hois-classifier-value ng-if="student.speciality" ng-model="student.speciality" main-classifier-code="SPETSKUTSE"></hois-classifier-value>
+            <hois-value ng-if="!student.speciality" value="'student.result.vocational.notSelected' | translate" class="invalid"></hois-value>
           </md-input-container>
           <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" ng-if="!student.isVocational && (student.curriculumIncludesSpecialities || student.curriculumSpeciality)">
             <label>{{'student.curriculumSpecialityOrMajor' | translate}}</label>
@@ -443,7 +444,7 @@
       </hois-collapsable>
     </div>
 
-    <div>
+    <div ng-if="!(auth.isStudent() && auth.higher)">
       <hois-collapsable label="('student.representatives' | translate)">
 
         <md-button ng-if="student.userCanAddRepresentative" ng-click="editRepresentative()" class="md-raised">

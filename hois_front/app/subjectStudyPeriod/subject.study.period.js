@@ -1,7 +1,7 @@
 'use strict';
 
 function compareSubgroups(a, b) {
-  var result = a.code.localeCompare(b.code);
+  var result = a.code.hoisLocaleCompare(b.code);
 
   if (result !== 0) {
       return result;
@@ -17,7 +17,7 @@ function compareSubgroups(a, b) {
   }
 
   // AutocompleteResult for teacher has the same value for nameEt, nameEn, nameRu
-  result = a.teacher.nameEt.localeCompare(b.teacher.nameEt);
+  result = a.teacher.nameEt.hoisLocaleCompare(b.teacher.nameEt);
 
   if (result !== 0) {
       return result;
@@ -404,6 +404,8 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController',
             removeSubgroupCore(subgroup);
           }
         });
+      } else {
+        removeSubgroupCore(subgroup);
       }
     }
 

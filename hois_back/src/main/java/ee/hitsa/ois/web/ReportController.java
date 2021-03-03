@@ -9,6 +9,8 @@ import javax.persistence.EntityManager;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
+import ee.hitsa.ois.enums.Language;
+import ee.hitsa.ois.report.studentgroupteacher.StudentGroupTeacherReportCard;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.report.SchoolQuery;
@@ -29,7 +32,6 @@ import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.report.ReportUtil;
 import ee.hitsa.ois.report.studentgroupteacher.NegativeResultsReport;
-import ee.hitsa.ois.report.studentgroupteacher.StudentGroupTeacherReport;
 import ee.hitsa.ois.service.ClassifierService;
 import ee.hitsa.ois.service.EducationalSuccessReportService;
 import ee.hitsa.ois.service.PdfService;
@@ -374,15 +376,16 @@ public class ReportController {
                 .studentGroupTeacherAsExcel(user, criteria, new ClassifierCache(classifierService)));
     }
 
-    @GetMapping("/studentgroupteacher/studentgroupteacher.pdf")
+    @GetMapping("/studentgroupteacher/studentreportcard.pdf")
     public void studentGroupTeacherAsPdf(HoisUserDetails user, @Valid StudentGroupTeacherCommand criteria,
-            HttpServletResponse response) throws IOException {
+            @RequestParam(required = false) Language lang, HttpServletResponse response) throws IOException {
         ReportUtil.assertCanViewStudentGroupTeacherReport(user,
                 em.getReference(StudentGroup.class, criteria.getStudentGroup()));
-        StudentGroupTeacherReport report = studentGroupTeacherReportService.studentGroupTeacherAsPdf(user, criteria,
-                new ClassifierCache(classifierService));
+        lang = lang == null ? Language.ET : lang;
+        StudentGroupTeacherReportCard report = studentGroupTeacherReportService.studentReportCardsAsPdf(user,
+                criteria, new ClassifierCache(classifierService), lang);
         HttpUtil.pdf(response, criteria.getStudentGroup() + ".pdf",
-                pdfService.generate(StudentGroupTeacherReport.TEMPLATE_NAME, report));
+                pdfService.generate(StudentGroupTeacherReportCard.TEMPLATE_NAME, report, lang));
     }
 
     @GetMapping("/studentgroupteacher/negativeresults.xls")
@@ -441,12 +444,11 @@ public class ReportController {
         return teacherDetailLoadService.teacherDetailLoadSubjects(user.getSchoolId(), criteria, Collections.singleton(teacherId)).get(teacherId);
     }
 
-    @GetMapping("/teachers/detailload/teachersdetailloadsubjectjournal.xlsx")
-    public void teacherDetailLoadSubjectJournalAsExcel(HoisUserDetails user, @Valid TeacherDetailLoadCommand criteria,
+    @GetMapping("/teachers/detailload/teachersdetailloadsubjectjournal")
+    public void teacherDetailLoadSubjectJournalAsExcelOrZip(HoisUserDetails user, @Valid TeacherDetailLoadCommand criteria,
             HttpServletResponse response) throws IOException {
         UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PARING);
-        HttpUtil.xls(response, "teachersdetailloadsubjectjournal.xlsx",
-                teacherDetailLoadService.teacherDetailLoadSubjectJournalAsExcel(user.getSchoolId(), criteria));
+        teacherDetailLoadService.teacherDetailLoadSubjectJournalAsExcelOrZip(user.getSchoolId(), criteria, response, "teachersdetailloadsubjectjournal");
     }
     
     @GetMapping("/teachers/detailload/teachersdetailload.xlsx")

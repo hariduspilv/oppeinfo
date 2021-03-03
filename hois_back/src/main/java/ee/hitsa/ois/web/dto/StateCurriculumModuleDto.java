@@ -2,6 +2,7 @@ package ee.hitsa.ois.web.dto;
 
 import java.math.BigDecimal;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.validation.Valid;
@@ -9,22 +10,25 @@ import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-
 import org.hibernate.validator.constraints.NotBlank;
 import org.hibernate.validator.constraints.NotEmpty;
 
+import ee.hitsa.ois.domain.ClassifierConnect;
 import ee.hitsa.ois.domain.statecurriculum.StateCurriculumModule;
 import ee.hitsa.ois.enums.MainClassCode;
+import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
+import ee.hitsa.ois.validation.StateCurriculumValidator.Vocational;
+import ee.hitsa.ois.validation.StateCurriculumValidator.Secondary;
 
 public class StateCurriculumModuleDto extends VersionedCommand {
     
     private Long id;
     @NotNull
-    @ClassifierRestriction(MainClassCode.KUTSEMOODUL)
+    @ClassifierRestriction({MainClassCode.KUTSEMOODUL, MainClassCode.EHIS_AINE})
     private String module;  
     @NotBlank
     @Size(max=255)
@@ -50,19 +54,34 @@ public class StateCurriculumModuleDto extends VersionedCommand {
      */
     private Boolean isAdditional = Boolean.FALSE;
     
-    @NotEmpty
+    private Long coursesOrWeeks;
+    
+    private String syllabus;
+    
+    private String riigiteatajaUrl;
+    
+    @NotEmpty(groups = {Vocational.class})
     @ClassifierRestriction({MainClassCode.OSAKUTSE, MainClassCode.SPETSKUTSE, MainClassCode.KUTSE})
     private Set<String> moduleOccupations = new HashSet<>();
 
-    @NotEmpty
+    @NotEmpty(groups = {Vocational.class})
     @Valid
     private Set<StateCurriculumModuleOutcomeDto> outcomes;
     
+    @NotEmpty(groups = {Secondary.class})
+    @Valid
+    private Set<StateCurriculumModuleCompetenceDto> competences;
+    
     public static StateCurriculumModuleDto of(StateCurriculumModule module) {
         StateCurriculumModuleDto dto = EntityUtil.bindToDto
-                (module, new StateCurriculumModuleDto(), "moduleOccupations", "outcomes");
+                (module, new StateCurriculumModuleDto(), "moduleOccupations", "moduleCompetences", "outcomes");
         dto.setModuleOccupations(StreamUtil.toMappedSet(o -> EntityUtil.getNullableCode(o.getOccupation()), module.getModuleOccupations()));
         dto.setOutcomes(StreamUtil.toMappedSet(StateCurriculumModuleOutcomeDto::of, module.getOutcomes()));
+        dto.setCompetences(StreamUtil.toMappedSet(StateCurriculumModuleCompetenceDto::of, module.getModuleCompetences()));
+        Optional<ClassifierConnect> connect = ClassifierUtil.parentLinkFor(module.getModule(), MainClassCode.AINEVALDKOND);
+        if (connect.isPresent()) {
+            dto.setSyllabus(EntityUtil.getCode(connect.get().getConnectClassifier()));
+        }
         return dto;
     }
 
@@ -160,5 +179,37 @@ public class StateCurriculumModuleDto extends VersionedCommand {
 
     public void setIsAdditional(Boolean isAdditional) {
         this.isAdditional = isAdditional;
+    }
+
+    public Set<StateCurriculumModuleCompetenceDto> getCompetences() {
+        return competences;
+    }
+
+    public void setCompetences(Set<StateCurriculumModuleCompetenceDto> competences) {
+        this.competences = competences;
+    }
+
+    public Long getCoursesOrWeeks() {
+        return coursesOrWeeks;
+    }
+
+    public void setCoursesOrWeeks(Long coursesOrWeeks) {
+        this.coursesOrWeeks = coursesOrWeeks;
+    }
+
+    public String getSyllabus() {
+        return syllabus;
+    }
+
+    public void setSyllabus(String syllabus) {
+        this.syllabus = syllabus;
+    }
+
+    public String getRiigiteatajaUrl() {
+        return riigiteatajaUrl;
+    }
+
+    public void setRiigiteatajaUrl(String riigiteatajaUrl) {
+        this.riigiteatajaUrl = riigiteatajaUrl;
     }
 }

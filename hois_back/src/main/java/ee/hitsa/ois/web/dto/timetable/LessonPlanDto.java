@@ -336,6 +336,7 @@ public class LessonPlanDto extends LessonPlanForm {
         private List<LessonPlanModuleJournalThemeDto> themes;
         private List<String> studentGroups;
         private Boolean isIndividual;
+        private Boolean isFree;
 
         public static LessonPlanModuleJournalDto of(LessonPlan lessonPlan, Journal journal, LessonPlanCapacityMapper capacityMapper) {
             LessonPlanModuleJournalDto dto = new LessonPlanModuleJournalDto();
@@ -364,6 +365,7 @@ public class LessonPlanDto extends LessonPlanForm {
             // all hours mapped by capacity type and week nr
             dto.setHours(capacityMapper.mapJournalOutput(journal));
             dto.setIsIndividual(journal.getIsIndividual());
+            dto.setIsFree(journal.getIsFree());
             return dto;
         }
 
@@ -405,6 +407,14 @@ public class LessonPlanDto extends LessonPlanForm {
 
         public void setIsIndividual(Boolean isIndividual) {
             this.isIndividual = isIndividual;
+        }
+
+        public Boolean getIsFree() {
+            return isFree;
+        }
+
+        public void setIsFree(Boolean isFree) {
+            this.isFree = isFree;
         }
     }
 

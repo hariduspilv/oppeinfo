@@ -1,0 +1,3 @@
+<select ng-options="option.code as currentLanguageNameField(option) for option in options | filter: show">
+  <option ng-style="{'display': hocsRequired ? 'none' : ''}" value=""></option>
+</select>

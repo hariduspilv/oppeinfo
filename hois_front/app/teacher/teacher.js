@@ -162,7 +162,8 @@
               $location.url(baseUrl + '/' + $scope.teacher.id + '/edit?_noback'); // Didn't work for reloading for some reason. Added loadTeacher function to update data.
               loadTeacher($scope.teacher.id);
             }).catch(function () {
-              $scope.teacher.ehisLastSuccessfulDate = null;
+              $scope.teacher.ehisLastSuccessfulVDate = null;
+              $scope.teacher.ehisLastSuccessfulHDate = null;
             });
           });
         });
@@ -404,25 +405,32 @@
     };
 
     $scope.loadData();
-  }]).controller('TeacherViewController', ['$scope', '$route', '$translate', 'QueryUtils', 'message', function ($scope, $route, $translate, QueryUtils, message) {
+  }]).controller('TeacherViewController', ['$scope', '$route', '$translate', 'QueryUtils', 'message', '$localStorage',
+    function ($scope, $route, $translate, QueryUtils, message, $localStorage) {
     var TABS = Object.freeze({
       DATA: "edit",
       CONTINUING_EDUCATION: "continuingEducation",
       QUALIFICATION: "qualification",
       MOBILITY: "mobility",
       RTIP_ABSENCE: "rtipAbsence",
-      SUBJECT_PROGRAMS: "programs"
+      SUBJECT_PROGRAMS: "programs",
+      LOAD: "load",
     });
     var currentTab = TABS.DATA;
+    $scope.selectedIndex = 0;
     $scope.isShowingRtipTab = false;
+    $scope.customBack = customBack;
     $route.current.locals = angular.extend($route.current.locals || {}, {
       params: {
         myData: true
       }
     });
+    $scope.showEdit = showEdit;
+    $scope.showBottomButtons = showBottomButtons;
     var auth = $route.current.locals.auth;
     $scope.auth = auth;
     var id = (auth.isTeacher() ? auth.teacher : $route.current.params.id);
+    $scope.initialProgramSearch = false;
 
     $scope.teacherId = id;
     var Endpoint = QueryUtils.endpoint('/teachers');
@@ -459,7 +467,7 @@
     $scope.changeIsShowingRtipTab = function () {
       $scope.isShowingRtipTab = !$scope.isShowingRtipTab;
       if ($scope.isShowingRtipTab) {
-        currentTab = TABS.RTIP_ABSENCE;
+        changeTabByValue(TABS.RTIP_ABSENCE);
         $scope.loadData();
       }
     };
@@ -471,9 +479,41 @@
       });
     };
 
+    function changeTabByValue(val) {
+      for (var key in TABS) {
+        if (!TABS.hasOwnProperty(key)) {
+          continue;
+        }
+        if (val === TABS[key]) {
+          $scope.changeTab(key);
+          break;
+        }
+      }
+    }
+
     $scope.changeTab = function (tab) {
       if (typeof tab === 'string' && TABS[tab] !== undefined) {
         currentTab = TABS[tab];
+        if ($scope.teacher.$resolved) {
+          var navItemIndex = currentSchoolUsersResultsNavItemIndex();
+          var localStorageNavItem = {school: auth.school.id, user: auth.user, teacher: id, navItemName: currentTab, currentIndex: $scope.selectedIndex};
+          if (navItemIndex) {
+            $localStorage.teacherCurrentNavItems[navItemIndex-1] = localStorageNavItem;
+          } else {
+            if (!$localStorage.teacherCurrentNavItems) {
+              $localStorage.teacherCurrentNavItems = [];
+            }
+            $localStorage.teacherCurrentNavItems.push(localStorageNavItem);
+          }
+        }
+        if (currentTab === TABS.SUBJECT_PROGRAMS) {
+          // case if from history taken tab, then we need to pass parameter
+          $scope.initialProgramSearch = true;
+          $scope.$broadcast('searchPrograms');
+        }
+        if (currentTab === TABS.LOAD) {
+          $scope.initLoad = true;
+        }
       }
     };
 
@@ -484,6 +524,49 @@
     $scope.loadData(); // HITSAOIS-219. Fixes the jumping button
     // (problem with md-dynamic-height because after changing tab it starts to change height but data is not loaded yet)
 
+    function currentSchoolUsersResultsNavItemIndex() {
+      if ($localStorage.teacherCurrentNavItems) {
+        for (var i = 0; i < $localStorage.teacherCurrentNavItems.length; i++) {
+          var navItem = $localStorage.teacherCurrentNavItems[i];
+
+          if (auth.school.id === navItem.school && auth.user === navItem.user && id === navItem.teacher) {
+            return i + 1;
+          }
+        }
+      }
+      return null;
+    }
+
+    $scope.teacher.$promise.then(function () {
+      if ($localStorage.teacherCurrentNavItems) {
+        var navItemIndex = currentSchoolUsersResultsNavItemIndex();
+        if (navItemIndex) {
+          $scope.selectedIndex = $localStorage.teacherCurrentNavItems[navItemIndex-1].currentIndex;
+          changeTabByValue($localStorage.teacherCurrentNavItems[navItemIndex-1].navItemName);
+        } else {
+          $scope.selectedIndex = 0;
+          changeTabByValue(TABS.DATA);
+        }
+      } else {
+        $scope.selectedIndex = 0;
+        changeTabByValue(TABS.DATA);
+      }
+    });
+
+    function customBack(url) {
+      $localStorage.teacherCurrentNavItems = [];
+      $scope.back(url);
+    }
+
+    var HIDE_EDIT = [TABS.RTIP_ABSENCE, TABS.SUBJECT_PROGRAMS];
+    function showEdit() {
+      return HIDE_EDIT.indexOf(currentTab) === -1;
+    }
+
+    var HIDE_BOTTOM_BUTTONS = [TABS.LOAD];
+    function showBottomButtons() {
+      return HIDE_BOTTOM_BUTTONS.indexOf(currentTab) === -1;
+    }
   }]).controller('TeacherRtipAbsenceEditController', ['$scope', '$route', '$translate', 'QueryUtils', 'message', function ($scope, $route, $translate, QueryUtils, message) {
     $scope.auth = $route.current.locals.auth;
     var id = $route.current.params.id;
@@ -521,6 +604,8 @@
   }]).controller('TeacherProgramController', ['$scope', '$route', 'QueryUtils', '$translate', function ($scope, $route, QueryUtils, $translate) {
     var id = $route.current.params.id;
     var Endpoint = QueryUtils.endpoint('/teachers');
+
+    $scope.initialProgramSearch = true;
 
     $route.current.locals = angular.extend($route.current.locals || {}, {
       params: {

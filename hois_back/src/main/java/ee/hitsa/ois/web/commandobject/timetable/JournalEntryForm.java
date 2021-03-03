@@ -44,6 +44,7 @@ public class JournalEntryForm {
     private List<String> journalEntryCapacityTypes;
     private List<Long> journalEntryTeachers;
     private Long journalStudent;
+    private Boolean isTest;
     private List<JournalEntryStudentForm> journalEntryStudents;
 
     public String getEntryType() {
@@ -111,6 +112,12 @@ public class JournalEntryForm {
     }
     public void setJournalStudent(Long journalStudent) {
         this.journalStudent = journalStudent;
+    }
+    public Boolean getIsTest() {
+        return isTest;
+    }
+    public void setIsTest(Boolean isTest) {
+        this.isTest = isTest;
     }
     public List<JournalEntryStudentForm> getJournalEntryStudents() {
         return journalEntryStudents;

@@ -76,9 +76,20 @@
                         <tr ng-repeat="ssp in record.subjectStudyPeriodDtos | filter:{ subject: subject.id }">
                             <td>
                                 <div>
-                                    <span ng-repeat="studentGroup in ssp.studentGroupObjects">
-                                        <span ng-if="$index > 0">, </span>
-                                        {{studentGroup.nameEt}}
+                                    <span ng-repeat="teacher in ssp.teachers">
+                                        <span>{{teacher.name}}{{!$last ? ', ' : ''}}</span>
+                                    </span>
+                                    <i ng-if="ssp.capacityDiff || ssp.teachers.length > 1 || ssp.subgroups.length > 1" class="material-icons pointer" title="{{'subjectStudyPeriod.teacherSpecificLoads' | translate}}"
+                                       ng-click="teacherCapacities(ssp)">*</i>
+                                    <span ng-if="ssp.subgroups.length > 0">
+                                      <span class="subject-study-period-proportion">{{'subjectStudyPeriod.subgroups.label' | translate | lowercase}}:
+                                        {{ssp.subgroups.length}}
+                                      </span>
+                                    </span>
+                                      <span ng-repeat="group in ssp.studentGroupObjects | filter: {id: '!' + record.studentGroup}">
+                                      <br ng-if="$first"/>
+                                      <br ng-if="$first"/>
+                                      {{currentLanguageNameField(group)}}{{!$last ? ', ' : ''}}
                                     </span>
                                     <i ng-if="ssp.capacityDiff">
                                         <span>{{'subjectStudyPeriod.teacherLoadDiffersFromPair' | translate}}</span>
@@ -88,32 +99,32 @@
                                                            style="display: inline-flex; margin: 0;"
                                                            ng-model="ssp.coefficient" model-value-attr="code"
                                                            main-classifier-code="KOEFITSIENT"></hois-classifier-radio>
-                                    <span ng-if="ssp.subgroups.length > 0">
-                                        <span class="subject-study-period-proportion">{{'subjectStudyPeriod.subgroups.label' | translate | lowercase}}:
-                                            {{ssp.subgroups.length}}
-                                        </span>
-                                    </span>
                                     <a ng-href="#/subjectStudyPeriod/{{ssp.id}}/edit?teacherId={{record.teacher}}">{{'main.button.change' | translate}}</a>
                                 </div>
-                                <div ng-if="ssp.capacityDiff" class="subject-study-period-period-total-label">{{'subjectStudyPeriod.subjectTeacherPairTotal' | translate}}</div>
+                                <div ng-if="ssp.capacityDiff" class="subject-study-period-period-total-label">{{'subjectStudyPeriod.teacherSpecificLoads' | translate}}</div>
                             </td>
                             <td ng-repeat="type in capacityTypes">
                                 <span ng-if="!ssp.capacityDiff" ng-repeat="capacity in ssp.capacities | filter:{ capacityType: type.code } : true">
                                     <input type="number" ng-model="capacity.hours" min="0" max="1000" aria-label="{{'subjectStudyPeriod.changeLoad' | translate}}" pattern="^\d+$">
                                 </span>
-                                <span ng-if="ssp.capacityDiff" ng-repeat="capacity in sspTeacherCapacities(ssp) | filter:{ capacityType: type.code } : true">
+                                <span ng-if="ssp.capacityDiff" ng-repeat="capacity in ssp.capacities | filter:{ capacityType: type.code } : true">
                                     <input type="number" ng-model="capacity.hours" min="0" max="1000" aria-label="{{'subjectStudyPeriod.changeLoad' | translate}}" pattern="^\d+$">
                                 </span>
-                                <div ng-if="ssp.capacityDiff" ng-repeat="capacity in ssp.capacities | filter:{ capacityType: type.code } : true"
-                                    class="subject-study-period-period-total">{{capacity.hours ? capacity.hours : 0}}</div>
+<!--                                <div ng-if="ssp.capacityDiff" ng-repeat="capacity in sspTeacherCapacities(ssp, type.code) | filter:{ capacityType: type.code } : true"-->
+<!--                                     class="subject-study-period-period-total">{{capacity.hours ? capacity.hours : 0}}</div>-->
+                                <div ng-if="ssp.capacityDiff" class="subject-study-period-period-total">{{teacherCapacitiesSumBySspAndType(ssp, type.code)}}</div>
                             </td>
                             <td>
-                                <div ng-if="ssp.capacityDiff">{{capacitiesUtil.capacitiesSumBySspAndTeacher(ssp, teacher.id, true)}}</div>
-                                <div ng-class="{'subject-study-period-period-total': ssp.capacityDiff}">{{capacitiesUtil.capacitiesSumBySsp(ssp)}}</div>
+<!--                                <div ng-if="ssp.capacityDiff">{{capacitiesUtil.capacitiesSumBySspAndTeacher(ssp, teacher.id, true)}}</div>-->
+                              <div ng-if="ssp.capacityDiff">{{capacitiesUtil.capacitiesSumBySsp(ssp)}}</div>
+<!--                              <div ng-class="{'subject-study-period-period-total': ssp.capacityDiff}">{{capacitiesUtil.capacitiesSumBySsp(ssp)}}</div>-->
+                              <div ng-class="{'subject-study-period-period-total': ssp.capacityDiff}">{{capacitiesUtil.capacitiesSumBySspAndTeacher(ssp, teacher.id, true)}}</div>
                             </td>
                             <td>
-                              <div ng-if="ssp.capacityDiff">{{capacitiesUtil.toEap(capacitiesUtil.capacitiesSumBySspAndTeacher(ssp, teacher.id, true)) | number: 2}}</div>
-                              <div ng-class="{'subject-study-period-period-total': ssp.capacityDiff}">{{capacitiesUtil.toEap(capacitiesUtil.capacitiesSumBySsp(ssp)) | number: 2}}</div>
+<!--                              <div ng-if="ssp.capacityDiff">{{capacitiesUtil.toEap(capacitiesUtil.capacitiesSumBySspAndTeacher(ssp, teacher.id, true)) | number: 2}}</div>-->
+                              <div ng-if="ssp.capacityDiff">{{capacitiesUtil.toEap(capacitiesUtil.capacitiesSumBySsp(ssp)) | number: 2}}</div>
+<!--                              <div ng-class="{'subject-study-period-period-total': ssp.capacityDiff}">{{capacitiesUtil.toEap(capacitiesUtil.capacitiesSumBySsp(ssp)) | number: 2}}</div>-->
+                              <div ng-class="{'subject-study-period-period-total': ssp.capacityDiff}">{{capacitiesUtil.toEap(capacitiesUtil.capacitiesSumBySspAndTeacher(ssp, teacher.id, true)) | number: 2}}</div>
                             </td>
                         </tr>
                         <tr class="bold">

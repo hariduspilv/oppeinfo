@@ -2,25 +2,36 @@
 
 angular.module('hitsaOis').controller('StudentSpecialitySearchController',
   ['$route', '$scope', 'message', 'QueryUtils', function ($route, $scope, message, QueryUtils) {
-    var baseUrl = "/students/highspecialities";
+    var baseUrl = "/students/specialities";
     $scope.auth = $route.current.locals.auth;
 
     $scope.autocompletes = [];
     $scope.curriculumVersions = QueryUtils.endpoint("/autocomplete/curriculumversions").query({closed: false});
-    $scope.specialities = QueryUtils.endpoint("/autocomplete/highspecialities").query();
+    $scope.higherSpecialities = QueryUtils.endpoint("/autocomplete/higherspecialities").query();
+    $scope.vocationalSpecialities = QueryUtils.endpoint("/autocomplete/vocationalspecialities").query();
     $scope.availableSpecialities = [];
     $scope.filteredVersions = [];
 
-    function filterSpeciality(spec) {
+    function filterHigherSpecialities(spec) {
       return angular.isArray(spec.curriculumVersions) && spec.curriculumVersions.filter(function(cv) {
         return cv === $scope.criteria.curriculumVersion;
       }).length > 0;
     }
 
+    function filterVocationalSpecialities(spec) {
+      return spec.curriculum === $scope.criteria.curriculum;
+    }
+
     function postLoad() {
-      $scope.specialities.$promise.then(function(result) {
-        $scope.availableSpecialities = result.filter(filterSpeciality);
-      });
+      if ($scope.hiddenCriteria.curriculum.higher) {
+        $scope.higherSpecialities.$promise.then(function(result) {
+          $scope.availableSpecialities = result.filter(filterHigherSpecialities);
+        });
+      } else {
+        $scope.vocationalSpecialities.$promise.then(function (result) {
+          $scope.availableSpecialities = result.filter(filterVocationalSpecialities);
+        });
+      }
     }
 
     QueryUtils.createQueryForm($scope, baseUrl, {}, postLoad);
@@ -28,7 +39,12 @@ angular.module('hitsaOis').controller('StudentSpecialitySearchController',
     function filterVersions() {
       var needClear = true;
       $scope.filteredVersions = $scope.curriculumVersions.filter(function(row) {
-        var passed = row.curriculum === $scope.criteria.curriculum && row.specialities && row.specialities.length > 1;
+        var selectedCurriculum = ($scope.hiddenCriteria.curriculum || {});
+        var passed = row.curriculum === selectedCurriculum.id;
+        // higher connected through version while vocational through curriculum itself
+        if (passed && selectedCurriculum.higher) {
+          passed = row.specialities && row.specialities.length > 1;
+        }
         if (passed && row.id === $scope.criteria.curriculumVersion) {
           needClear = false;
         }
@@ -39,6 +55,10 @@ angular.module('hitsaOis').controller('StudentSpecialitySearchController',
       }
     }
 
+    $scope.$watch('hiddenCriteria.curriculum', function () {
+      $scope.criteria.curriculum = !!$scope.hiddenCriteria.curriculum ? $scope.hiddenCriteria.curriculum.id : undefined;
+      $scope.tabledata.content = [];
+    })
     $scope.$watch('criteria.curriculum', filterVersions);
     $scope.$watchCollection('curriculumVersions', filterVersions);
 

@@ -24,14 +24,23 @@ public class ClassifierDto extends InsertedChangedVersionDto implements Translat
     private String ehisValue;
     private Boolean vocational;
     private Boolean higher;
+    private Boolean secondary;
 
     public static ClassifierDto of(Classifier classifier) {
         return EntityUtil.bindToDto(classifier, new ClassifierDto());
     }
-    
+
     public static ClassifierDto ofMin(String code) {
         ClassifierDto dto = new ClassifierDto();
         dto.setCode(code);
+        return dto;
+    }
+
+    public static ClassifierDto ofMin(String code, String nameEt, String nameEn) {
+        ClassifierDto dto = new ClassifierDto();
+        dto.setCode(code);
+        dto.setNameEt(nameEt);
+        dto.setNameEn(nameEn);
         return dto;
     }
 
@@ -169,6 +178,14 @@ public class ClassifierDto extends InsertedChangedVersionDto implements Translat
 
     public void setHigher(Boolean higher) {
         this.higher = higher;
+    }
+
+    public Boolean getSecondary() {
+        return secondary;
+    }
+
+    public void setSecondary(Boolean secondary) {
+        this.secondary = secondary;
     }
 
 }

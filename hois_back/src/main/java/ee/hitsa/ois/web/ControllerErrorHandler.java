@@ -69,6 +69,7 @@ public class ControllerErrorHandler {
             info = ErrorInfo.of(((BindException) e).getBindingResult());
             status = HttpStatus.PRECONDITION_FAILED;
         } else if (e instanceof MethodArgumentNotValidException) {
+
             info = ErrorInfo.of(((MethodArgumentNotValidException) e).getBindingResult());
             status = HttpStatus.PRECONDITION_FAILED;
         } else if (e instanceof MissingServletRequestParameterException) {

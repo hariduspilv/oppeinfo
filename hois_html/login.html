@@ -270,7 +270,7 @@ function getCookie(name) {
 }
 function fillSchoolSelect(schools) {
   schools.sort(function (a, b) {
-    return currentLanguageNameField(a).localeCompare(currentLanguageNameField(b));
+    return currentLanguageNameField(a).hoisLocaleCompare(currentLanguageNameField(b));
   });
   var select = document.getElementById("school");
   for (let i = 0; i < select.options.length; i++) {

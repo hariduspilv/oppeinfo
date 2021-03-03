@@ -8,8 +8,9 @@ public class SubjectProgramSearchDto {
     private AutocompleteResult subject;
     private AutocompleteResult studyPeriod;
     private Long subjectStudyPeriod;
-    private AutocompleteResult teacher;
+    private String teachers;
     private String status;
+    private Boolean joint;
     
     public Long getId() {
         return id;
@@ -35,16 +36,27 @@ public class SubjectProgramSearchDto {
     public void setSubjectStudyPeriod(Long subjectStudyPeriod) {
         this.subjectStudyPeriod = subjectStudyPeriod;
     }
-    public AutocompleteResult getTeacher() {
-        return teacher;
+
+    public String getTeachers() {
+        return teachers;
     }
-    public void setTeacher(AutocompleteResult teacher) {
-        this.teacher = teacher;
+
+    public void setTeachers(String teachers) {
+        this.teachers = teachers;
     }
+
     public String getStatus() {
         return status;
     }
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public Boolean getJoint() {
+        return joint;
+    }
+
+    public void setJoint(Boolean joint) {
+        this.joint = joint;
     }
 }

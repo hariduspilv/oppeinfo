@@ -145,7 +145,7 @@
     data.module = oModule;
     data.theme = informalSubjectsOrModules.curriculumVersionOmoduleTheme ? informalSubjectsOrModules.curriculumVersionOmoduleTheme : null;
     data.isModule = !informalSubjectsOrModules.curriculumVersionOmoduleTheme;
-    data.schoolResultHours = data.isModule ? getHours(informalSubjectsOrModules.curriculumVersionOmodule.themes) : informalSubjectsOrModules.curriculumVersionOmoduleTheme.hours;
+    data.schoolResultHours = data.isModule ? scope.creditsToHours(oModule.credits) : informalSubjectsOrModules.curriculumVersionOmoduleTheme.hours;
     data.grade = scope.gradesMap[informalSubjectsOrModules.grade];
     data.outcomes = informalSubjectsOrModules.outcomes;
     data.skills = informalSubjectsOrModules.skills;
@@ -167,22 +167,6 @@
     data.skills = informalSubjectsOrModules.skills;
     data.transfer = informalSubjectsOrModules.transfer;
     return data;
-  }
-
-  function getSubjectIsOptional(subjectId, hModule) {
-    for (var i = 0; i < hModule.subjects.length; i++) {
-      if (hModule.subjects[i].subjectId === subjectId) {
-        return hModule.subjects[i].optional;
-      }
-    }
-  }
-
-  function getHours(themes) {
-    var hours = 0;
-    for (var i = 0; i < themes.length; i++) {
-      hours += themes[i].hours;
-    }
-    return hours;
   }
 
   function getReplacedSubjectsIds(replacedSubjects) {
@@ -303,6 +287,7 @@ angular.module('hitsaOis').controller('ApelApplicationEditController', function 
     $scope.application = {};
     $scope.formState = {};
     $scope.formState.viewForm = false;
+    $scope.creditsToHours = DataUtils.creditsToHours;
 
     Classifier.queryForDropdown({ mainClassCode: 'NOM_PIKEND' }, function (response) {
       $scope.nominalStudyExtensions = Classifier.toMap(response);
@@ -476,14 +461,15 @@ angular.module('hitsaOis').controller('ApelApplicationEditController', function 
               entry.grade = dialogScope.gradesMap[entry.grade];
 
               entry.module = entry.curriculumVersionOmodule;
-              entry.hours = entry.isModule ? getHours(entry.curriculumVersionOmodule.themes) : entry.curriculumVersionOmoduleTheme.hours;
               if (entry.isModule) {
                 entry.EKAP = entry.curriculumVersionOmodule.credits;
+                entry.hours = DataUtils.creditsToHours(entry.curriculumVersionOmodule.credits);
                 getModuleOutcomes(entry.curriculumVersionOmodule.curriculumModule, entry.outcomes).then(function (allOutcomes) {
                   entry.outcomes = allOutcomes;
                 });
               } else {
                 entry.EKAP = entry.curriculumVersionOmoduleTheme.credits;
+                entry.hours = entry.curriculumVersionOmoduleTheme.hours;
                 getThemeOutcomes(entry.curriculumVersionOmoduleTheme.id, entry.outcomes).then(function (allOutcomes) {
                   entry.outcomes = allOutcomes;
                 });
@@ -520,7 +506,7 @@ angular.module('hitsaOis').controller('ApelApplicationEditController', function 
             student: dialogScope.student.id,
             curriculumVersion: dialogScope.curriculumVersionId
           }).$promise.then(function (result) {
-            dialogScope.modulesAndThemes = getModulesAndThemes(result);
+            dialogScope.modulesAndThemes = result;
           });
         } else {
           QueryUtils.endpoint('/autocomplete/subjectsList').query({
@@ -545,20 +531,17 @@ angular.module('hitsaOis').controller('ApelApplicationEditController', function 
           if (selectedItem) {
             if (selectedItem.isModule) {
               if (moduleCanBeAddedAsReplaced(ArrayUtils, dialogScope.record.informalSubjectsOrModules, selectedItem.moduleId)) {
-                QueryUtils.endpoint('/occupationModule').get({id: selectedItem.id}).$promise.then(function (oModule) {
-                  getModuleOutcomes(oModule.curriculumModule, null).then(function (outcomes) {
-                    addNewSubtitutableModuleTheme(selectedItem, getHours(oModule.themes), oModule.credits, outcomes);
-                  });
+                getModuleOutcomes(selectedItem.curriculumModuleId, null).then(function (outcomes) {
+                  var hours = DataUtils.creditsToHours(selectedItem.credits);
+                  addNewSubtitutableModuleThemeRow(selectedItem, hours, selectedItem.credits, outcomes);
                 });
               } else {
                 message.error('apel.error.moduleOrItsThemeHasAlreadyBeenAdded');
               }
             } else {
               if (moduleThemeCanBeAddedAsReplaced(ArrayUtils, dialogScope.record.informalSubjectsOrModules, selectedItem.themeId, selectedItem.moduleId)) {
-                QueryUtils.endpoint('/occupationModule/theme').get({id: selectedItem.id}).$promise.then(function (theme) {
-                  getThemeOutcomes(selectedItem.id, null).then(function (outcomes) {
-                    addNewSubtitutableModuleTheme(selectedItem, theme.hours, theme.credits, outcomes);
-                  });
+                getThemeOutcomes(selectedItem.theme.id, null).then(function (outcomes) {
+                  addNewSubtitutableModuleThemeRow(selectedItem, selectedItem.hours, selectedItem.credits, outcomes);
                 });
               } else {
                 message.error('apel.error.themeOrParentModuleHasAlreadyBeenAdded');
@@ -597,26 +580,12 @@ angular.module('hitsaOis').controller('ApelApplicationEditController', function 
           return selection;
         }
 
-        function addNewSubtitutableModuleTheme(selectedModuleOrTheme, hours, EKAP, outcomes) {
-          if (!selectedModuleOrTheme.isModule) {
-            QueryUtils.endpoint('/occupationModule/theme').get({id: selectedModuleOrTheme.id}, function (theme) {
-              QueryUtils.endpoint('/occupationModule').get({id: theme.module}, function (oModule) {
-                addNewSubtitutableModuleThemeRow(selectedModuleOrTheme, theme, oModule, hours, EKAP, outcomes);
-              });
-            });
-          } else {
-            QueryUtils.endpoint('/occupationModule').get({id: selectedModuleOrTheme.id}, function (oModule) {
-              addNewSubtitutableModuleThemeRow(selectedModuleOrTheme, null, oModule, hours, EKAP, outcomes);
-            });
-          }
-        }
-
-        function addNewSubtitutableModuleThemeRow(selectedModuleOrTheme, oModuleTheme, oModule, hours, EKAP, outcomes) {
+        function addNewSubtitutableModuleThemeRow(selectedModuleOrTheme, hours, EKAP, outcomes) {
           var grade = dialogScope.gradesMap.KUTSEHINDAMINE_A;
           var newModuleTheme = {
             isModule: selectedModuleOrTheme.isModule,
-            curriculumVersionOmoduleTheme: oModuleTheme,
-            curriculumVersionOmodule: oModule,
+            curriculumVersionOmoduleTheme: selectedModuleOrTheme.theme,
+            curriculumVersionOmodule: selectedModuleOrTheme.module,
             hours: hours,
             EKAP: EKAP,
             grade: grade,
@@ -634,14 +603,8 @@ angular.module('hitsaOis').controller('ApelApplicationEditController', function 
           if (!ArrayUtils.contains(getReplacedSubjectsIds(dialogScope.record.informalSubjectsOrModules), dialogScope.formState.selectedSubject.id)) {
             var subject = dialogScope.formState.selectedSubject;
 
-            if (dialogScope.subjects.indexOf(dialogScope.formState.selectedSubject) !== -1) {
-              QueryUtils.endpoint('/apelApplications/subjectModule').search({
-                curriculumVersionId: dialogScope.curriculumVersionId,
-                subjectId: subject.id
-              }).$promise.then(function (hModule) {
-                var isOptional = getSubjectIsOptional(subject.id, hModule);
-                addNewSubtitutableSubjectRow(subject, hModule, isOptional, subject.credits);
-              });
+            if (subject.module !== null) {
+              addNewSubtitutableSubjectRow(subject, subject.module, subject.isOptional, subject.credits);
             } else {
               addNewSubtitutableSubjectRow(subject, dialogScope.freeChoiceModule, true, subject.credits);
             }
@@ -783,7 +746,7 @@ angular.module('hitsaOis').controller('ApelApplicationEditController', function 
             student: dialogScope.student.id,
             curriculumVersion: dialogScope.curriculumVersionId
           }).$promise.then(function (result) {
-            dialogScope.modulesAndThemes = getModulesAndThemes(result);
+            dialogScope.modulesAndThemes = result;
           });
           dialogScope.curriculumModules = QueryUtils.endpoint('/autocomplete/curriculumversionomodules').query(
             {student: dialogScope.student.id, curriculumVersion: dialogScope.curriculumVersionId});
@@ -1255,7 +1218,7 @@ angular.module('hitsaOis').controller('ApelApplicationEditController', function 
           }
           dialogScope.apelSchools.push(transferableSubjectOrModule.newApelSchool);
           dialogScope.apelSchools = dialogScope.apelSchools.sort(function (s1, s2) {
-            return $rootScope.currentLanguageNameField(s1).localeCompare($rootScope.currentLanguageNameField(s2));
+            return $rootScope.currentLanguageNameField(s1).hoisLocaleCompare($rootScope.currentLanguageNameField(s2));
           });
         }
 
@@ -1372,13 +1335,13 @@ angular.module('hitsaOis').controller('ApelApplicationEditController', function 
           if (selectedItem) {
             if (selectedItem.isModule) {
               if (moduleCanBeAddedAsReplaced(ArrayUtils, dialogScope.record.formalReplacedSubjectsOrModules, selectedItem.moduleId)) {
-                addNewFormalSubtitutableModuleTheme(selectedItem);
+                addNewFormalSubtitutableModuleThemeRow(selectedItem);
               } else {
                 message.error('apel.error.moduleOrItsThemeHasAlreadyBeenAdded');
               }
             } else {
               if (moduleThemeCanBeAddedAsReplaced(ArrayUtils, dialogScope.record.formalReplacedSubjectsOrModules, selectedItem.themeId, selectedItem.moduleId)) {
-                addNewFormalSubtitutableModuleTheme(selectedItem);
+                addNewFormalSubtitutableModuleThemeRow(selectedItem);
               } else {
                 message.error('apel.error.themeOrParentModuleHasAlreadyBeenAdded');
               }
@@ -1387,26 +1350,16 @@ angular.module('hitsaOis').controller('ApelApplicationEditController', function 
           }
         };
 
-        function addNewFormalSubtitutableModuleTheme(selectedModuleOrTheme) {
-          if (!selectedModuleOrTheme.isModule) {
-            QueryUtils.endpoint('/occupationModule/theme').get({id: dialogScope.selectedModuleOrTheme.id}, function (theme) {
-              var oModuleTheme = theme;
-              QueryUtils.endpoint('/occupationModule').get({id: oModuleTheme.module}, function (oModule) {
-                addNewFormalSubtitutableModuleThemeRow(selectedModuleOrTheme, oModuleTheme, oModule);
-              });
-            });
+        function addNewFormalSubtitutableModuleThemeRow(selectedModuleOrTheme) {
+          if (selectedModuleOrTheme.isModule) {
+            selectedModuleOrTheme.module.credits = selectedModuleOrTheme.credits;
           } else {
-            QueryUtils.endpoint('/occupationModule').get({id: dialogScope.selectedModuleOrTheme.id}, function (oModule) {
-              addNewFormalSubtitutableModuleThemeRow(selectedModuleOrTheme, null, oModule);
-            });
+            selectedModuleOrTheme.theme.credits = selectedModuleOrTheme.credits;
           }
-        }
-
-        function addNewFormalSubtitutableModuleThemeRow(selectedModuleOrTheme, oModuleTheme, oModule) {
           var newModuleTheme = {
             isModule: selectedModuleOrTheme.isModule,
-            curriculumVersionOmoduleTheme: oModuleTheme,
-            curriculumVersionOmodule: oModule
+            curriculumVersionOmoduleTheme: selectedModuleOrTheme.theme,
+            curriculumVersionOmodule: selectedModuleOrTheme.module
           };
           dialogScope.record.formalReplacedSubjectsOrModules.push(newModuleTheme);
         }
@@ -1508,42 +1461,6 @@ angular.module('hitsaOis').controller('ApelApplicationEditController', function 
         }
       });
     };
-
-    function getModulesAndThemes(result) {
-      var modulesAndThemes = [];
-      if (result) {
-        result = sortByName(result);
-
-        for (var i = 0; i < result.length; i++) {
-          modulesAndThemes.push({
-            id: result[i].id,
-            moduleId: result[i].id,
-            themeId: null,
-            nameEt: result[i].nameEt,
-            nameEn: result[i].nameEn,
-            isModule: true
-          });
-          var themes = sortByName(result[i].themes);
-          if (themes) {
-            for (var j = 0; j < themes.length; j++) {
-              modulesAndThemes.push({
-                id: themes[j].id,
-                moduleId: result[i].id,
-                themeId: themes[j].id,
-                nameEt: result[i].nameEt + "/" + themes[j].nameEt,
-                nameEn: result[i].nameEn + "/" + themes[j].nameEn,
-                isModule: false
-              });
-            }
-          }
-        }
-        return modulesAndThemes;
-      }
-    }
-
-    function sortByName(array) {
-      return $filter('orderBy')(array, $scope.currentLanguageNameField());
-    }
 
     var ApelApplicationFileEndpoint = QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/file');
 
@@ -1668,6 +1585,7 @@ angular.module('hitsaOis').controller('ApelApplicationEditController', function 
     $scope.application = {};
     $scope.formState = {};
     $scope.formState.viewForm = true;
+    $scope.creditsToHours = DataUtils.creditsToHours;
 
     Classifier.queryForDropdown({ mainClassCode: 'NOM_PIKEND' }, function (response) {
       $scope.nominalStudyExtensions = Classifier.toMap(response);

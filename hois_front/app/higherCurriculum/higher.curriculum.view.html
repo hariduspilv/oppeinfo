@@ -365,8 +365,8 @@
       </div>
     </fieldset>
 
-    <div ng-show="gradeRequired()">&nbsp;</div>
-    <fieldset tabindex="12" ng-show="gradeRequired()">
+    <div>&nbsp;</div>
+    <fieldset tabindex="12">
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.grade.label' | translate}}</legend>
       <md-table-container>
         <div ng-repeat="item in curriculum.grades | orderBy: currentLanguageNameField()" layout="column">

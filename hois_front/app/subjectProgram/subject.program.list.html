@@ -11,15 +11,13 @@
             <md-option ng-value="subject.id" ng-repeat="subject in subjects | orderBy: currentLanguageNameField()">{{currentLanguageNameField(subject)}}</md-option>
           </md-select>
         </md-input-container>
-        <hois-autocomplete ng-if="!auth.isAdmin()" flex-gt-sm="45" flex="100" ng-model="criteria.subject" 
-          url="{{subjectAutocompleteUrl}}" label="subjectProgram.search.subject" 
+        <hois-autocomplete ng-if="!auth.isAdmin()" flex-gt-sm="45" flex="100" ng-model="criteria.subject"
+          url="{{subjectAutocompleteUrl}}" label="subjectProgram.search.subject"
           no-paging="true" ha-attribute="id">
         </hois-autocomplete>
         <md-input-container flex-gt-sm="50" flex="100" flex-offset-gt-sm="5">
           <label class="textInput">{{'subjectProgram.search.studyPeriod' | translate}}</label>
-          <md-select ng-model="criteria.studyPeriod">
-            <md-option ng-value="period.id" ng-repeat="period in studyPeriods | orderBy: currentLanguageNameField()">{{currentLanguageNameField(period)}}</md-option>
-          </md-select>
+          <hois-select ng-model="criteria.studyPeriod" values="studyPeriods" required sorted-query="true"></hois-select>
         </md-input-container>
       </div>
       <div layout="row" layout-sm="column" layout-xs="column">
@@ -65,9 +63,9 @@
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
           <tr md-row>
             <th md-column style="width:40%">{{'subjectProgram.search.subject' | translate}}</th>
-            <th md-column style="width:25%">{{'subjectProgram.search.studyPeriod' | translate}}</th>
+            <th md-column style="width:20%">{{'subjectProgram.search.studyPeriod' | translate}}</th>
             <th md-column style="width:20%" ng-if="!myData">{{'subjectProgram.search.teacher' | translate}}</th>
-            <th md-column style="width:10%">{{'subjectProgram.search.status' | translate}}</th>
+            <th md-column style="width:15%">{{'subjectProgram.search.status' | translate}}</th>
             <th md-column style="width:5%"></th>
           </tr>
         </thead>
@@ -75,14 +73,14 @@
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
             <td md-cell>{{currentLanguageNameField(row.subject)}}</td>
             <td md-cell>{{getStudyPeriodName(row.studyPeriod)}}</td>
-            <td md-cell ng-if="!myData">{{currentLanguageNameField(row.teacher)}}</td>
-            <td md-cell>
-              <hois-classifier-value ng-model="row.status" main-classifier-code="AINEPROGRAMM_STAATUS"></hois-classifier-value>
+            <td md-cell ng-if="!myData">{{row.teachers}}</td>
+            <td md-cell style="white-space: nowrap;">
+              <hois-classifier-value style="display: inline;" ng-model="row.status" main-classifier-code="AINEPROGRAMM_STAATUS"></hois-classifier-value> {{row.joint ? '(' + ('subjectProgram.jointProgram' | translate | lowercase) + ')' : ''}}
             </td>
             <td md-cell>
-              <md-button md-no-ink class="md-primary change-button" 
-              ng-href="#/subjectProgram/{{::(myData ? 'teachers' : 'programs')}}/{{::row.id}}/{{::(row.status === 'AINEPROGRAMM_STAATUS_I' && !myData  ? 'edit' : 'view')}}">
-                {{row.status === 'AINEPROGRAMM_STAATUS_I' && !myData ? ('main.button.edit' | translate) : ('main.button.view' | translate)}}
+              <md-button md-no-ink class="md-primary change-button"
+                         ng-href="#/subjectProgram/{{::(myData ? 'teachers' : 'programs')}}/{{::row.id}}/view">
+                {{'main.button.view' | translate}}
               </md-button>
             </td>
           </tr>

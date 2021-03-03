@@ -43,18 +43,15 @@
                                 <span ng-repeat="teacher in ssp.teachers" ng-class="{'invalid': !capacitiesUtil.teachersLoadOk(ssp) || (teacher.scheduleLoad - teacher.plannedLessons) < 0}">
                                     <span title="{{'subjectStudyPeriod.teacherLoad' | translate : teacherPlannedLoad(teacher) }}">{{teacher.name}}{{!$last ? ', ' : ''}}</span>
                                 </span>
-                                <span ng-show="ssp.studentGroupObjects && ssp.studentGroupObjects.length > 0">
-                                    (
-                                    <span ng-repeat="sg in ssp.studentGroupObjects">
-                                        <span ng-if="$index > 0">, </span>
-                                        {{sg.nameEt}}
-                                    </span>
-                                    )
-                                </span>
                                 <span ng-if="ssp.subgroups.length > 0">
                                   <span class="subject-study-period-proportion">{{'subjectStudyPeriod.subgroups.label' | translate | lowercase}}:
                                     {{ssp.subgroups.length}}
                                   </span>
+                                </span>
+                                <span ng-repeat="group in ssp.studentGroupObjects | filter: {id: '!' + record.studentGroup}">
+                                  <br ng-if="$first"/>
+                                  <br ng-if="$first"/>
+                                  {{currentLanguageNameField(group)}}{{!$last ? ', ' : ''}}
                                 </span>
                             </td>
                             <td ng-repeat="type in capacityTypes">

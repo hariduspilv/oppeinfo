@@ -34,10 +34,11 @@ public class CurriculumModuleDto extends CurriculumModuleForm {
 
     public static CurriculumModuleDto of(CurriculumModule module) {
         CurriculumModuleDto dto = EntityUtil.bindToDto
-                (module, new CurriculumModuleDto(), "outcomes", "occupations", "competences");
+                (module, new CurriculumModuleDto(), "outcomes", "occupations", "competences", "studyFields");
         dto.setOutcomes(getOrderedOutcomes(module));
         dto.setOccupations(StreamUtil.toMappedSet(o -> EntityUtil.getNullableCode(o.getOccupation()), module.getOccupations()));
         dto.setCompetences(StreamUtil.toMappedSet(c -> EntityUtil.getNullableCode(c.getCompetence()), module.getCompetences()));
+        dto.setStudyFields(StreamUtil.toMappedSet(o -> EntityUtil.getId(o.getCurriculumStudyField()), module.getStudyFields()));
         dto.setAddedToImplementationPlan(Boolean.valueOf(!CollectionUtils.isEmpty(module.getCurriculumVersionOccupationModules())));
         
         Curriculum curriculum = module.getCurriculum();

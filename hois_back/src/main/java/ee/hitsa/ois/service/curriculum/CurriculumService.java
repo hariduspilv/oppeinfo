@@ -24,7 +24,11 @@ import ee.hitsa.ois.domain.curriculum.CurriculumDepartment;
 import ee.hitsa.ois.domain.curriculum.CurriculumFile;
 import ee.hitsa.ois.domain.curriculum.CurriculumGrade;
 import ee.hitsa.ois.domain.curriculum.CurriculumJointPartner;
+import ee.hitsa.ois.domain.curriculum.CurriculumModule;
+import ee.hitsa.ois.domain.curriculum.CurriculumModuleCompetence;
+import ee.hitsa.ois.domain.curriculum.CurriculumModuleStudyField;
 import ee.hitsa.ois.domain.curriculum.CurriculumSpeciality;
+import ee.hitsa.ois.domain.curriculum.CurriculumStudyField;
 import ee.hitsa.ois.domain.curriculum.CurriculumStudyForm;
 import ee.hitsa.ois.domain.curriculum.CurriculumStudyLanguage;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
@@ -66,7 +70,9 @@ import ee.hitsa.ois.web.dto.curriculum.CurriculumDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumFileDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumGradeDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumJointPartnerDto;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumModuleDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumSpecialityDto;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumStudyFieldDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionDto;
 
 @Transactional
@@ -136,7 +142,7 @@ public class CurriculumService {
         Integer oldStudyPeriod = curriculum.getStudyPeriod();
         EntityUtil.bindToEntity(curriculumForm, curriculum, classifierRepository, "draft", "higher",
               "versions", "studyLanguages", "studyForms", "addresses", "schoolDepartments", "files",
-              "jointPartners", "specialities", "modules", "occupations", "grades", "teacher");
+              "jointPartners", "specialities", "modules", "occupations", "grades", "teacher", "studyFields");
 
         if(curriculum.getId() != null) {
             updateCurriculumFiles(curriculum, StreamUtil.toMappedSet(CurriculumFileDto::of, curriculumForm.getFiles()));
@@ -215,6 +221,16 @@ public class CurriculumService {
         return EntityUtil.save(curriculum, em);
     }
 
+    private void updateModuleStudyFields(CurriculumModule module, Set<Long> studyFields, Map<Long, CurriculumStudyField> map) {
+        EntityUtil.bindEntityCollection(module.getStudyFields(), p -> EntityUtil.getId(p.getCurriculumStudyField()), 
+                studyFields, p -> p, dto -> {
+                    CurriculumModuleStudyField studyField = new CurriculumModuleStudyField();
+                    studyField.setCurriculumModule(module);
+                    studyField.setCurriculumStudyField(map.get(dto));
+            return studyField;
+        });
+    }
+
     private void updateJointPartners(Curriculum curriculum, Set<CurriculumJointPartnerDto> jointPartners) {
         EntityUtil.bindEntityCollection(curriculum.getJointPartners(), CurriculumJointPartner::getId, 
                 jointPartners, CurriculumJointPartnerDto::getId, dto -> {
@@ -234,7 +250,10 @@ public class CurriculumService {
             CurriculumAddress address = new CurriculumAddress();
             address.setCurriculum(curriculum);
             return updateAddress(dto, address);
-        }, this::updateAddress);
+        }, this::updateAddress, removedAddress -> {
+            ValidationFailedException.throwIf(!removedAddress.getStudentGroups().isEmpty(),
+                    "curriculum.error.curriculumAddressCantBeDeleted");
+        });
     }
 
     private CurriculumAddress updateAddress(CurriculumAddressForm form, CurriculumAddress address) {
@@ -300,6 +319,17 @@ public class CurriculumService {
             cd.setCurriculum(curriculum);
             cd.setSchoolDepartment(em.getReference(SchoolDepartment.class, d));
             return cd;
+        });
+    }
+    
+    void updateStudyFields(Curriculum curriculum, Set<Long> newStudyFields) {
+        EntityUtil.bindEntityCollection(curriculum.getStudyFields(), c -> EntityUtil.getId(c), newStudyFields, d -> {
+            CurriculumStudyField sf = new CurriculumStudyField();
+            sf.setCurriculum(curriculum);
+            CurriculumStudyField savedStudyField = em.getReference(CurriculumStudyField.class, d);
+            sf.setNameEt(savedStudyField.getNameEt());
+            sf.setNameEn(savedStudyField.getNameEn());
+            return sf;
         });
     }
     
@@ -499,5 +529,41 @@ public class CurriculumService {
                     em.getReference(School.class, schoolId);
         List<String> studyLevels = StreamUtil.toMappedList(sl -> EntityUtil.getCode(sl.getStudyLevel()), school.getStudyLevels());
         return StreamUtil.toFilteredList(Boolean.TRUE.equals(command.getIsHigher()) ? StudyLevelUtil::isHigher : StudyLevelUtil::isVocational, studyLevels);
+    }
+    
+    public CurriculumStudyField createStudyField(Curriculum curriculum, CurriculumStudyFieldDto dto, Map<Long, CurriculumStudyField> map) {
+        CurriculumStudyField studyField = new CurriculumStudyField();
+        studyField.setCurriculum(curriculum);
+        studyField = updateStudyField(dto, studyField, map);
+        return studyField;
+    }
+    
+    public CurriculumStudyField createStudyField(Curriculum curriculum, CurriculumStudyFieldDto dto) {
+        return EntityUtil.save(createStudyField(curriculum, dto, new HashMap<>()), em);
+    }
+    
+    public CurriculumStudyField updateStudyField(CurriculumStudyFieldDto dto, CurriculumStudyField studyField) {
+        return EntityUtil.save(updateStudyField(dto, studyField, new HashMap<>()), em);
+    }
+
+    public CurriculumStudyField updateStudyField(CurriculumStudyFieldDto dto, CurriculumStudyField studyField, Map<Long, CurriculumStudyField> map) {
+        studyField = EntityUtil.bindToEntity(dto, studyField, classifierRepository, "curriculum");
+        map.put(dto.getTempId(), studyField);
+        return studyField;
+    }
+
+    public void deleteStudyField(HoisUserDetails user, CurriculumStudyField studyField) {
+        EntityUtil.setUsername(user.getUsername(), em);
+        EntityUtil.deleteEntity(studyField, em);
+    }
+    
+    /**
+     * @param curriculum
+     * @param studyFieldDtos
+     * @param map temp id and relation to CurriculumStudyField
+     */
+    private void updateStudyFields(Curriculum curriculum, Set<CurriculumStudyFieldDto> studyFieldDtos, Map<Long, CurriculumStudyField> map) {
+        EntityUtil.bindEntityCollection(curriculum.getStudyFields(), c -> EntityUtil.getId(c), studyFieldDtos, 
+                CurriculumStudyFieldDto::getId, dto -> createStudyField(curriculum, dto, map), (o, v) -> updateStudyField(o, v, map));
     }
 }

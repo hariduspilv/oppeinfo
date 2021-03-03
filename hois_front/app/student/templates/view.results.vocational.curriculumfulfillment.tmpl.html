@@ -4,11 +4,11 @@
 
 <md-checkbox ng-model="formState.showOutcomes" aria-label="show outcomes">{{'student.result.showOutcomes' | translate}}</md-checkbox>
 
-<div ng-repeat="module in ::vocationalResultsCurriculum.vocationalResultsModules">
+<div ng-repeat="module in vocationalResultsCurriculum.vocationalResultsModules">
   <div ng-include="'student/templates/view.results.vocational.curriculumfulfillment.list.tmpl.html'"></div>
 </div>
 
-<div ng-repeat="result in ::vocationalResultsCurriculum.replacedModuleResults">
+<div ng-repeat="result in vocationalResultsCurriculum.replacedModuleResults">
   <div ng-include="'student/templates/view.results.vocational.curriculumfulfillment.formallearning.tmpl.html'"></div>
 </div>
 
@@ -16,11 +16,11 @@
      || vocationalResultsCurriculum.replacedExtraCurriculaModuleResults.length > 0">
   <h3>{{'student.result.otherModuleResults' | translate}}</h3>
 
-  <div ng-repeat="module in ::vocationalResultsCurriculum.extraCurriculaVocationalResultsModules">
+  <div ng-repeat="module in vocationalResultsCurriculum.extraCurriculaVocationalResultsModules">
     <div ng-include="'student/templates/view.results.vocational.curriculumfulfillment.list.tmpl.html'"></div>
   </div>
 
-  <div ng-repeat="result in ::vocationalResultsCurriculum.replacedExtraCurriculaModuleResults">
+  <div ng-repeat="result in vocationalResultsCurriculum.replacedExtraCurriculaModuleResults">
     <div ng-include="'student/templates/view.results.vocational.curriculumfulfillment.formallearning.tmpl.html'"></div>
   </div>
 </div>
@@ -40,7 +40,7 @@
       </tr>
       </thead>
       <tbody md-body>
-        <tr md-row ng-repeat="result in ::vocationalResultsCurriculum.otherOutcomeResults | orderBy: 'date' track by $index">
+        <tr md-row ng-repeat="result in vocationalResultsCurriculum.otherOutcomeResults | orderBy: 'date' track by $index">
           <td md-cell>{{currentLanguageNameField(result.outcome)}} ({{currentLanguageNameField(result.curriculum)}})</td>
           <td md-cell>
             <hois-vocational-result value="result.grade" exists-grading-schema="existsSchoolGradingSchema"></hois-vocational-result>

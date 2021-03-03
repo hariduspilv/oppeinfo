@@ -59,21 +59,25 @@
         </md-input-container>
       </div>
 
-      <div layout="row" layout-sm="column" layout-xs="column" ng-if="formState.onlyvocational || formState.isVocational">
-        <div flex="45" flex-sm="100" flex-xs="100">
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <div flex="45" flex-sm="100" flex-xs="100" ng-if="formState.onlyvocational || formState.isVocational">
           <hois-autocomplete ng-model="record.teacher" method="teachers" name="teacher" label="studentGroup.teacher"></hois-autocomplete>
         </div>
 
-        <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" ng-if="!record.isGuest">
-          <label class="textInput">{{'studentGroup.speciality' | translate}}</label>
-          <!-- <hois-classifier-select ng-model="record.speciality" name="speciality" main-classifier-code="SPETSKUTSE" show-only-values="formState.specialities" model-value-attr="code"></hois-classifier-select> -->
-          <md-select ng-model="record.speciality">
-            <md-option md-option-empty></md-option>
-            <md-option ng-value="opt.code.code" ng-repeat="opt in formState.specialities | orderBy: ['code.nameEt', 'code.validFrom', 'code.validThru']">
-              {{opt.code | hoisValidDates}}
-            </md-option>
-          </md-select>
+        <md-input-container flex="{{formState.onlyvocational || formState.isVocational ? 50 : 45}}" flex-sm="100" flex-xs="100"
+                            flex-offset="{{formState.onlyvocational || formState.isVocational ? 5 : 0}}"
+                            flex-offset-xs="0" flex-offset-sm="0"
+                            ng-if="!record.isGuest && !formState.isVocational && (record.curriculumAddress || formState.curriculumAddresses.length > 1)">
+          <label class="textInput">{{'studentGroup.curriculumAddress' | translate}}</label>
+          <hois-select ng-model="record.curriculumAddress" name="curriculumAddress"
+                       values="formState.curriculumAddresses"></hois-select>
         </md-input-container>
+        <hois-autocomplete
+          flex="{{formState.onlyvocational || formState.isVocational ? 50 : 45}}" flex-sm="100" flex-xs="100"
+          flex-offset="{{formState.onlyvocational || formState.isVocational ? 5 : 0}}" flex-offset-xs="0" flex-offset-sm="0"
+          ng-if="!record.isGuest && formState.isVocational && (record.ehisSchool || formState.curriculumAddresses.length > 1)"
+          ng-model="record.ehisSchool" ha-attribute="code" additional-query-params="{mainClassCode: 'EHIS_KOOL'}"
+          label="studentGroup.curriculumAddress" method="classifiers" no-paging="true"></hois-autocomplete>
       </div>
 
       <div layout="row">
@@ -100,6 +104,7 @@
             <th md-column md-order-by="rowno">{{'studentGroup.studentname' | translate}}</th>
             <th md-column md-order-by="idcode">{{'studentGroup.idcode' | translate}}</th>
             <th md-column md-order-by="curriculumVersion.{{currentLanguageNameField()}}">{{formState.curriculumVersionLabel | translate}}</th>
+            <th md-column ng-if="formState.hasSpecialities" md-order-by="speciality.{{currentLanguageNameField()}}">{{'studentGroup.speciality' | translate}}</th>
             <th md-column md-order-by="status.{{currentLanguageNameField()}}">{{'studentGroup.studentstatus' | translate}}</th>
             <th></th>
           </tr>
@@ -112,6 +117,7 @@
             </td>
             <td md-cell>{{::row.idcode}}</td>
             <td md-cell>{{currentLanguageNameField(row.curriculumVersion)}}</td>
+            <td md-cell ng-if="formState.hasSpecialities">{{currentLanguageNameField(row.speciality)}}</td>
             <td md-cell>{{currentLanguageNameField(row.status)}}</td>
             <td md-cell>
               <a ng-if="record.id" md-no-ink class="remove" ng-click="removeStudent(row.id)">&times;</a>

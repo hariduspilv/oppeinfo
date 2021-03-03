@@ -44,6 +44,7 @@ import ee.hitsa.ois.util.JournalUtil;
 import ee.hitsa.ois.util.TranslateUtil;
 import ee.hitsa.ois.web.dto.StudyPeriodEventDto;
 import ee.hitsa.ois.web.dto.StudyPeriodWithWeeksDto;
+import ee.hitsa.ois.web.dto.timetable.LessonPlanCurriculumDto;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -488,12 +489,14 @@ public class LessonPlanService {
 
     private void copyPreviousLessonPlan(LessonPlanCreateForm form, LessonPlan lessonPlan) {
         LessonPlan previousLessonPlan = em.getReference(LessonPlan.class, form.getPreviousLessonplan());
+        Map<Long, CurriculumVersionOccupationModule> moduleEquivalents = occupationalModuleEquivalents(lessonPlan,
+                previousLessonPlan);
 
         for (LessonPlanModule lpm : previousLessonPlan.getLessonPlanModules()) {
             LessonPlanModule lessonPlanModuleCopy = new LessonPlanModule();
             lessonPlanModuleCopy.setLessonPlan(lessonPlan);
             
-            CurriculumVersionOccupationModule module = lessonPlanCopyModule(previousLessonPlan, lessonPlan, lpm);
+            CurriculumVersionOccupationModule module = moduleEquivalents.get(EntityUtil.getId(lpm.getCurriculumVersionOccupationModule()));
             if (module == null) {
                 continue;
             }
@@ -523,33 +526,69 @@ public class LessonPlanService {
             }
         }
     }
-    
-    private CurriculumVersionOccupationModule lessonPlanCopyModule(LessonPlan previousLessonPlan,
-            LessonPlan lessonPlan, LessonPlanModule lessonPlanModule) {
-        CurriculumVersionOccupationModule module = null;
-        if (EntityUtil.getId(lessonPlan.getCurriculumVersion()).equals(EntityUtil.getId(previousLessonPlan.getCurriculumVersion()))) {
-            module = lessonPlanModule.getCurriculumVersionOccupationModule();
+
+    private Map<Long, CurriculumVersionOccupationModule> occupationalModuleEquivalents(LessonPlan lessonPlan,
+            LessonPlan previousLessonPlan) {
+        CurriculumVersion lpCurriculumVersion = lessonPlan.getCurriculumVersion();
+        CurriculumVersion previousLpCurriculumVersion = previousLessonPlan.getCurriculumVersion();
+
+        List<?> data;
+        if (!EntityUtil.getId(lpCurriculumVersion.getCurriculum()).equals(EntityUtil.getId(previousLpCurriculumVersion.getCurriculum()))) {
+            data = em.createNativeQuery("select distinct on (cvo_id) cvo_id, cvo2_id "
+                    + "from (select first_value(cvo.id) over(partition by cvo2.id order by "
+                        + "case when (replace(replace(cm2.name_et, ' ', ''), '-', '') "
+                        + "ilike replace(replace(cm.name_et, ' ', ''), '-', '')) then 0 else 1 end) cvo_id, cvo2.id cvo2_id "
+                    + "from curriculum_version_omodule cvo "
+                    + "join curriculum_module cm on cm.id = cvo.curriculum_module_id "
+                    + "join curriculum_version_omodule cvo2 on cvo2.curriculum_version_id = ?2 "
+                    + "join curriculum_module cm2 on cm2.id = cvo2.curriculum_module_id "
+                        + "and (replace(replace(cm2.name_et, ' ', ''), '-', '') ilike '%' || replace(replace(cm.name_et, ' ', ''), '-', '') || '%' "
+                        + "or replace(replace(cm.name_et, ' ', ''), '-', '') ilike '%' || replace(replace(cm2.name_et, ' ', ''), '-', '') || '%') "
+                    + "where cvo.curriculum_version_id = ?1 order by cvo.id) x")
+                .setParameter(1, EntityUtil.getId(previousLessonPlan.getCurriculumVersion()))
+                .setParameter(2, EntityUtil.getId(lessonPlan.getCurriculumVersion()))
+                .getResultList();
+        } else if (EntityUtil.getId(lpCurriculumVersion).equals(EntityUtil.getId(previousLessonPlan))) {
+            data = em.createNativeQuery("select cvo.id cvo_id, cvo.id cvo2_id from curriculum_version_omodule cvo "
+                    + "where cvo.curriculum_version_id = ?1")
+                .setParameter(1, EntityUtil.getId(previousLessonPlan.getCurriculumVersion()))
+                .getResultList();
         } else {
-            List<CurriculumVersionOccupationModule> data = em.createQuery("select cvom from CurriculumVersionOccupationModule cvom "
-                    + "where cvom.curriculumVersion.id = ?1 and cvom.curriculumModule.id = ?2", CurriculumVersionOccupationModule.class)
-                    .setParameter(1, EntityUtil.getId(lessonPlan.getCurriculumVersion()))
-                    .setParameter(2, EntityUtil.getId(lessonPlanModule.getCurriculumVersionOccupationModule().getCurriculumModule()))
-                    .getResultList();
-            module = data.isEmpty() ? null : data.get(0);
+            data = em.createNativeQuery("select cvo.id cvo_id, cvo2.id cvo2_id from curriculum_version_omodule cvo "
+                    + "join curriculum_version_omodule cvo2 on cvo.curriculum_module_id = cvo2.curriculum_module_id "
+                    + "where cvo.curriculum_version_id = ?1 and cvo2.curriculum_version_id = ?2")
+                .setParameter(1, EntityUtil.getId(previousLessonPlan.getCurriculumVersion()))
+                .setParameter(2, EntityUtil.getId(lessonPlan.getCurriculumVersion()))
+                .getResultList();
         }
-        return module;
+
+        Set<Long> equivalentModuleIds = StreamUtil.toMappedSet(r -> resultAsLong(r, 1), data);
+        if (!equivalentModuleIds.isEmpty()) {
+            List<CurriculumVersionOccupationModule> equivalentModules = em.createQuery("select cvo "
+                    + "from CurriculumVersionOccupationModule cvo "
+                    + "where cvo.id in (?1)", CurriculumVersionOccupationModule.class)
+                .setParameter(1, equivalentModuleIds)
+                .getResultList();
+            Map<Long, CurriculumVersionOccupationModule> equivalentModuleMap = equivalentModules.stream()
+                    .collect(Collectors.toMap(CurriculumVersionOccupationModule::getId, r -> r, (o, n) -> o));
+            return StreamUtil.toMap(r -> resultAsLong(r, 0), r -> equivalentModuleMap.get(resultAsLong(r, 1)), data);
+        }
+        return new HashMap<>();
     }
-    
+
     private Map<Long, CurriculumVersionOccupationModuleTheme> occupationalModuleThemeEquivalents(LessonPlanModule lessonPlanModule,
             CurriculumVersionOccupationModule copiedLessonPlanModuleOccupationModule) {
-        List<?> data = em.createNativeQuery(
-                "select distinct on (cvot.id) cvot.id as theme_id, cvot2.id as equivalent_theme_id from curriculum_version_omodule_theme cvot "
-                        + "join curriculum_version_omodule cvo on cvot.curriculum_version_omodule_id = cvo.id "
-                        + "join curriculum_version_omodule cvo2 on cvo2.id = ?1 "
-                        + "join curriculum_version_omodule_theme cvot2 on "
-                            + "(cvot2.name_et ilike '%' || cvot.name_et || '%' or cvot.name_et ilike '%' || cvot2.name_et || '%') "
-                            + "and cvo2.id = cvot2.curriculum_version_omodule_id "
-                        + "where cvot.curriculum_version_omodule_id = ?2")
+        List<?> data = em.createNativeQuery("select distinct on (theme_id) theme_id, equivalent_theme_id "
+            + "from (select first_value(cvot.id) over (partition by cvot2.id order by "
+                + "case when (replace(replace(cvot2.name_et, ' ', ''), '-', '') "
+                + "ilike replace(replace(cvot.name_et, ' ', ''), '-', '')) then 0 else 1 end) theme_id, cvot2.id as equivalent_theme_id "
+            + "from curriculum_version_omodule_theme cvot "
+            + "join curriculum_version_omodule cvo on cvot.curriculum_version_omodule_id = cvo.id "
+            + "join curriculum_version_omodule cvo2 on cvo2.id = ?1 "
+            + "join curriculum_version_omodule_theme cvot2 on cvo2.id = cvot2.curriculum_version_omodule_id "
+                + "and (replace(replace(cvot2.name_et, ' ', ''), '-', '') ilike '%' || replace(replace(cvot.name_et, ' ', ''), '-', '') || '%' "
+                + "or replace(replace(cvot.name_et, ' ', ''), '-', '') ilike '%' || replace(replace(cvot2.name_et, ' ', ''), '-', '') || '%') "
+            + "where cvot.curriculum_version_omodule_id = ?2 order by cvot.id) x")
                 .setParameter(1, EntityUtil.getId(copiedLessonPlanModuleOccupationModule))
                 .setParameter(2, EntityUtil.getId(lessonPlanModule.getCurriculumVersionOccupationModule()))
                 .getResultList();
@@ -610,6 +649,7 @@ public class LessonPlanService {
         journalCopy.setAddModuleOutcomes(journal.getAddModuleOutcomes());
         journalCopy.setAddStudents(journal.getAddStudents());
         journalCopy.setIsIndividual(journal.getIsIndividual());
+        journalCopy.setIsFree(journal.getIsFree());
         journalCopy.setUntisCode(journal.getUntisCode());
         journalCopy.setJournalSub(journalSubCopy);
 
@@ -1634,29 +1674,28 @@ public class LessonPlanService {
                 Collectors.mapping(r -> resultAsLong(r, 1), Collectors.toList())));
     }
 
-    private Map<Long, List<Object>> curriculumLessonPlans(Long schoolId) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
-                "from lesson_plan lp join curriculum_version cv on lp.curriculum_version_id = cv.id "
+    private List<LessonPlanCurriculumDto> curriculumLessonPlans(Long schoolId) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from lesson_plan lp "
+                        + "join curriculum_version cv on lp.curriculum_version_id = cv.id "
                         + "join curriculum c on cv.curriculum_id = c.id "
                         + "join student_group sg on lp.student_group_id = sg.id "
                         + "join study_year sy on lp.study_year_id = sy.id "
                         + "join classifier cl on sy.year_code = cl.code");
 
-        qb.requiredCriteria("sg.school_id = :schoolId and sy.school_id = :schoolId", "schoolId", schoolId);
-        qb.sort("sy.end_date desc, sg.code");
+        qb.requiredCriteria("lp.school_id = :schoolId", "schoolId", schoolId);
 
-        List<?> data = qb.select(
-                "c.id as curriculum_id, sy.id as study_year_id, sy.end_date, lp.id as lesson_plan_id, cl.name_et || ' ' || sg.code as name",
-                em).getResultList();
-        return data.stream()
-                .collect(Collectors.groupingBy(r -> resultAsLong(r, 0), LinkedHashMap::new, Collectors.mapping(r -> {
-                    Map<String, Object> curriculumLessonplan = new HashMap<>();
-                    curriculumLessonplan.put("studyYear", resultAsLong(r, 1));
-                    curriculumLessonplan.put("studyYearEndDate", resultAsLocalDate(r, 2));
-                    curriculumLessonplan.put("lessonplan", resultAsLong(r, 3));
-                    curriculumLessonplan.put("name", resultAsString(r, 4));
-                    return curriculumLessonplan;
-                }, Collectors.toList())));
+        List<?> data = qb.select("c.id as curriculum_id, c.mer_code, sy.id as study_year_id, sy.end_date, "
+                        + "lp.id as lesson_plan_id, cl.name_et || ' ' || sg.code as name", em).getResultList();
+        return StreamUtil.toMappedList(r -> {
+            LessonPlanCurriculumDto dto = new LessonPlanCurriculumDto();
+            dto.setCurriculum(resultAsLong(r, 0));
+            dto.setMerCode(resultAsString(r, 1));
+            dto.setStudyYear(resultAsLong(r, 2));
+            dto.setStudyYearEndDate(resultAsLocalDate(r, 3));
+            dto.setLessonplan(resultAsLong(r, 4));
+            dto.setName(resultAsString(r, 5));
+            return dto;
+        }, data);
     }
 
     private Map<Long, Long> scheduleLegends(LessonPlan lessonPlan) {
@@ -2037,17 +2076,29 @@ public class LessonPlanService {
                 + "join lesson_plan_module lpm on lp.id = lpm.lesson_plan_id "
                 + "join journal_omodule_theme jot on lpm.id = jot.lesson_plan_module_id "
                 + "join journal j on jot.journal_id = j.id "
-                + "join journal_teacher jt on j.id = jt.journal_id "
-                + "left join journal_teacher_capacity jtc on j.is_capacity_diff = true and jtc.journal_teacher_id = jt.id "
-                + "left join journal_capacity jc on j.is_capacity_diff is not true and jc.journal_id = j.id "
-                + "join journal_capacity_type jct on ((jct.id = jtc.journal_capacity_type_id and j.is_capacity_diff = true) "
-                    + "or (jtc.id = jc.journal_capacity_type_id and j.is_capacity_diff is not true))");
-
+                + "join journal_capacity_type jct on j.id = jct.journal_id");
         qb.requiredCriteria("lp.id in (:lessonPlanIds)", "lessonPlanIds", lessonPlanIds);
+
+        // capacity check using `exists` instead of `join` to improve performance
+        // capacity_diff = null/false
+        qb.filter("(j.is_capacity_diff is not true and exists(" +
+                    "select 1 from journal_capacity jc2 " +
+                    "where j.id = jc2.journal_id and jct.id = jc2.journal_capacity_type_id) " +
+                // capacity_diff = true
+                "or j.is_capacity_diff = true and exists(" +
+                    "select 1 from journal_teacher jt " +
+                    "join journal_teacher_capacity jtc on jt.id = jtc.journal_teacher_id " +
+                    "where j.id = jt.journal_id and jct.id = jtc.journal_capacity_type_id)" +
+                ")");
+
         if (user.isTeacher()) {
-            qb.requiredCriteria("jt.teacher_id = :teacherId", "teacherId", user.getTeacherId());
+            qb.requiredCriteria("exists(select 1 from journal_teacher jt " +
+                    "where j.id = jt.journal_id and jt.teacher_id = :teacherId)",
+                    "teacherId", user.getTeacherId());
         } else {
-            qb.optionalCriteria("jt.teacher_id in (:teacherIds)", "teacherIds", criteria.getTeacher());
+            qb.optionalCriteria("exists(select 1 from journal_teacher jt " +
+                    "where j.id = jt.journal_id and jt.teacher_id in :teacherIds)",
+                    "teacherIds", criteria.getTeacher());
         }
         
         List<?> additionalCapacities = qb.select("distinct jct.capacity_type_code", em).getResultList();

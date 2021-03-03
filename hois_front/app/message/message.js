@@ -575,6 +575,7 @@ angular.module('hitsaOis')
     checkIfUserHasEmail();
 
     setTargetGroups();
+    /** @type {Array<Receiver>} */
     $scope.receivers = [];
     $scope.studyForm = [];
     $scope.studentGroup = [];
@@ -613,25 +614,9 @@ angular.module('hitsaOis')
 
     $scope.addReceiver = function(receiver) {
         if(receiver && !isPersonAdded(receiver.personId)) {
-            //TODO: array.map is not needed anymore except for addedWithAutocomplete property!!
-            var newReceiver = {
-                studentId: receiver.id,
-                personId: receiver.personId,
-                idcode: receiver.idcode,
-                fullname: receiver.fullname,
-                role: $scope.targetGroup ? [$scope.targetGroup] : receiver.role,
-                curriculum: receiver.curriculum,
-                studentGroup: receiver.studentGroup,
-                journal: receiver.journal,
-                subject: receiver.subject,
-                addedWithAutocomplete: true
-            };
-            if($scope.auth.isTeacher()) {
-                newReceiver.curriculumObject = receiver.curriculum;
-                newReceiver.studentGroupObject = receiver.studentGroup;
-            }
+            var newReceiver = new Receiver(receiver, true);
             $scope.receivers.push(newReceiver);
-            if($scope.targetGroup === 'ROLL_T' && (receiver === null || !receiver.higher)) {
+            if (!$scope.auth.isStudent() && $scope.targetGroup === 'ROLL_T' && (!receiver.higher)) {
                 getHisParents(newReceiver);
             }
         }
@@ -645,18 +630,22 @@ angular.module('hitsaOis')
     }
 
     function isPersonAdded(personId) {
-        return $scope.receivers.filter(function (r){return r.personId === personId;}).length > 0;
+      return $scope.receivers.filter(function (r) {
+        return r.personId === personId;
+      }).length > 0;
     }
 
     function isStudent(receiver) {
-      return receiver.role.length === 1 && receiver.role[0] === 'ROLL_T';
+      return receiver.role.items.length === 1 && receiver.role.items[0] === 'ROLL_T';
     }
 
     $scope.removeReceiver = function(receiver) {
         ArrayUtils.remove($scope.receivers, receiver);
         if(isStudent(receiver)) {
             // student, remove also his/her representative(s)
-            $scope.receivers = $scope.receivers.filter(function(r){return r.studentId !== receiver.studentId;});
+            $scope.receivers = $scope.receivers.filter(function (r) {
+              return r.studentId !== receiver.studentId || r.removeTargetGroup('ROLL_T');
+            });
             if (anyFilterApplied()) {
               ignorePersonId[receiver.personId] = true;
             } else {
@@ -732,21 +721,10 @@ angular.module('hitsaOis')
     function groupRepeatsIntoReceivers(list) {
         groupItems(list, $scope.receivers,
             function (r) {
-                return r.personId === this.personId && r.role[0] === this.role[0];
+                return r.personId === this.personId && r.role.items[0] === this.role.items[0];
             },
             function (existing, duplicate) {
-                if (!isSamePartOfByKey(existing, duplicate, "curriculum.id")) {
-                    existing.curriculum.push(duplicate.curriculum[0]);
-                }
-                if (!isSamePartOfByKey(existing, duplicate, "studentGroup.id")) {
-                    existing.studentGroup.push(duplicate.studentGroup[0]);
-                }
-                if (!isSamePartOfByKey(existing, duplicate, "journal.id")) {
-                    existing.journal.push(duplicate.journal[0]);
-                }
-                if (!isSamePartOfByKey(existing, duplicate, "subject.id")) {
-                    existing.subject.push(duplicate.subject[0]);
-                }
+                existing.mergeReceiver(duplicate);
             }
         );
     }
@@ -762,8 +740,9 @@ angular.module('hitsaOis')
       if (!hasParameters) {
         return;
       }
+      query.page = 0;
       query.size = 1000;
-      QueryUtils.endpoint(baseUrl + "/students").query(query, function (response) {
+      repeatQuery(baseUrl + "/students", query, function (response) {
         // It returns their parents as well.
         // HITSAOIS-54 8
         // if there are repeated values in the current list then append new values to them and group
@@ -776,40 +755,26 @@ angular.module('hitsaOis')
       });
     }
 
+    function repeatQuery(url, query, successCallback) {
+      QueryUtils.endpoint(url).query(query, function (response) {
+        successCallback(response);
+        if (response.length >= query.size) {
+          query.page++;
+          repeatQuery(url, query, successCallback);
+        }
+      });
+    }
+
     function studentAndParentListToReceiverOption(response) {
-        var list = response.map(function(s){
-            return {
-                studentId: s.id,
-                personId: s.personId,
-                idcode: s.idcode,
-                fullname: s.fullname,
-                higher: s.higher,
-                // role: ["ROLL_T"],
-                role: s.role,
-                studyForm: s.studyForm,
-                journal: s.journal !== null ? [s.journal] : [],
-                subject: s.subject !== null ? [s.subject] : [],
-                curriculum: [s.curriculum], // HITSAOIS-54 8 for grouping
-                studentGroup: [s.studentGroup] // HITSAOIS-54 8 for grouping
-            };
-        });
-        return list;
+      return response.map(function(s){
+        return new Receiver(s, false);
+      });
     }
 
     function filterReceivers(role) {
-        $scope.receivers = $scope.receivers.filter(function(r){
-            return (r.addedWithAutocomplete || !includesOrEmpty(r.role, role) ||
-            includesOrEmpty($scope.curriculum, r.curriculum ? r.curriculum.id : null) &&
-            includesOrEmpty($scope.studentGroup, r.studentGroup ? r.studentGroup.id : null) &&
-            includesOrEmpty($scope.studyForm, r.studyForm) &&
-            includesOrEmpty($scope.studyGroupStudentsParents, r.studentGroup ? r.studentGroup.id : null) &&
-            includesOrEmpty($scope.journalStudent, r.journal ? r.journal.id : null) &&
-            includesOrEmpty($scope.journalStudentParent, r.journal ? r.journal.id : null) &&
-            includesOrEmpty($scope.journalTeacher, r.journal ? r.journal.id : null) &&
-            includesOrEmpty($scope.subjectStudent, r.subject ? r.subject.id : null) &&
-            includesOrEmpty($scope.subjectStudentParent, r.subject ? r.subject.id : null) &&
-            includesOrEmpty($scope.subjectTeacher, r.subject ? r.subject.id : null));
-        });
+      $scope.receivers = $scope.receivers.filter(function (r) {
+        return r.addedWithAutocomplete || r.removeTargetGroup(role);
+      });
     }
 
     function getUniqueElements(arr) {
@@ -825,30 +790,7 @@ angular.module('hitsaOis')
       }, []);
     }
 
-    /**
-     * do not remove student's parents, if student is added with autocomplete
-     */
-    function isStudentsParent(r) {
-        return $scope.targetGroup === 'ROLL_T' && includesOrEmpty(r.role, 'ROLL_L');
-    }
-
     $scope.targetGroupChanged = function(newVal, oldVal) {
-        /*
-        filterReceivers() did not work in the following scenario:
-        user adds a student which has representative and then selects Parents as target group.
-        In that case student's representative hadn't been removed from the list.
-        So now list of receivers is just completely cleared.
-        */
-        // filterReceivers();
-        // $scope.receivers = [];
-        // $scope.curriculum = [];
-        // $scope.studentGroup = [];
-        // $scope.studyForm = [];
-        // $scope.studyGroupStudentsParents = [];
-        // $scope.journalStudent = [];
-        // $scope.journalStudentParent = [];
-        // $scope.subjectStudent = [];
-        // $scope.subjectStudentParent = [];
       getGroups();
 
       var existingData = groupSearchStorage[newVal];
@@ -878,18 +820,7 @@ angular.module('hitsaOis')
       });
     };
 
-    function hasAnyStorageValue(targetGroup) {
-      if (!targetGroup) {
-        return false;
-      }
-
-    }
-
     $scope.searchTypeChanged = function(newVal, oldVal) {
-      //$scope.receivers = $scope.receivers.filter(function (r) { return r.addedWithAutocomplete });
-      // filterReceivers();
-      // $scope.curriculum = [];
-      // $scope.studyForm = [];
       if ($scope.targetGroup === 'ROLL_T') {
         if ($scope.auth.isTeacher()) {
           $scope.studentGroup = [];
@@ -938,44 +869,43 @@ angular.module('hitsaOis')
           $scope.targetGroup === 'ROLL_O' && ($scope.journalTeacher.length > 0 || $scope.subjectTeacher.length > 0);
     }
 
-    // $scope.$watchGroup([], function () {
-    //   getGroups();
-    //   filterReceivers(['ROLL_T', 'ROLL_L']);
-    //   if(anyFilterApplied()) {
-    //     getStudents({
-    //       studyForm: $scope.studyForm,
-    //       studentGroupId: $scope.studentGroup,
-    //       curriculum: $scope.curriculum,
-    //       journalId: $scope.journalStudent,
-    //       subjectId: $scope.subjectStudent
-    //     });
-    //   } else {
-    //     removeFilteredReceivers(['ROLL_T', 'ROLL_L']);
-    //   }
-    // });
-
     function clearAndApply(fApply, oData, role) {
         filterReceivers(role);
         if(anyFilterApplied()) {
           if (angular.isFunction(fApply)) {
             fApply(oData);
           }
-        } else {
-          removeFilteredReceivers(role);
         }
     }
 
-    /*
-     * We have to block the first run in $watch because when page is loaded then watch is fired.
-     */
+    function compareArrays(arr1, arr2) {
+      var same = true;
+      if (arr1.length !== arr2.length) {
+        return false;
+      }
+      for (var i = 0; i < arr1.length; i++) {
+        if (angular.isArray(arr1[i]) && (angular.isArray(arr2[i]))) {
+          same = same && compareArrays(arr1[i], arr2[i]);
+        } else {
+          same = same && (arr1[i] === arr2[i]);
+        }
+        if (!same) {
+          break;
+        }
+      }
+      return same;
+    }
 
-    $scope.$watchGroup(['curriculum', 'studyForm', 'journalStudent', 'subjectStudent', 'studentGroup'], function(newValues) {
+    $scope.$watchGroup(['curriculum', 'studyForm', 'journalStudent', 'subjectStudent', 'studentGroup'], function(newValues, oldValues) {
       if ((!newValues[0] || !newValues[0].length) &&
         (!newValues[1] || !newValues[1].length) &&
         (!newValues[2] || !newValues[2].length) &&
         (!newValues[3] || !newValues[3].length) &&
         (!newValues[4] || !newValues[4].length)) {
-        clearAndApply(undefined, undefined, ["ROLL_T", "ROLL_L"]);
+        clearAndApply(undefined, undefined, ["ROLL_T"]);
+        return;
+      }
+      if (compareArrays(newValues, oldValues)) {
         return;
       }
       clearAndApply(getStudents, {
@@ -984,12 +914,15 @@ angular.module('hitsaOis')
         curriculum: $scope.curriculum,
         journalId: $scope.journalStudent,
         subjectId: $scope.subjectStudent
-      }, ['ROLL_T', 'ROLL_L']);
+      }, ['ROLL_T']);
     });
 
-    $scope.$watchGroup(['journalStudentParent', 'subjectStudentParent', 'studyGroupStudentsParents'], function (newValues) {
+    $scope.$watchGroup(['journalStudentParent', 'subjectStudentParent', 'studyGroupStudentsParents'], function (newValues, oldValues) {
       if ((!newValues[0] || !newValues[0].length) && (!newValues[1] || !newValues[1].length) && (!newValues[2] || !newValues[2].length)) {
         clearAndApply(undefined, undefined, "ROLL_L");
+        return;
+      }
+      if (compareArrays(newValues, oldValues)) {
         return;
       }
       clearAndApply(getParents, {
@@ -999,9 +932,12 @@ angular.module('hitsaOis')
       }, 'ROLL_L');
     });
 
-    $scope.$watchGroup(['journalTeacher', 'subjectTeacher'], function (newValues) {
+    $scope.$watchGroup(['journalTeacher', 'subjectTeacher'], function (newValues, oldValues) {
       if ((!newValues[0] || !newValues[0].length) && (!newValues[1] || !newValues[1].length)) {
         clearAndApply(undefined, undefined, "ROLL_O");
+        return;
+      }
+      if (compareArrays(newValues, oldValues)) {
         return;
       }
       clearAndApply(getTeachers, {
@@ -1021,8 +957,9 @@ angular.module('hitsaOis')
       if (!hasParameters) {
         return;
       }
+      query.page = 0;
       query.size = 1000;
-      QueryUtils.endpoint(baseUrl + "/parents").query(query, function(response){
+      repeatQuery(baseUrl + "/parents", query, function (response) {
         // HITSAOIS-54 8
         groupRepeatsIntoReceivers(parentsPageToReceiverOptionList(response, false));
       });
@@ -1039,29 +976,19 @@ angular.module('hitsaOis')
       if (!hasParameters) {
         return;
       }
+      query.page = 0;
       query.size = 1000;
-      QueryUtils.endpoint(baseUrl + "/teachers").query(query, function(response){
+      repeatQuery(baseUrl + "/teachers", query, function (response) {
         // HITSAOIS-54 8
         groupRepeatsIntoReceivers(studentAndParentListToReceiverOption(response));
       });
     }
 
     function parentsPageToReceiverOptionList(response, addedWithAutocomplete) {
-        var list = response.map(function(p){
-            return {
-                studentId: p.id,
-                personId: p.personId,
-                idcode: p.idcode,
-                fullname: p.fullname,
-                role: ['ROLL_L'],
-                journal: p.journal !== null ? [p.journal] : [],
-                subject: p.subject !== null ? [p.subject] : [],
-                studentGroup: [p.studentGroup],
-                curriculum: [p.curriculum],
-                addedWithAutocomplete: addedWithAutocomplete
-            };
+        return response.map(function(p){
+          p.role = 'ROLL_L';
+          return new Receiver(p, addedWithAutocomplete)
         });
-        return list;
     }
 
     function getGroups() {
@@ -1080,13 +1007,6 @@ angular.module('hitsaOis')
       }
     }
 
-    function removeFilteredReceivers(role) {
-        ignorePersonId = {};
-        $scope.receivers = $scope.receivers.filter(function (r) {
-          return r.addedWithAutocomplete || !includesOrEmpty(r.role, role);
-        });
-    }
-
     var lookup = QueryUtils.endpoint('/message/persons');
     $scope.querySearch = function (text) {
         var deferred = $q.defer();
@@ -1097,8 +1017,8 @@ angular.module('hitsaOis')
             for (var i = 0; i < data.length; i++) {
                 data[i].curriculum = [data[i].curriculum];
                 data[i].studentGroup = [data[i].studentGroup];
-                data[i].journal = [data[i].journal];
-                data[i].subject = [data[i].subject];
+                data[i].journal = data[i].journals;
+                data[i].subject = data[i].subjects;
             }
             var container = [];
             groupItems(data, container,
@@ -1138,7 +1058,7 @@ angular.module('hitsaOis')
         $scope.record.receivers = $scope.receivers.map(function(r) {
             return {
                 person: r.personId,
-                role: (r.role || [])[0]
+                role: (r.role.items || [])[0]
             };
         });
         $scope.record.$save(afterSend);
@@ -1290,5 +1210,239 @@ angular.module('hitsaOis')
       $scope[ref] = ($scope.groupSearchVal || []).map(function (it) {
         return it.id;
       });
+    }
+
+    /**
+     *
+     * @param {object} receiver
+     * @param {boolean} autocomplete
+     * @constructor
+     */
+    function Receiver(receiver, autocomplete) {
+      var _self = this;
+
+      // filled by student or representative
+      this.studentId = receiver.id;
+
+      this.personId = receiver.personId;
+      this.idcode = receiver.idcode;
+      this.fullname = receiver.fullname;
+      this.firstname = receiver.firstname;
+      this.lastname = receiver.lastname;
+
+      // filled by student
+      this.higher = receiver.higher;
+
+      this.role = new FilterItem(selfIdentifier);
+      this.role.addItem($scope.targetGroup, receiver.role);
+
+      // from which side has been filled
+      this.targetGroup = convertToArrayIfNeeded($scope.targetGroup);
+
+      // filled by student
+      this.curriculum = new FilterItem(idIdentifier);
+      this.curriculum.addItem($scope.targetGroup, receiver.curriculum);
+      this.studentGroup = new FilterItem(idIdentifier);
+      this.studentGroup.addItem($scope.targetGroup, receiver.studentGroup);
+
+      // filled by student/representative/teacher
+      this.journal = new FilterItem(idIdentifier);
+      this.journal.addItem($scope.targetGroup, receiver.journals);
+      this.subject = new FilterItem(idIdentifier);
+      this.subject.addItem($scope.targetGroup, receiver.subjects);
+
+      this.addedWithAutocomplete = autocomplete;
+
+      function convertToArrayIfNeeded(data) {
+        if (angular.isArray(data)) {
+          return data;
+        }
+        return [data];
+      }
+
+      function selfIdentifier(item) {
+        return item;
+      }
+
+      function idIdentifier(item) {
+        return item.id;
+      }
+
+      /**
+       *
+       * @param {object} receiver
+       */
+      this.mergeObject = function (receiver) {
+        if (_self.targetGroup.indexOf($scope.targetGroup) === -1) {
+          _self.targetGroup.push($scope.targetGroup);
+        }
+        if (receiver.addedWithAutocomplete) {
+          _self.addedWithAutocomplete = true;
+        }
+
+        _self.role.addItem($scope.targetGroup, receiver.role);
+        _self.curriculum.addItem($scope.targetGroup, receiver.curriculum);
+        _self.studentGroup.addItem($scope.targetGroup, receiver.studentGroup);
+        _self.journal.addItem($scope.targetGroup, receiver.journal);
+        _self.subject.addItem($scope.targetGroup, receiver.subject);
+      }
+
+      /**
+       *
+       * @param {Receiver} receiver
+       */
+      this.mergeReceiver = function (receiver) {
+        if (_self.targetGroup.indexOf($scope.targetGroup) === -1) {
+          _self.targetGroup.push($scope.targetGroup);
+        }
+        if (receiver.addedWithAutocomplete) {
+          _self.addedWithAutocomplete = true;
+        }
+
+        _self.role.addItem($scope.targetGroup, receiver.role.items);
+        _self.curriculum.addItem($scope.targetGroup, receiver.curriculum.items);
+        _self.studentGroup.addItem($scope.targetGroup, receiver.studentGroup.items);
+        _self.journal.addItem($scope.targetGroup, receiver.journal.items);
+        _self.subject.addItem($scope.targetGroup, receiver.subject.items);
+        receiver.destroy();
+      }
+
+      /**
+       *
+       * @param {string|Array<string>} targetGroup
+       * @returns {boolean} true if still exists, false if not
+       */
+      this.removeTargetGroup = function (targetGroup) {
+        if (angular.isArray(targetGroup)) {
+          var stillExists = false;
+          for (var group in targetGroup) {
+            if (!targetGroup.hasOwnProperty(group)) {
+              continue;
+            }
+            stillExists = stillExists || removeTargetGroup(targetGroup[group]);
+          }
+          return stillExists;
+        }
+        return removeTargetGroup(targetGroup);
+      }
+
+      function removeTargetGroup(targetGroup) {
+        var idx = _self.targetGroup.indexOf(targetGroup);
+        if (idx === -1) {
+          return true;
+        }
+        _self.targetGroup.splice(idx, 1);
+        if (_self.targetGroup.length === 0) {
+          _self.destroy();
+          return false;
+        }
+        _self.role.removeTargetGroup(targetGroup);
+        _self.curriculum.removeTargetGroup(targetGroup);
+        _self.studentGroup.removeTargetGroup(targetGroup);
+        _self.journal.removeTargetGroup(targetGroup);
+        _self.subject.removeTargetGroup(targetGroup);
+        return true;
+      }
+
+      this.destroy = function () {
+        delete _self.studentId;
+        delete _self.personId;
+        delete _self.idcode;
+        delete _self.fullname;
+        delete _self.firstname;
+        delete _self.lastname;
+        delete _self.higher;
+
+        delete _self.role;
+        delete _self.targetGroup;
+
+        delete _self.curriculum;
+        delete _self.studentGroup;
+        delete _self.journal;
+        delete _self.subject;
+
+        delete this;
+      }
+    }
+
+    /**
+     *
+     * @param {function} identifier
+     * @constructor
+     */
+    function FilterItem(identifier) {
+
+      this.items = [];
+      this.identifier = identifier;
+
+      var _self = this;
+      var itemsByIdent = {};
+
+      this.addItem = function (targetGroup, item) {
+        if (!targetGroup || !item) {
+          return false;
+        }
+        if (angular.isArray(item)) {
+          item.forEach(function (it) {
+            addItem(targetGroup, it);
+          });
+        } else {
+          addItem(targetGroup, item);
+        }
+        return true;
+      }
+
+      this.removeTargetGroup = function (targetGroup) {
+        if (!targetGroup) {
+          return false;
+        }
+        for (var ident in itemsByIdent) {
+          if (!itemsByIdent.hasOwnProperty(ident)) {
+            continue;
+          }
+          var idx = itemsByIdent[ident].indexOf(targetGroup);
+          if (idx !== -1) {
+            itemsByIdent[ident].splice(idx, 1);
+            if (itemsByIdent[ident].length === 0) {
+              var i = 0;
+              while (i < _self.items.length) {
+                var itemIdent = _self.identifier(_self.items[i]);
+                if (typeof itemIdent === 'number' && _self.identifier(_self.items[i]) === parseInt(ident) ||
+                  _self.identifier(_self.items[i]) === ident) {
+                  _self.items.splice(i, 1);
+                }
+                else {
+                  ++i;
+                }
+              }
+            }
+          }
+        }
+        return true;
+      }
+
+      function addItem(targetGroup, item) {
+        if (!item) {
+          return;
+        }
+        var ident = _self.identifier(item);
+        if (!itemsByIdent[ident]) {
+          itemsByIdent[ident] = [];
+        }
+        if (itemsByIdent[ident].indexOf(targetGroup) === -1) {
+          itemsByIdent[ident].push(targetGroup);
+          var exists = false;
+          for (var i = 0; i < _self.items.length; i++) {
+            var itemIdent = _self.identifier(_self.items[i]);
+            if (itemIdent === ident) {
+              exists = true;
+              break;
+            }
+          }
+          if (!exists) {
+            _self.items.push(item);
+          }
+        }
+      }
     }
 }]);

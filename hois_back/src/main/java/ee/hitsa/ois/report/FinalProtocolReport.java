@@ -30,6 +30,7 @@ public class FinalProtocolReport {
     private final BigDecimal credits;
     private final LocalDate finalDate;
     private final String committeeMembers;
+    private final Boolean hasCurriculumGrades;
     private final Boolean hasOccupations;
     private final List<FinalProtocolStudentReport> protocolStudents;
     private final String confirmedBy;
@@ -49,6 +50,7 @@ public class FinalProtocolReport {
             CurriculumModule module = protocol.getProtocolVdata().getCurriculumVersionOccupationModule().getCurriculumModule();
             curriculumModule = name(module, lang);
             credits = module.getCredits();
+            hasCurriculumGrades = Boolean.FALSE;
             hasOccupations = Boolean.valueOf(!module.getOccupations().isEmpty());
             subject = null;
             subjectCode = null;
@@ -58,6 +60,7 @@ public class FinalProtocolReport {
             subject = name(subj, lang);
             subjectCode = subj.getCode();
             credits = subj.getCredits();
+            hasCurriculumGrades = Boolean.valueOf(!hData.getCurriculum().getGrades().isEmpty());
             hasOccupations = Boolean.valueOf(hData.getCurriculum().getSpecialities().stream().anyMatch(s -> s.getOccupation() != null));
             curriculumModule = null;
         }
@@ -112,7 +115,11 @@ public class FinalProtocolReport {
     public String getCommitteeMembers() {
         return committeeMembers;
     }
-    
+
+    public Boolean getHasCurriculumGrades() {
+        return hasCurriculumGrades;
+    }
+
     public Boolean getHasOccupations() {
         return hasOccupations;
     }

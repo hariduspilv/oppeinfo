@@ -171,10 +171,9 @@ angular.module('hitsaOis').constant('GRADING_SCHEMA_TYPE', {
     function gradeComparator(a, b) {
       if (type === GRADING_SCHEMA_TYPE.HIGHER) {
         return a.valid - b.valid || HigherGradeUtil.gradeComparator(a, b) ||
-          b.nameEt.localeCompare(a.nameEt, undefined, {numeric: true, sensitivity: 'base'});
+          b.nameEt.hoisLocaleCompare(a.nameEt);
       }
-      return a.valid - b.valid || a.code.localeCompare(b.code) ||
-        a.nameEt.localeCompare(b.nameEt, undefined, {numeric: true,  sensitivity: 'base'});
+      return a.valid - b.valid || a.code.hoisLocaleCompare(b.code) || a.nameEt.hoisLocaleCompare(b.nameEt);
     }
 
     return GradingSchema;

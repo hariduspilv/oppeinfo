@@ -198,11 +198,15 @@
               $scope.formState.previousLessonplans = [];
               if (angular.isDefined($scope.record.studyYear) && angular.isDefined($scope.record.studentGroup)) {
                 var studyYear = $scope.formState.studyYears.find(function (it) { return it.id === $scope.record.studyYear; });
+                studyYear.endDate = new Date(studyYear.endDate);
                 var studentGroup = $scope.formState.studentGroups.find(function (it) { return it.id === $scope.record.studentGroup; });
-                var curriculumLessonPlans = studentGroup ? $scope.formState.curriculumLessonPlans[studentGroup.curriculum] : null;
-                if (curriculumLessonPlans) {
-                  $scope.formState.previousLessonplans = curriculumLessonPlans.filter(function (it) {
-                    return new Date(it.studyYearEndDate).getTime() <= new Date(studyYear.endDate).getTime();
+
+                if (studentGroup) {
+                  $scope.formState.previousLessonplans = $scope.formState.curriculumLessonPlans.filter(function (it) {
+                    return (it.curriculum === studentGroup.curriculum || (it.merCode && it.merCode === studentGroup.merCode)) &&
+                      it.studyYearEndDate.getTime() <= studyYear.endDate.getTime();
+                  }).sort(function (a, b) {
+                    return b.studyYearEndDate -  a.studyYearEndDate || a.name.hoisLocaleCompare(b.name);
                   });
                 }
               }
@@ -303,6 +307,9 @@
         $scope.formState.studentGroupMap = studentgroups;
         $scope.formState.curriculumVersions = result.curriculumVersions;
         $scope.formState.curriculumLessonPlans = result.curriculumLessonPlans;
+        $scope.formState.curriculumLessonPlans.forEach(function (lessonPlan) {
+          lessonPlan.studyYearEndDate = new Date(lessonPlan.studyYearEndDate);
+        });
       });
 
       $scope.$watchCollection('criteria.teacherObject', function (value) {
@@ -382,7 +389,7 @@
 
       $scope.formState = {
         showSettings: false,
-        showPlannedModules: true,
+        showPlannedModules: false,
         showWeeks: true,
         scrollPosition: 0
       };
@@ -1125,5 +1132,282 @@
         $scope.record = result;
       });
     }
-  ]);
+  ]).controller('TeacherLoadController', ['$scope', '$route', 'QueryUtils', 'LessonPlanTableService', 'DataUtils',
+    '$translate', 'FormUtils', 'config',
+    function ($scope, $route, QueryUtils, LessonPlanTableService, DataUtils, $translate, FormUtils, config) {
+      var TeacherEndpoint = QueryUtils.endpoint('/teachers');
+      var baseUrl = '/lessonplans/byteacher';
+
+      $scope.auth = $route.current.locals.auth;
+      $scope.isEdit = $route.current.locals.params.edit;
+
+      var id = $scope.auth.isTeacher() ? $scope.auth.teacher : $route.current.params.id;
+
+      $scope.criteria = {};
+      $scope.formState = {
+        showWeeks: true,
+        showCapacityTypes: true
+      };
+      $scope.otherLoads = [];
+      $scope.forms = {};
+
+      $scope.keys = Object.keys;
+      $scope.hoursToCredits = DataUtils.hoursToCredits;
+      $scope.getUniqueJournalThemes = LessonPlanTableService.getUniqueJournalThemes;
+
+      $scope.changedStudyYear = changedStudyYear;
+      $scope.getCapacityTypes = getCapacityTypes;
+      $scope.getCapacityByCode = getCapacityByCode;
+      $scope.sumSubjectHours = sumSubjectHours;
+      $scope.addOtherLoad = addOtherLoad;
+      $scope.deleteOtherLoad = deleteOtherLoad;
+      $scope.saveOtherLoads = saveOtherLoads;
+      $scope.calculateLoad = calculateLoad;
+
+      $scope.$watch('criteria.studyYear', changedStudyYear);
+
+      if (id) {
+        $scope.teacher = TeacherEndpoint.get({id: id}, afterLoad);
+      } else {
+        $scope.teacher = new TeacherEndpoint({isActive: true, isStudyPeriodScheduleLoad: true, person: {citizenship: 'RIIK_EST'}});
+      }
+
+      function changedStudyYear() {
+        if (!$scope.criteria.studyYear) {
+          $scope.formState.xlsUrl = null;
+          $scope.record = null
+          $scope.otherLoads = [];
+          $scope.loadPdfUrl = null;
+          return;
+        }
+        QueryUtils.loadingWheel($scope, true);
+        QueryUtils.endpoint(baseUrl + '/:id/:studyYear').search({
+          id: id,
+          studyYear: $scope.criteria.studyYear
+        }, mapTeacherLoad, function () {
+          QueryUtils.loadingWheel($scope, false);
+        });
+        $scope.formState.xlsUrl = 'lessonplans/byteacher/' + id + '/' + $scope.criteria.studyYear + '/lessonplanbyteacher.xls';
+        $scope.loadPdfUrl = config.apiUrl + '/teachers/' + id + '/loads/'+ $scope.criteria.studyYear + '/teacherload.pdf';
+        getOtherLoads();
+      }
+
+      function afterLoad() {
+        setIsVocationalOrIsHigher($scope, $translate);
+        $scope.currentNavItem = 'teacher.load';
+      }
+
+      function setIsVocationalOrIsHigher() {
+        $scope.vocationalHigher = '';
+        var array = [];
+        if($scope.teacher.isVocational) {
+          array.push('teacher.isVocational');
+        }
+        if($scope.teacher.isHigher) {
+          array.push('teacher.isHigher');
+        }
+        $translate(array).then(function (value) {
+          $scope.vocationalHigher = array.map(function (key) { return value[key]; }).join('; ');
+        });
+      }
+
+      function mapTeacherLoad(result) {
+        $scope.formState.capacityTypes = result.lessonPlanCapacities;
+        $scope.formState.vocationalContactCapacities = result.vocationalContactCapacities;
+
+        $scope.formState.studyPeriods = result.studyPeriods;
+        var spLocationPointer = 0;
+        $scope.formState.studyPeriods.forEach(function (sp, spIndex) {
+          sp.weekIndex = [spLocationPointer, spLocationPointer + sp.weekNrs.length];
+          sp.arrayIndex = spIndex;
+          spLocationPointer += sp.weekNrs.length;
+        });
+
+        $scope.formState.weekNrs = [];
+        result.studyPeriods.forEach(function (studyPeriod) {
+          for (var i = 0; i < studyPeriod.weekNrs.length; i++) {
+            $scope.formState.weekNrs.push({
+              nr: studyPeriod.weekNrs[i],
+              endOfPeriod: i === studyPeriod.weekNrs.length - 1
+            });
+          }
+        });
+
+        $scope.formState.weekBeginningDates = result.weekBeginningDates;
+        $scope.formState.rowTotals = {};
+        $scope.formState.journalTotals = {};
+        $scope.formState.grandTotals = {
+          _: {
+            _: createWeekTotalsRow($scope)
+          }
+        };
+        $scope.formState.grandCreditTotals = {
+          _: {
+            _: createWeekTotalsRow($scope)
+          }
+        };
+        $scope.formState.grandContactTotals = {
+          _: {
+            _: createWeekTotalsRow($scope)
+          }
+        };
+
+        // initialize totals
+        result.journals.forEach(function (journal) {
+          journal.spHours = {};
+          journal.spTotals = {};
+          $scope.formState.journalTotals[journal.id] = {
+            _: createWeekTotalsRow($scope)
+          };
+          $scope.formState.capacityTypes.forEach(function (c) {
+            var capacityType = c.code;
+            journal.spHours[capacityType] = {};
+            var hours = journal.hours[capacityType];
+            if (hours !== undefined) {
+              updateJournalRowTotals($scope, journal, capacityType);
+              updateSpJournalRows($scope, journal, capacityType);
+              var grandTotals = $scope.formState.grandTotals;
+              if (grandTotals[capacityType] === undefined) {
+                grandTotals[capacityType] = createWeekTotalsRow($scope);
+              }
+            }
+          });
+          for (var i = 0, wnCnt = $scope.formState.weekNrs.length; i < wnCnt; i++) {
+            updateJournalTotals($scope, journal, i);
+          }
+          updateSpJournalTotals($scope, journal);
+        });
+
+        function calculateHours(i, capacityType) {
+          return result.journals.reduce(function (sum, journal) {
+            var hours = journal.hours[capacityType];
+            if (hours !== undefined) {
+              sum += hours[i];
+            }
+            return sum;
+          }, 0);
+        }
+
+        for (var i = 0, wnCnt = $scope.formState.weekNrs.length; i < wnCnt; i++) {
+          var grandTotals = $scope.formState.grandTotals;
+          $scope.formState.capacityTypes.forEach(function (c) {
+            var capacityType = c.code;
+            if (grandTotals[capacityType] !== undefined) {
+              grandTotals[capacityType][i] = calculateHours(i, capacityType);
+              updateTotals($scope, grandTotals, capacityType, i);
+            }
+          });
+
+          updateCreditTotals($scope, i);
+          updateContactTotals($scope, i);
+        }
+
+        $scope.formState.capacityTypes.forEach(function (c) {
+          initializeSpGrandTotals($scope, c.code);
+        });
+
+        // subjects
+        $scope.formState.subjectCapacityTypes = [];
+        $scope.formState.studyPeriods.forEach(function (sp) {
+          for (var i = 0; i < $scope.formState.capacityTypes.length; i++) {
+            var capacity = $scope.formState.capacityTypes[i];
+            $scope.formState.subjectCapacityTypes.push({
+              studyPeriod: sp.id,
+              code: capacity.code,
+              value: capacity.value,
+              endOfPeriod: i === $scope.formState.capacityTypes.length - 1
+            });
+          }
+        });
+        $scope.record = result;
+        QueryUtils.loadingWheel($scope, false);
+      }
+
+      function getCapacityTypes(hours) {
+        if ($scope.formState.capacityTypes) {
+          return $scope.formState.capacityTypes.filter(function (ct) {
+            return hours !== undefined && hours[ct.code] !== undefined;
+          });
+        }
+      }
+
+      function getCapacityByCode(capacityCode) {
+        return LessonPlanTableService.getCapacityByCode($scope.formState.capacityTypes, capacityCode);
+      }
+
+      function sumSubjectHours(hours) {
+        if (angular.isDefined($scope.formState.subjectCapacityTypes)) {
+          return $scope.formState.subjectCapacityTypes.reduce(function(total, sct) {
+            var periodHours = hours[sct.studyPeriod];
+            if (periodHours) {
+              var capacityHours = periodHours[sct.code];
+              if (capacityHours) {
+                total += capacityHours;
+              }
+            }
+            return total;
+          }, 0);
+        }
+      }
+
+      function addOtherLoad() {
+        if (!$scope.isEdit) {
+          return;
+        }
+        $scope.otherLoads.push({
+          id: null,
+          nameEt: null,
+          hours: null,
+          percent: null,
+          studyYear: $scope.criteria.studyYear
+        });
+      }
+
+      function deleteOtherLoad(row) {
+        if (!$scope.isEdit && $scope.auth.isAdmin()) {
+          return;
+        }
+        var idx = $scope.otherLoads.indexOf(row);
+        if (idx === -1) {
+          return;
+        }
+        $scope.otherLoads.splice(idx, 1);
+      }
+
+      function saveOtherLoads() {
+        if (!$scope.isEdit && $scope.auth.isAdmin()) {
+          return;
+        }
+        FormUtils.withValidForm($scope.forms.otherLoadsForm, function () {
+          QueryUtils.endpoint('/teachers/' + id + '/otherLoads/' + $scope.criteria.studyYear)
+            .post($scope.otherLoads, function (result) {
+              if (!angular.isArray(result)) {
+                return;
+              }
+              $scope.otherLoads = result;
+            });
+        });
+      }
+
+      function getOtherLoads() {
+        QueryUtils.endpoint('/teachers/:id/otherLoads/:studyYear').query({id: id, studyYear: $scope.criteria.studyYear},
+          function (result) {
+            if (!angular.isArray(result)) {
+              return;
+            }
+            $scope.otherLoads = result;
+          });
+      }
+
+      function calculateLoad() {
+        var vocationalContactTotal = $scope.formState && $scope.formState.grandContactTotals &&
+          $scope.formState.grandContactTotals.__ ? $scope.formState.grandContactTotals.__ : 0;
+        var higherContactTotal = $scope.record && $scope.record.subjectContactTotals
+          ? $scope.sumSubjectHours($scope.record.subjectContactTotals) : 0;
+        var otherLoadTotal = angular.isArray($scope.otherLoads) ? $scope.otherLoads.reduce(function (acc, cur) {
+          return acc + cur.hours;
+        }, 0) : 0;
+        return vocationalContactTotal + higherContactTotal + otherLoadTotal;
+      }
+    }]);
 }());

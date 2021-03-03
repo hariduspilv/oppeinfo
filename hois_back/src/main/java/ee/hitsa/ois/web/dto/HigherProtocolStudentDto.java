@@ -32,8 +32,8 @@ public class HigherProtocolStudentDto extends VersionedCommand {
     private LocalDate examDate;
     private String studentStatus;
 
+    private Boolean canBeEdited;
     private Boolean canBeDeleted;
-    private Boolean canChangeGrade;
 
     public static HigherProtocolStudentDto of(ProtocolStudent protocolStudent) {
         HigherProtocolStudentDto s = new HigherProtocolStudentDto();
@@ -51,7 +51,7 @@ public class HigherProtocolStudentDto extends VersionedCommand {
         s.setStudentStatus(EntityUtil.getCode(protocolStudent.getStudent().getStatus()));
         s.setGrade(GradeDto.of(protocolStudent));
 
-        s.setCanChangeGrade(Boolean.valueOf(ProtocolUtil.studentGradeCanBeChanged(protocolStudent)));
+        s.setCanBeEdited(Boolean.valueOf(ProtocolUtil.studentCanBeEdited(protocolStudent)));
         s.setCanBeDeleted(Boolean.valueOf(!ProtocolUtil.hasGrade(protocolStudent))); // different from other protocols
         return s;
     }
@@ -152,19 +152,19 @@ public class HigherProtocolStudentDto extends VersionedCommand {
         this.studentStatus = studentStatus;
     }
 
+    public Boolean getCanBeEdited() {
+        return canBeEdited;
+    }
+
+    public void setCanBeEdited(Boolean canBeEdited) {
+        this.canBeEdited = canBeEdited;
+    }
+
     public Boolean getCanBeDeleted() {
         return canBeDeleted;
     }
 
     public void setCanBeDeleted(Boolean canBeDeleted) {
         this.canBeDeleted = canBeDeleted;
-    }
-
-    public Boolean getCanChangeGrade() {
-        return canChangeGrade;
-    }
-
-    public void setCanChangeGrade(Boolean canChangeGrade) {
-        this.canChangeGrade = canChangeGrade;
     }
 }

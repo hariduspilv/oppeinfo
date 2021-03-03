@@ -85,7 +85,7 @@
             <td md-cell>{{::row.studentgroups}}</td>
             <td md-cell>{{::row.subgroups}}</td>
             <td md-cell ng-if="auth.isTeacher()">
-              <span ng-if="!row.jointProgram.id">
+              <span ng-if="!row.jointProgram.id && row.teachers.length > 1">
                 <md-button md-no-ink class="md-primary change-button" ng-if="row.canEditJointProgram"
                            style="padding:0 !important; margin: 3px 0 0 0 !important; min-width: 0 !important"
                            ng-click="addJointSubjectProgram(row)">
@@ -118,7 +118,7 @@
             <td md-cell ng-if="!auth.isTeacher()">
               <table>
                 <tr>
-                  <td ng-if="!row.jointProgram.id">
+                  <td ng-if="!row.jointProgram.id && row.teachers.length > 1">
                     <md-button md-no-ink class="md-primary change-button" ng-if="row.canEditJointProgram"
                                style="padding:0 !important; margin: 3px 0 0 0 !important; min-width: 0 !important"
                                ng-click="addJointSubjectProgram(row)">

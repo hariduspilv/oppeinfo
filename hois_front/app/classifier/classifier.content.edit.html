@@ -47,7 +47,11 @@
             <input ng-model="classifier.extraval2" type="text" md-maxlength="100">
           </md-input-container>  
           <br>
-
+          <md-checkbox 
+              ng-model="classifier.secondary" 
+              aria-label="{{'classifier.isSecondary' | translate}}">
+            {{'classifier.isSecondary' | translate}}
+          </md-checkbox>
           <md-checkbox 
               ng-model="classifier.vocational" 
               aria-label="Is vocational">

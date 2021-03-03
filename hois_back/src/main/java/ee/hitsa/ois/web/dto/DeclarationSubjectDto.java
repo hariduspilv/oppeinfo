@@ -1,7 +1,10 @@
 package ee.hitsa.ois.web.dto;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -9,8 +12,10 @@ import java.util.stream.Collectors;
 import ee.hitsa.ois.domain.DeclarationSubject;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.subject.SubjectConnect;
+import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodTeacher;
 import ee.hitsa.ois.domain.subject.subjectprogram.SubjectProgram;
 import ee.hitsa.ois.domain.subject.subjectprogram.SubjectProgramTeacher;
+import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.enums.SubjectConnection;
 import ee.hitsa.ois.enums.SubjectProgramStatus;
 import ee.hitsa.ois.util.ClassifierUtil;
@@ -53,15 +58,34 @@ public class DeclarationSubjectDto extends VersionedCommand {
         }
         dto.setTeachers(PersonUtil.sorted(declarationSubject.getSubjectStudyPeriod().getTeachers().stream().map(t -> t.getTeacher().getPerson())));
         // In case of having not available or not created subject program it should return ID '-1' which means that there is no program available.
-        dto.setPrograms(declarationSubject.getSubjectStudyPeriod().getTeachers().stream().map(t -> {
-            // TODO: can be multiple teachers
-            Optional<SubjectProgram> optProgram = t.getSubjectProgramTeachers().stream()
-                    .map(SubjectProgramTeacher::getSubjectProgram).findFirst(); // Only 1 study program for subjectStudyPeriodTeacher
+
+        SubjectProgram joint = null;
+        Map<Long, SubjectProgram> programBySsptId = new HashMap<>();
+        for (SubjectProgram program : declarationSubject.getSubjectStudyPeriod().getSubjectPrograms()) {
+            if (Boolean.TRUE.equals(program.getIsJoint())) {
+                joint = program;
+            } else {
+                program.getTeachers().forEach(spt -> {
+                    programBySsptId.put(EntityUtil.getId(spt.getSubjectStudyPeriodTeacher()), program);
+                });
+            }
+        }
+
+        dto.setPrograms(new ArrayList<>());
+        if (joint != null && ClassifierUtil.equals(SubjectProgramStatus.AINEPROGRAMM_STAATUS_K, joint.getStatus())) {
             SubjectProgramResult programDto = new SubjectProgramResult();
-            programDto.setTeacherName(PersonUtil.fullname(t.getTeacher().getPerson()));
-            if (optProgram.isPresent() && ClassifierUtil.equals(SubjectProgramStatus.AINEPROGRAMM_STAATUS_K, optProgram.get().getStatus())) {
-                programDto.setId(optProgram.get().getId());
-                programDto.setPublicStudent(Boolean.valueOf(SubjectProgramValidation.isPublicForStudent(optProgram.get())));
+            programDto.setId(joint.getId());
+            programDto.setPublicStudent(Boolean.valueOf(SubjectProgramValidation.isPublicForStudent(joint)));
+            dto.getPrograms().add(programDto);
+        }
+
+        dto.getPrograms().addAll(declarationSubject.getSubjectStudyPeriod().getTeachers().stream().map(teacher -> {
+            SubjectProgramResult programDto = new SubjectProgramResult();
+            SubjectProgram program = programBySsptId.get(teacher.getId());
+            programDto.setTeacherName(PersonUtil.fullname(teacher.getTeacher().getPerson()));
+            if (program != null && ClassifierUtil.equals(SubjectProgramStatus.AINEPROGRAMM_STAATUS_K, program.getStatus())) {
+                programDto.setId(program.getId());
+                programDto.setPublicStudent(Boolean.valueOf(SubjectProgramValidation.isPublicForStudent(program)));
             } else {
                 programDto.setId(Long.valueOf(-1));
             }

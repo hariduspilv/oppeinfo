@@ -134,10 +134,6 @@ angular.module('hitsaOis')
 
     // --- Validation
 
-    $scope.gradeRequired = function() {
-        return !$scope.curriculum || !$scope.curriculum.origStudyLevel || $scope.curriculum.origStudyLevel !== 'OPPEASTE_514';
-    };
-
     function curriculumFormIsValid() {
         return $scope.higherCurriculumForm.$valid &&
         (!$scope.strictValidation() || $scope.curriculum.specialities.length > 0 && $scope.jointPartnersAdded());
@@ -237,7 +233,6 @@ angular.module('hitsaOis')
 
     function mapModelToDto() {
       updateJointInfo();
-      clearGradesIfNecessary();
       $scope.curriculum.studyPeriodMonths = $scope.curriculum.studyPeriodMonths ? $scope.curriculum.studyPeriodMonths : 0;
       $scope.curriculum.studyPeriod = $scope.curriculum.studyPeriodMonths + 12 * $scope.curriculum.studyPeriodYears;
     }
@@ -283,12 +278,6 @@ angular.module('hitsaOis')
             $scope.jointPartnersEhisSchools = [];
         }
     };
-
-    function clearGradesIfNecessary() {
-        if(!$scope.gradeRequired()) {
-            $scope.curriculum.grades = [];
-        }
-    }
 
     $scope.delete = function () {
         dialogService.confirmDialog({prompt: 'curriculum.deleteconfirmHigher'}, function() {

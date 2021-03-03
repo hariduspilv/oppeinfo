@@ -18,11 +18,16 @@ import javax.validation.Valid;
 
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
 import ee.hitsa.ois.domain.student.StudentCurriculumCompletionHigherModule;
+import ee.hitsa.ois.enums.SupportServiceAccess;
 import ee.hitsa.ois.service.fotobox.FotoBoxService;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.OisFileCommand;
 import ee.hitsa.ois.web.commandobject.StudentCommand;
+import ee.hitsa.ois.web.commandobject.student.StudentMatchedResultsForm;
 import ee.hitsa.ois.web.dto.student.StudentHigherProgressDto;
+import ee.hitsa.ois.web.dto.student.StudentMatchedResultDto;
+import ee.hitsa.ois.web.dto.student.StudentMatchedResultsFormDto;
+import ee.hitsa.ois.web.dto.student.StudentCurriculumFulfillmentDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -142,7 +147,7 @@ public class StudentController {
      * @param pageable
      * @return
      */
-    @GetMapping("/highspecialities")
+    @GetMapping("/specialities")
     public Page<StudentSpecialitySearchDto> search(HoisUserDetails user, @Valid StudentSpecialitySearchCommand criteria, Pageable pageable) {
         UserUtil.assertIsSchoolAdminOrLeadingTeacher(user);
         return studentService.search(user, criteria, pageable);
@@ -152,6 +157,12 @@ public class StudentController {
     public StudentViewDto get(HoisUserDetails user, @WithEntity Student student, StudentCommand criteria) {
         UserUtil.assertCanViewStudent(user, student);
         return studentService.getStudentView(user, student, criteria);
+    }
+
+    @GetMapping("/{id:\\d+}/curriculumFulfillment")
+    public StudentCurriculumFulfillmentDto curriculumFulfillment(HoisUserDetails user, @WithEntity Student student) {
+        UserUtil.assertCanViewStudent(user, student);
+        return studentService.studentCurriculumFulfillment(student);
     }
 
     @PutMapping("/{id:\\d+}")
@@ -282,13 +293,8 @@ public class StudentController {
     @GetMapping("/{id:\\d+}/supportservices")
     public Page<StudentSupportServiceDto> supportServices(HoisUserDetails user, @WithEntity Student student, Pageable pageable) {
         UserUtil.assertCanViewStudentSupportServices(user, student);
-        if (user.isTeacher() && !UserUtil.isStudentGroupTeacher(user, student)) {
-            return studentService.supportServices(student, pageable, false);
-        }
-        if (user.isSchoolAdmin() && !UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_TUGITEENUS)) {
-            return studentService.supportServices(student, pageable, false);
-        }
-        return studentService.supportServices(student, pageable, true);
+        SupportServiceAccess access = SupportServiceAccess.getSupportServiceAccessForUser(user, student);
+        return studentService.supportServices(student, pageable, access);
     }
 
     @GetMapping("/{id:\\d+}/supportservices/print.pdf")
@@ -298,9 +304,10 @@ public class StudentController {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMYYYY");
         String fileName = String.format("%s_%s_%s_%s.pdf", "tugiteenuste_valjavote", student.getPerson().getFullname(), formatter.format(cmd.getFrom()),
                 formatter.format(cmd.getThru())).replaceAll("[^a-zA-Z0-9\\.\\-]", "_");
+        SupportServiceAccess access = SupportServiceAccess.getSupportServiceAccessForUser(user, student);
         HttpUtil.pdf(response, fileName, pdfService.generate(SupportServicesReport.TEMPLATE_NAME,
                 new SupportServicesReport(student, cmd.getFrom(), cmd.getThru(),
-                        studentService.supportServicesList(student, true, cmd.getFrom(), cmd.getThru()),
+                        studentService.supportServicesList(student, access, cmd.getFrom(), cmd.getThru()),
                         em, lang == null ? Language.ET : lang)));
     }
     
@@ -389,6 +396,26 @@ public class StudentController {
         return studentService.vocationalConnectedEntities(student.getId());
     }
 
+    @GetMapping("/{id:\\d+}/vocationalMatchedResults")
+    public List<StudentMatchedResultDto> vocationalMatchedResults(HoisUserDetails user, @WithEntity Student student) {
+        UserUtil.assertCanViewStudentSpecificData(user, student);
+        return studentService.vocationalMatchedResults(student);
+    }
+
+    @GetMapping("/{id:\\d+}/vocationalMatchedResultsFormData")
+    public StudentMatchedResultsFormDto vocationalMatchedResultsFormData(HoisUserDetails user, @WithEntity Student student) {
+        UserUtil.canChangeStudentModules(user, student);
+        return studentService.vocationalMatchedResultsFormData(student);
+    }
+
+    @PostMapping("/{id:\\d+}/vocationalMatchedResults")
+    public List<StudentMatchedResultDto> saveVocationalMatchedResults(HoisUserDetails user,
+            @WithEntity Student student, @Valid @RequestBody StudentMatchedResultsForm form) {
+        UserUtil.canChangeStudentModules(user, student);
+        studentService.saveVocationalMatchedResults(student, form);
+        return vocationalMatchedResults(user, student);
+    }
+
     @GetMapping("/{id:\\d+}/higherChangeableModules")
     public List<StudentModuleResultDto> higherChangeableModules(HoisUserDetails user, @WithEntity Student student) {
         UserUtil.canChangeStudentModules(user, student);
@@ -410,7 +437,7 @@ public class StudentController {
         return higherChangeableModules(user, student);
     }
 
-    @PostMapping("/highspecialities")
+    @PostMapping("/specialities")
     public List<StudentSpecialitySearchDto> saveSpecialities(HoisUserDetails user, @RequestBody List<StudentSpecialitySearchDto> form) {
         UserUtil.assertIsSchoolAdminOrLeadingTeacher(user);
         return studentService.saveSpecialities(user, form);

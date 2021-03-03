@@ -24,9 +24,12 @@ angular.module('hitsaOis')
     $scope.auth = $route.current.locals.auth;
     $scope.hasBaseModuleRight = ArrayUtils.includes($scope.auth.authorizedRoles, USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_BAASMOODUL);
     $scope.curriculumId = $route.current.params.curriculum;
-    
     $scope.occupationsSelected = {};
     $scope.specialitiesSelected = {};
+
+    $scope.formState = {
+      studyFields: QueryUtils.endpoint('/curriculum/studyFields/'+$scope.curriculumId).query()
+    };
 
     $scope.competences = [];
     $scope.curriculum = QueryUtils.endpoint(baseUrl + '/curriculumMin').get({id: $scope.curriculumId});
@@ -38,7 +41,6 @@ angular.module('hitsaOis')
     });
     
     $scope.possibleTypes = QueryUtils.endpoint(baseUrl + '/types').query({module: id, curriculum: $scope.curriculumId});
-
     $scope.moduleType = $scope.moduleTypes.NEW_MODULE;
     $scope.baseModuleUsed = false;
 

@@ -233,7 +233,7 @@ public class CurriculumReport {
 
         public Structure(CurriculumVersionSpeciality speciality, List<CurriculumVersionHigherModule> modules, Language lang) {
             this.name = name(speciality.getCurriculumSpeciality(), lang);
-            this.modules = modules.stream()
+            this.modules = StreamUtil.nullSafeList(modules).stream()
                     .sorted(Comparator
                             .comparing(CurriculumVersionHigherModule::getOrderNr,
                                     Comparator.nullsLast(Comparator.naturalOrder()))

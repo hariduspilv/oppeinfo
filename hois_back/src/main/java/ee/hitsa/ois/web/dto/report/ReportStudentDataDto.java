@@ -9,7 +9,9 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsDecimal;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.StudentType;
+import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.web.commandobject.report.StudentDataCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
@@ -17,7 +19,9 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 public class ReportStudentDataDto {
     private Integer nr;
     private Long studentId;
-    
+    /**
+     * Person data
+     */
     private String firstname;
     private String lastname;
     private String fullname;
@@ -27,7 +31,10 @@ public class ReportStudentDataDto {
     private LocalDate birthdate;
     private String residenceCountry;
     private String citizenship;
-    
+    private Boolean age;
+    /**
+     * Study data
+     */
     private Boolean guestStudent;
     private Boolean foreignStudent;
     private Boolean cumLaude;
@@ -50,11 +57,32 @@ public class ReportStudentDataDto {
     private String fin;
     private String language;
     private BigDecimal curriculumPercentage;
+    private Boolean specialNeed;
+    private String specialNeedCode;
+    private String studyCompany;
+    private LocalDate directiveStart;
+    private LocalDate directiveEnd;
+    /**
+     * Contact data
+     */
     private String address;
     private String phone;
     private String officialEmail;
     private String personalEmail;
-    
+    private String otherContact;
+    /**
+     * Representative data
+     */
+    private String representativeName;
+    private String representativeIdcode;
+    private String representativeRelation;
+    private String representativePhone;
+    private String representativeEmail;
+    private String representativeOtherContact;
+    private Boolean representativeVisible;
+    /**
+     * Statistics data
+     */
     private BigDecimal eap;
     private BigDecimal eapSum;
     private BigDecimal weightedAverageSum;
@@ -66,6 +94,7 @@ public class ReportStudentDataDto {
     private Long debtPointsSum;
     private Long debtPoints;
     private Long declaredEap;
+    private BigDecimal apelEap;
     private String activeResult;
     private AutocompleteResult activeResultSubject;
     private AutocompleteResult declaredSubject;
@@ -85,8 +114,8 @@ public class ReportStudentDataDto {
         this.studentId = resultAsLong(r, 0);
         this.firstname = resultAsString(r, 1);
         this.lastname = resultAsString(r, 2);
-        this.guestStudent = Boolean.valueOf(StudentType.OPPUR_K.name().equals(resultAsString(r, 9)));
-        boolean externalStudent = StudentType.OPPUR_E.name().equals(resultAsString(r, 9));
+        this.guestStudent = Boolean.valueOf(StudentType.OPPUR_K.name().equals(resultAsString(r, 10)));
+        boolean externalStudent = StudentType.OPPUR_E.name().equals(resultAsString(r, 10));
         if (Boolean.TRUE.equals(criteria.getFullnameShow())) {
             if (Boolean.TRUE.equals(criteria.getFullname())) {
                 this.fullname = this.lastname + " " + this.firstname 
@@ -104,13 +133,15 @@ public class ReportStudentDataDto {
         this.birthdate = JpaQueryUtil.resultAsLocalDate(r, 6);
         this.residenceCountry = resultAsString(r, 7);
         this.citizenship = resultAsString(r, 8);
-        this.foreignStudent = resultAsBoolean(r, 10);
-        this.cumLaude = resultAsBoolean(r, 11);
-        this.immatDate = resultAsLocalDate(r, 12);
-        this.finishedDate = resultAsLocalDate(r, 13);
-        this.directiveTypes = resultAsString(r, 14);
-        this.directiveConfirmDate = resultAsLocalDate(r, 15);
-        this.directiveReasons = resultAsString(r, 16);
+        this.age = resultAsBoolean(r, 9);
+        
+        this.foreignStudent = resultAsBoolean(r, 11);
+        this.cumLaude = resultAsBoolean(r, 12);
+        this.immatDate = resultAsLocalDate(r, 13);
+        this.finishedDate = resultAsLocalDate(r, 14);
+        this.directiveTypes = resultAsString(r, 15);
+        this.directiveConfirmDate = resultAsLocalDate(r, 16);
+        this.directiveReasons = resultAsString(r, 17);
         if (directiveReasons != null) {
             if (directiveReasons.startsWith("EKSMAT_POHJUS")) {
                 exmatReason = directiveReasons;
@@ -120,50 +151,68 @@ public class ReportStudentDataDto {
                 stiptoetlReason = directiveReasons;
             }
         }
-        this.directiveReasons = resultAsString(r, 16);
-        this.studentGroups = new AutocompleteResult(resultAsLong(r, 17), resultAsString(r, 18), resultAsString(r, 18));
-        this.studentStatuses = resultAsString(r, 19);
-        this.regNr = resultAsLong(r, 20);
-        this.nominalStudyEnd = resultAsLocalDate(r, 21);
-        this.studyForm = resultAsString(r, 22);
-        this.studyLoad = resultAsString(r, 23);
-        this.schoolDepartment = resultAsString(r, 24);
-        this.curriculum = new AutocompleteResult(resultAsLong(r, 25), resultAsString(r, 26), resultAsString(r, 27));
-        this.ehisCode = resultAsString(r, 28);
-        this.studyLevel = resultAsString(r, 29);
-        this.speciality = new AutocompleteResult(null, resultAsString(r, 30), resultAsString(r, 31));
-        this.studyYearNumber = resultAsLong(r, 32);
-        this.fin = resultAsString(r, 33);
-        this.language = resultAsString(r, 34);
-        this.foreignLanguage = resultAsString(r, 35);
-        this.curriculumPercentage = resultAsDecimal(r, 38);
-        this.address = resultAsString(r, 39);
-        this.phone = resultAsString(r, 40);
-        this.officialEmail = resultAsString(r, 41);
-        this.personalEmail = resultAsString(r, 42);
-        this.eap = resultAsDecimal(r, 43);
-        this.weightedAverageSum = resultAsDecimal(r, 44);
-        this.eapSum = resultAsDecimal(r, 45);
-        this.weightedAverage = resultAsDecimal(r, 46);
-        this.averageSum = resultAsDecimal(r, 47);
-        this.average = resultAsDecimal(r, 48);
-        this.debtSum = resultAsLong(r, 49);
-        this.debt = resultAsLong(r, 50);
-        this.debtPointsSum = resultAsLong(r, 51);
-        this.debtPoints = resultAsLong(r, 52);
-        this.declaredEap = resultAsLong(r, 53);
-        this.activeResult = resultAsString(r, 54);
-        if (resultAsLong(r, 55) != null) {
-            this.activeResultSubject = new AutocompleteResult(null, resultAsString(r, 56), resultAsString(r, 57));
+        this.studentGroups = new AutocompleteResult(resultAsLong(r, 18), resultAsString(r, 19), resultAsString(r, 19));
+        this.studentStatuses = resultAsString(r, 20);
+        this.regNr = resultAsLong(r, 21);
+        this.nominalStudyEnd = resultAsLocalDate(r, 22);
+        this.studyForm = resultAsString(r, 23);
+        this.studyLoad = resultAsString(r, 24);
+        this.schoolDepartment = resultAsString(r, 25);
+        this.curriculum = new AutocompleteResult(resultAsLong(r, 26), resultAsString(r, 27), resultAsString(r, 28));
+        this.ehisCode = resultAsString(r, 29);
+        this.studyLevel = resultAsString(r, 30);
+        this.speciality = new AutocompleteResult(null, resultAsString(r, 31), resultAsString(r, 32));
+        this.studyYearNumber = resultAsLong(r, 33);
+        this.fin = resultAsString(r, 34);
+        this.language = resultAsString(r, 35);
+        this.foreignLanguage = resultAsString(r, 36);
+        this.curriculumPercentage = resultAsDecimal(r, 37);
+        this.specialNeed = resultAsBoolean(r, 38);
+        this.specialNeedCode = resultAsString(r, 39);
+        this.studyCompany = resultAsString(r, 40);
+        if (EnumUtil.toNameList(DirectiveType.KASKKIRI_AKAD, DirectiveType.KASKKIRI_VALIS, DirectiveType.KASKKIRI_KYLALIS).contains(this.directiveTypes)) {
+            this.directiveStart = resultAsLocalDate(r, 41);
+            this.directiveEnd = resultAsLocalDate(r, 42);
         }
-        if (resultAsLong(r, 58) != null) {
-            this.declaredSubject = new AutocompleteResult(null, resultAsString(r, 59), resultAsString(r, 60));
+        
+        this.address = resultAsString(r, 43);
+        this.phone = resultAsString(r, 44);
+        this.officialEmail = resultAsString(r, 45);
+        this.personalEmail = resultAsString(r, 46);
+        this.otherContact = resultAsString(r, 47);
+        
+        this.representativeName = resultAsString(r, 48);
+        this.representativeIdcode = resultAsString(r, 49);
+        this.representativeRelation = resultAsString(r, 50);
+        this.representativePhone = resultAsString(r, 51);
+        this.representativeEmail = resultAsString(r, 52);
+        this.representativeOtherContact = resultAsString(r, 53);
+        this.representativeVisible = resultAsBoolean(r, 54);
+        
+        this.eap = resultAsDecimal(r, 55);
+        this.weightedAverageSum = resultAsDecimal(r, 56);
+        this.eapSum = resultAsDecimal(r, 57);
+        this.weightedAverage = resultAsDecimal(r, 58);
+        this.averageSum = resultAsDecimal(r, 59);
+        this.average = resultAsDecimal(r, 60);
+        this.debtSum = resultAsLong(r, 61);
+        this.debt = resultAsLong(r, 62);
+        this.debtPointsSum = resultAsLong(r, 63);
+        this.debtPoints = resultAsLong(r, 64);
+        this.declaredEap = resultAsLong(r, 65);
+        this.apelEap = resultAsDecimal(r, 66);
+        this.activeResult = resultAsString(r, 67);
+        if (resultAsLong(r, 68) != null) {
+            this.activeResultSubject = new AutocompleteResult(null, resultAsString(r, 69), resultAsString(r, 70));
         }
-        this.declarationConfirmation = resultAsLocalDate(r, 61);
-        this.previousSchoolName = resultAsString(r, 62);
-        this.completedSchoolYear = resultAsLong(r, 63);
-        this.previousStudyLevel = resultAsString(r, 64);
-        this.dormitory = resultAsString(r, 65);
+        if (resultAsLong(r, 71) != null) {
+            this.declaredSubject = new AutocompleteResult(null, resultAsString(r, 72), resultAsString(r, 73));
+        }
+        this.declarationConfirmation = resultAsLocalDate(r, 74);
+        this.previousSchoolName = resultAsString(r, 75);
+        this.completedSchoolYear = resultAsLong(r, 76);
+        this.previousStudyLevel = resultAsString(r, 77);
+        this.dormitory = resultAsString(r, 78);
     }
 
     public String getFirstname() {
@@ -652,5 +701,125 @@ public class ReportStudentDataDto {
 
     public void setRegNr(Long regNr) {
         this.regNr = regNr;
+    }
+
+    public String getOtherContact() {
+        return otherContact;
+    }
+
+    public void setOtherContact(String otherContact) {
+        this.otherContact = otherContact;
+    }
+
+    public String getSpecialNeedCode() {
+        return specialNeedCode;
+    }
+
+    public void setSpecialNeedCode(String specialNeedCode) {
+        this.specialNeedCode = specialNeedCode;
+    }
+
+    public Boolean getSpecialNeed() {
+        return specialNeed;
+    }
+
+    public void setSpecialNeed(Boolean specialNeed) {
+        this.specialNeed = specialNeed;
+    }
+
+    public String getRepresentativeName() {
+        return representativeName;
+    }
+
+    public void setRepresentativeName(String representativeName) {
+        this.representativeName = representativeName;
+    }
+
+    public String getRepresentativeIdcode() {
+        return representativeIdcode;
+    }
+
+    public void setRepresentativeIdcode(String representativeIdcode) {
+        this.representativeIdcode = representativeIdcode;
+    }
+
+    public String getRepresentativeRelation() {
+        return representativeRelation;
+    }
+
+    public void setRepresentativeRelation(String representativeRelation) {
+        this.representativeRelation = representativeRelation;
+    }
+
+    public String getRepresentativePhone() {
+        return representativePhone;
+    }
+
+    public void setRepresentativePhone(String representativePhone) {
+        this.representativePhone = representativePhone;
+    }
+
+    public String getRepresentativeOtherContact() {
+        return representativeOtherContact;
+    }
+
+    public void setRepresentativeOtherContact(String representativeOtherContact) {
+        this.representativeOtherContact = representativeOtherContact;
+    }
+
+    public Boolean getRepresentativeVisible() {
+        return representativeVisible;
+    }
+
+    public void setRepresentativeVisible(Boolean representativeVisible) {
+        this.representativeVisible = representativeVisible;
+    }
+
+    public BigDecimal getApelEap() {
+        return apelEap;
+    }
+
+    public void setApelEap(BigDecimal apelEap) {
+        this.apelEap = apelEap;
+    }
+
+    public Boolean getAge() {
+        return age;
+    }
+
+    public void setAge(Boolean age) {
+        this.age = age;
+    }
+
+    public String getStudyCompany() {
+        return studyCompany;
+    }
+
+    public void setStudyCompany(String studyCompany) {
+        this.studyCompany = studyCompany;
+    }
+
+    public LocalDate getDirectiveStart() {
+        return directiveStart;
+    }
+
+    public void setDirectiveStart(LocalDate directiveStart) {
+        this.directiveStart = directiveStart;
+    }
+
+    public LocalDate getDirectiveEnd() {
+        return directiveEnd;
+    }
+
+    public void setDirectiveEnd(LocalDate directiveEnd) {
+        this.directiveEnd = directiveEnd;
+    }
+
+    public String getRepresentativeEmail() {
+        return representativeEmail;
+    }
+
+    public void setRepresentativeEmail(String representativeEmail) {
+        this.representativeEmail = representativeEmail;
     }
 }

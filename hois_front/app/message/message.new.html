@@ -12,7 +12,7 @@
             </md-input-container>
             <md-input-container flex="50" flex-sm="100" flex-xs="100">
                 <label class="textInput">{{'message.content' | translate}}</label>
-                <textarea ng-model="record.content" max-rows="20" md-maxlength="2000" required></textarea>
+                <textarea ng-model="record.content" max-rows="20" md-maxlength="5000" required></textarea>
             </md-input-container>
             <md-input-container flex="50" flex-sm="100" flex-xs="100">
                 <label>{{'message.targetGroup' | translate}}</label>
@@ -96,6 +96,7 @@
             <table md-table class="secondary-table">
                 <thead md-head>
                     <tr md-row>
+                        <th md-column>{{'main.order' | translate}}</th>
                         <th md-column>{{'message.receiver' | translate}}</th>
                         <th md-column ng-if="auth.isAdmin()">{{'student.idcode' | translate}}</th>
                         <th md-column>{{'message.targetGroup' | translate}}</th>
@@ -107,10 +108,11 @@
                     </tr>
                 </thead>
                 <tbody md-body>
-                <tr md-row ng-repeat="receiver in receivers" ng-class-odd="'odd'" ng-class-even="'even'">
+                <tr md-row ng-repeat="receiver in receivers | orderBy: ['role.items[0]', 'lastname', 'firstname']" ng-class-odd="'odd'" ng-class-even="'even'">
+                    <td md-cell>{{$index + 1}}.</td>
                     <td md-cell>{{receiver.fullname}}</td>
                     <td md-cell ng-if="auth.isAdmin()">
-                        <span ng-if="receiver.role.length === 1 && receiver.role[0] === 'ROLL_T'">{{receiver.idcode}}</span>
+                        <span ng-if="receiver.role.items.length === 1 && receiver.role.items[0] === 'ROLL_T'">{{receiver.idcode}}</span>
                     </td>
                     <td md-cell>
                         <p ng-repeat="role in receiver.role">
@@ -118,16 +120,16 @@
                         </p>
                     </td>
                     <td md-cell ng-if="groupSearchType.code === 'SEARCH_STUDENT_GROUP'">
-                        <span>{{currentLanguageNameField(receiver.curriculum)}}</span>
+                        <span>{{currentLanguageNameField(receiver.curriculum.items)}}</span>
                     </td>
                     <td md-cell ng-if="groupSearchType.code === 'SEARCH_STUDENT_GROUP'">
-                        <span>{{currentLanguageNameField(receiver.studentGroup)}}</span>
+                        <span>{{currentLanguageNameField(receiver.studentGroup.items)}}</span>
                     </td>
                     <td md-cell ng-if="groupSearchType.code === 'SEARCH_JOURNAL'">
-                        <span>{{currentLanguageNameField(distinctList(receiver.journal))}}</span>
+                        <span>{{currentLanguageNameField(receiver.journal.items)}}</span>
                     </td>
                     <td md-cell ng-if="groupSearchType.code === 'SEARCH_SUBJECTS'">
-                        <span>{{currentLanguageNameField(distinctList(receiver.subject))}}</span>
+                        <span>{{currentLanguageNameField(receiver.subject.items)}}</span>
                     </td>
                     <td md-cell>
                       <md-button ng-click="removeReceiver(receiver)" class="remove nomargin">&times;</md-button>

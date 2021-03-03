@@ -5,7 +5,6 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 
 import java.lang.invoke.MethodHandles;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -202,8 +201,8 @@ public class DirectiveConfirmService {
                 DirectiveStudent formAcademicLeave = ds.getDirectiveStudent();
                 if (formAcademicLeave != null) {
                     if (ds.getStartDate() != null) {
-                        if (ds.getStartDate().isBefore(formAcademicLeave.getStartDate())
-                                || ds.getStartDate().isAfter(formAcademicLeave.getEndDate())) {
+                        if (ds.getStartDate().isBefore(DateUtils.periodStart(formAcademicLeave))
+                                || ds.getStartDate().isAfter(DateUtils.periodEnd(formAcademicLeave))) {
                             allErrors.add(new ErrorForField("directive.notInAcademicLeaveDateRange",
                                     propertyPath(rowNum, "startDate")));
                         }
@@ -885,6 +884,7 @@ public class DirectiveConfirmService {
             break;
         case KASKKIRI_OKAVA:
             student.setCurriculumSpeciality(null);
+            studentService.removeVocationalMatchedResults(student);
             break;
         case KASKKIRI_OTEGEVUS:
             if (Boolean.TRUE.equals(directiveStudent.getIsAbsence())) {
@@ -999,10 +999,8 @@ public class DirectiveConfirmService {
                         student.setCurriculumSpeciality(original.getCurriculumSpeciality());
                         break;
                     case KASKKIRI_OTEGEVUS:
-                        StudentAbsence absence = ds.getStudentAbsence();
-                        if (absence != null) {
-                            studentAbsenceService.reject(confirmer, absence, ABSENCE_REJECT_DIRECTIVE_CANCELED);
-                        }
+                        ds.getStudentAbsences().stream().findAny().ifPresent(absence ->
+                                studentAbsenceService.reject(confirmer, absence, ABSENCE_REJECT_DIRECTIVE_CANCELED));
                         break;
                     case KASKKIRI_TUGI:
                         student.setNominalStudyEnd(original.getNominalStudyEnd());

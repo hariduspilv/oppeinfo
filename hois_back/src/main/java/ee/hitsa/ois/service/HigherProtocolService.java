@@ -239,6 +239,10 @@ public class HigherProtocolService extends AbstractProtocolService {
         EntityUtil.bindEntityCollection(protocol.getProtocolStudents(), ProtocolStudent::getId,
                 // no protocol students created here
                 form.getProtocolStudents(), ProtocolStudentSaveForm::getId, null, (dto, ps) -> {
+                    if (!ProtocolUtil.studentCanBeEdited(ps)) {
+                        return;
+                    }
+
                     if (gradeChangedButNotRemoved(dto, ps)) {
                         assertHasAddInfoIfProtocolConfirmed(dto, protocol);
                         addHistory(ps);
@@ -520,8 +524,8 @@ public class HigherProtocolService extends AbstractProtocolService {
             Long studentId = protocolStudent.getStudent().getId();
 
             if (studentsWithNewerProtocols.contains(studentId)) {
+                protocolStudent.setCanBeEdited(Boolean.FALSE);
                 protocolStudent.setCanBeDeleted(Boolean.FALSE);
-                protocolStudent.setCanChangeGrade(Boolean.FALSE);
             }
             List<ProtocolPracticeJournalResultDto> studentPracticeResults = practiceResults.get(studentId);
             if (studentPracticeResults != null) {

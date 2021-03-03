@@ -13,6 +13,7 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.student.StudentGroupForm;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public class StudentGroupDto extends StudentGroupForm {
 
@@ -52,6 +53,8 @@ public class StudentGroupDto extends StudentGroupForm {
             Set<String> active = new HashSet<>(StudentStatus.STUDENT_STATUS_ACTIVE);
             students = students.filter(s -> active.contains(EntityUtil.getCode(s.getStatus())));
         }
+        dto.setCurriculumAddress(studentGroup.getCurriculumAddress() != null
+                ? AutocompleteResult.of(studentGroup.getCurriculumAddress()) : null);
         // sort students in name order
         students = students.sorted((o1, o2) -> PersonUtil.SORT.compare(o1.getPerson(), o2.getPerson()));
         dto.setMembers(StreamUtil.toMappedList(s -> StudentGroupStudentDto.of(user, s), students));

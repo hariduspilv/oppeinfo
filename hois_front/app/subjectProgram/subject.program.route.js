@@ -28,7 +28,10 @@ angular.module('hitsaOis').config(['$routeProvider', function ($routeProvider) {
         translationLoaded: function($translate) { return $translate.onReady(); },
         auth: function (AuthResolver) { return AuthResolver.resolve(); },
         params: function () {
-          return { myData: false };
+          return {
+            myData: false,
+            initialSearch: true
+          };
         }
         //checkAccess: canSearchOtherTeacherPrograms
       },

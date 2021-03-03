@@ -95,6 +95,10 @@
               {{currentLanguageNameField(option)}}</md-option>
           </md-select>
         </md-input-container>
+        <md-input-container>
+          <label>{{'curriculum.studyField.label' | translate}}</label>
+          <hois-select values="formState.studyFields" ng-model="module.studyFields" multiple disabled></hois-select>
+        </md-input-container>
         <br/>
         <md-input-container flex>
           <md-checkbox ng-model="module.practice" disabled>{{'module.practice' | translate}}</md-checkbox>

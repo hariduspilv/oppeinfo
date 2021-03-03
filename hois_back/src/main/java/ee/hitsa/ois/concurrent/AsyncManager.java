@@ -37,7 +37,7 @@ public class AsyncManager {
     }
     
     public <R> void createRequest(HoisUserDetails user, Integer type, String key, AsyncRequest<R> request) {
-        createRequest(type, user.getSchoolId(), key, request);
+        createRequest(type, getSchoolIdByUser(user), key, request);
     }
 
     public <R> void createRequest(Integer type, Long schoolId, String key, AsyncRequest<R> request) {
@@ -52,13 +52,13 @@ public class AsyncManager {
     
     public FutureStatusResponse getState(HoisUserDetails user, Integer type, String key, boolean removeIfDone) {
         FutureStatusResponse response;
-        Optional<AsyncRequest<?>> optRequest = AsyncMemoryManager.get(type, user.getSchoolId(), key);
+        Optional<AsyncRequest<?>> optRequest = AsyncMemoryManager.get(type, getSchoolIdByUser(user), key);
         if (optRequest.isPresent()) {
             AsyncRequest<?> future = optRequest.get();
             future.setLastPollTime(LocalDateTime.now());
             response = future.generateResponse();
             if (removeIfDone && future.isDone()) {
-                AsyncMemoryManager.remove(type, user.getSchoolId(), key);
+                AsyncMemoryManager.remove(type, getSchoolIdByUser(user), key);
             }
         } else {
             response = new FutureStatusResponse();
@@ -74,6 +74,13 @@ public class AsyncManager {
     @Scheduled(cron = "0 */15 * * * *")
     public void removeExpiredRequests() {
         AsyncMemoryManager.removeExpiredRequests(EXPIRATION_MINUTES);
+    }
+
+    private static Long getSchoolIdByUser(HoisUserDetails user) {
+        if (user.isMainAdmin()) {
+            return -1L;
+        }
+        return user.getSchoolId();
     }
     
 }

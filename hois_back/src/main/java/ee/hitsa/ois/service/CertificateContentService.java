@@ -1,7 +1,9 @@
 package ee.hitsa.ois.service;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsDecimal;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsShort;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.math.BigDecimal;
@@ -29,8 +31,10 @@ import javax.persistence.TypedQuery;
 
 import ee.hitsa.ois.domain.gradingschema.GradingSchemaRow;
 import ee.hitsa.ois.util.EnumUtil;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumResult;
 import ee.hitsa.ois.web.dto.student.StudentHigherModuleResultDto;
 import ee.hitsa.ois.web.dto.student.StudentHigherResultDto;
+import ee.hitsa.ois.web.dto.student.StudentMatchedResultMinDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -466,16 +470,17 @@ public class CertificateContentService {
             Student student, boolean addOutcomes, boolean showUncompleted, boolean stateGradingSchema) {
         List<StudentVocationalResultModuleThemeDto> data = studentService.studentVocationalResults(student,
                 showUncompleted, false);
+        setMatchedResults(student, data);
         if (!showUncompleted) {
             data = StreamUtil.toFilteredList(r -> r.getGrade() != null && OccupationalGrade.isPositive(r.getGrade().getCode()), data);
         }
         
         Map<String, Classifier> grades = getVocationalGrades();
         Map<Long, GradingSchemaRow> gradingSchemaRows = getGradingSchemaRows(EntityUtil.getId(student.getSchool()), stateGradingSchema);
-        Long curriculumId = student.getCurriculumVersion() != null ? student.getCurriculumVersion().getCurriculum().getId() : null;
+        Set<Long> curriculumModuleIds = studentService.vocationalCurriculumModuleIds(student, false);
         String cvCode = student.getCurriculumVersion() != null ? student.getCurriculumVersion().getCode() : null;
         List<CertificateStudentResult> results = StreamUtil.toMappedList(r ->
-                CertificateStudentResult.of(r, grades, gradingSchemaRows, curriculumId), data);
+                CertificateStudentResult.of(r, grades, gradingSchemaRows, curriculumModuleIds), data);
         if (addOutcomes) {
             addVocationalOutcomes(data, results);
         }
@@ -561,6 +566,94 @@ public class CertificateContentService {
             }
         });
         return resultsByCategories;
+    }
+
+    private void setMatchedResults(Student student, List<StudentVocationalResultModuleThemeDto> results) {
+        List<StudentMatchedResultMinDto> matchedResults = studentService.vocationalMatchedResultsWithoutResult(student);
+        if (!matchedResults.isEmpty()) {
+            setMatchedResultRows(student, results, matchedResults);
+
+            Map<Long, StudentVocationalResultModuleThemeDto> moduleResults = results.stream()
+                    .filter(StudentVocationalResultModuleThemeDto::isModuleResult)
+                    .collect(Collectors.toMap(StudentVocationalResultModuleThemeDto::getCurriculumVersionModuleId,
+                            r -> r, (o, n) -> o));
+            Map<Long, StudentVocationalResultModuleThemeDto> themeResults = results.stream()
+                    .filter(r -> r.getTheme() != null)
+                    .collect(Collectors.toMap(r -> r.getTheme().getId(), r -> r, (o, n) -> o));
+
+            for (StudentMatchedResultMinDto matching : matchedResults) {
+                if (matching.getOldThemeId() == null) {
+                    StudentVocationalResultModuleThemeDto curriculumModule = moduleResults.get(matching.getModuleId());
+                    StudentVocationalResultModuleThemeDto matchedModule = moduleResults.get(matching.getOldModuleId());
+                    if (curriculumModule == null || matchedModule == null) {
+                        continue;
+                    }
+
+                    curriculumModule.setGrade(matchedModule.getGrade());
+                    curriculumModule.setDate(matchedModule.getDate());
+                    curriculumModule.setTeachers(matchedModule.getTeachers());
+                    results.remove(matchedModule);
+                } else {
+                    StudentVocationalResultModuleThemeDto curriculumModuleTheme = themeResults.get(matching.getThemeId());
+                    StudentVocationalResultModuleThemeDto matchedTheme = themeResults.get(matching.getOldThemeId());
+                    if (curriculumModuleTheme == null || matchedTheme == null) {
+                        continue;
+                    }
+
+                    curriculumModuleTheme.setGrade(matchedTheme.getGrade());
+                    curriculumModuleTheme.setDate(matchedTheme.getDate());
+                    curriculumModuleTheme.setTeachers(matchedTheme.getTeachers());
+                    results.remove(matchedTheme);
+                }
+            }
+        }
+    }
+
+    private void setMatchedResultRows(Student student, List<StudentVocationalResultModuleThemeDto> results,
+            List<StudentMatchedResultMinDto> matchedResults) {
+        Set<Long> matchedModuleIds = matchedResults.stream().filter(r -> r.getThemeId() == null)
+                .map(StudentMatchedResultMinDto::getModuleId).collect(Collectors.toSet());
+        Set<Long> matchedThemeIds = matchedResults.stream().filter(r -> r.getThemeId() != null)
+                .map(StudentMatchedResultMinDto::getThemeId).collect(Collectors.toSet());
+
+        // modules/themes that are matched with other results own results need to be removed
+        results.removeIf(r -> (r.getTheme() != null && matchedThemeIds.contains(r.getTheme().getId())
+                && (r.isModuleResult() && matchedModuleIds.contains(r.getCurriculumVersionModuleId()))));
+        // create rows for matched module/theme result to connect to
+        results.addAll(resultRowsForMatchedResults(student));
+    }
+
+    private List<StudentVocationalResultModuleThemeDto> resultRowsForMatchedResults(Student student) {
+        List<?> data = em.createNativeQuery("select cvo.id cvo_id, cm.id cm_id, "
+                + "cm.name_et module_name_et, cm.name_en module_name_en, cm.module_code, cv.code cv_code, "
+                + "cm.order_nr, cm.credits cm_credits, cm.curriculum_id, "
+                + "cvot.id cvot_id, cvot.name_et cvot_name_et, cvot.credits cvot_credits "
+                + "from student_vocational_omodule_theme svot "
+                + "join curriculum_version_omodule cvo on cvo.id = svot.curriculum_version_omodule_id "
+                + "join curriculum_module cm on cm.id = cvo.curriculum_module_id "
+                + "join classifier mcl on mcl.code = cm.module_code "
+                + "join curriculum_version cv on cv.id = cvo.curriculum_version_id "
+                + "left join curriculum_version_omodule_theme cvot on cvot.id = svot.curriculum_version_omodule_theme_id "
+                + "where svot.student_id = ?1")
+                .setParameter(1, EntityUtil.getId(student))
+                .getResultList();
+        return StreamUtil.toMappedList(r -> {
+            StudentVocationalResultModuleThemeDto dto = new StudentVocationalResultModuleThemeDto();
+            dto.setCurriculumVersionModuleId(resultAsLong(r, 0));
+            dto.setModule(new StudentVocationalResultModuleThemeDto.CurriculumModuleResult(resultAsLong(r, 1),
+                    resultAsString(r, 2), resultAsString(r, 3), resultAsString(r, 4), resultAsString(r, 5),
+                    resultAsShort(r, 6), resultAsDecimal(r, 7)));
+            dto.setCurriculum(new CurriculumResult(resultAsLong(r, 8), null, null, null));
+
+            Long themeId = resultAsLong(r, 9);
+            if (themeId == null) {
+                dto.setCredits(dto.getModule().getCredits());
+            } else {
+                dto.setTheme(new AutocompleteResult(themeId, resultAsString(r, 10), resultAsString(r, 10)));
+                dto.setCredits(resultAsDecimal(r, 11));
+            }
+            return dto;
+        }, data);
     }
 
     private void addHigherOutcomes(List<StudentHigherSubjectResultDto> data, List<CertificateStudentResult> results) {

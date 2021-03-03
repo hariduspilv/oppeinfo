@@ -14,7 +14,7 @@ public abstract class ProtocolUtil {
         return ProtocolStatus.PROTOKOLL_STAATUS_K.name().equals(protocolStatus);
     }
 
-    public static boolean studentGradeCanBeChanged(ProtocolStudent ps) {
+    public static boolean studentCanBeEdited(ProtocolStudent ps) {
         return StudentUtil.isActive(ps.getStudent());
     }
 

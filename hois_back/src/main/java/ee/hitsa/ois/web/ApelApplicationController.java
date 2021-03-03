@@ -225,13 +225,6 @@ public class ApelApplicationController {
         HttpUtil.pdf(response, application.getId() + ".pdf", pdfService.generate(templateName, report));
     }
 
-    @GetMapping("/subjectModule")
-    public CurriculumVersionHigherModuleDto subjectModule(HoisUserDetails user, @RequestParam Long curriculumVersionId,
-            @RequestParam Long subjectId) {
-        UserUtil.assertIsSchoolAdminOrStudent(user);
-        return apelApplicationService.subjectModule(curriculumVersionId, subjectId);
-    }
-
     @GetMapping("/studentModules/{id:\\d+}")
     public List<CurriculumVersionHigherModuleResult> studentModules(HoisUserDetails user, @WithEntity Student student) {
         UserUtil.assertIsSchoolAdminOrStudent(user);

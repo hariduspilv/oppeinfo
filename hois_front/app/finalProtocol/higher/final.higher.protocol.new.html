@@ -10,12 +10,10 @@
         </div>
 
         <div layout="row" layout-sm="column" layout-xs="column">
-          <md-input-container flex flex-sm="100">
-            <label class="textInput">{{'finalProtocol.curriculum' | translate}}</label>
-            <md-select ng-model="formState.curriculum" ng-change="curriculumChanged()" required>
-              <md-option ng-repeat="curriculum in curriculums | orderBy: currentLanguageNameField()" ng-value="curriculum.id">{{currentLanguageNameField(curriculum)}}</md-option>
-            </md-select>
-          </md-input-container>
+          <div flex>
+            <hois-autocomplete flex ng-model="formState.curriculumObject" url="/finalHigherProtocols/curriculums/{{formState.moduleType}}"
+              label="finalProtocol.curriculum" required></hois-autocomplete>
+          </div>
         </div>
 
         <div layout="row" layout-sm="column" layout-xs="column">

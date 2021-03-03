@@ -66,6 +66,7 @@ import javax.transaction.Transactional;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 
+import ee.hitsa.ois.domain.BaseEntityWithId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -303,6 +304,16 @@ public class DirectiveService {
         if (KASKKIRI_TYHIST.equals(directiveType)) {
             dto = DirectiveCancelDto.of(directive, changedStudentsForCancel(directive.getCanceledDirective()));
         } else {
+            if (KASKKIRI_IMMATV.equals(directiveType)) {
+                em.createQuery("select ds from DirectiveStudent ds " +
+                        "join fetch ds.curriculumVersion cv " +
+                        "join fetch cv.curriculum " +
+                        "join fetch ds.person " +
+                        "join fetch ds.saisApplication " +
+                        "where ds.directive.id = :directiveId ", DirectiveStudent.class)
+                        .setParameter("directiveId", directive.getId())
+                        .getResultList();
+            }
             dto = DirectiveDto.of(directive);
             if (KASKKIRI_AKADK.equals(directiveType)) {
                 setAcademicLeaveDirectiveStudents(dto);
@@ -604,6 +615,26 @@ public class DirectiveService {
             }
         }
 
+        boolean admission = KASKKIRI_IMMAT.equals(directiveType) || KASKKIRI_IMMATV.equals(directiveType)
+                || KASKKIRI_KYLALIS.equals(directiveType) || KASKKIRI_EKSTERN.equals(directiveType);
+
+        // fetched data
+        Map<String, Person> peopleByIdcode = admission
+                ? collectPeopleByIdcodes(form.getStudents().stream()
+                .map(DirectiveFormStudent::getIdcode)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList()))
+                : Collections.emptyMap();
+        Map<String, Person> peopleByForeignCode = admission
+                ? collectPeopleByForeignCodes(form.getStudents().stream()
+                .map(DirectiveFormStudent::getForeignIdcode)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList()))
+                : Collections.emptyMap();
+        List<Person> peopleWOIdcodeAndForeignCode = admission
+                ? collectPeopleWithoutIdcodeAndForeignCode()
+                : Collections.emptyList();
+
         if(KASKKIRI_IMMAT.equals(directiveType) || KASKKIRI_KYLALIS.equals(directiveType) || KASKKIRI_EKSTERN.equals(directiveType)) {
             long rowNum = 0;
             for(DirectiveFormStudent dfs : StreamUtil.nullSafeList(form.getStudents())) {
@@ -616,9 +647,40 @@ public class DirectiveService {
                 rowNum++;
             }
         }
-        if (DirectiveType.KASKKIRI_IMMAT.equals(directiveType) || DirectiveType.KASKKIRI_IMMATV.equals(directiveType) 
-                || DirectiveType.KASKKIRI_KYLALIS.equals(directiveType) || KASKKIRI_EKSTERN.equals(directiveType)) {
+        if (admission) {
             long rowNum = 0;
+            List<Long> versionIds = StreamUtil.nullSafeList(form.getStudents()).stream()
+                    .map(DirectiveFormStudent::getCurriculumVersion)
+                    .filter(Objects::nonNull)
+                    .distinct()
+                    .collect(Collectors.toList());
+
+            // curriculum version -> curriculum
+            Map<Long, Long> curriculumsByVersions = !versionIds.isEmpty()
+                    ? em.createQuery("select cv.id as cvid, cv.curriculum.id as cid " +
+                            "from CurriculumVersion cv where cv.id in :cvIds",
+                    Object[].class)
+                    .setParameter("cvIds", versionIds)
+                    .getResultList().stream()
+                    .collect(Collectors.toMap(r -> resultAsLong(r, 0), r -> resultAsLong(r, 1)))
+                    : Collections.emptyMap();
+
+            List<Long> curriculumIds = curriculumsByVersions.values().stream().distinct().collect(Collectors.toList());
+
+            // curriculum -> Set<Person>
+            Map<Long, Set<Long>> activeStudents = !curriculumIds.isEmpty()
+                    ? em.createQuery("select s.curriculumVersion.curriculum.id as cid, s.person.id as pid " +
+                    "from Student s " +
+                    "where s.curriculumVersion.curriculum.id in :cIds and s.status.code in :activeStudentStatus " +
+                    "and s.school.id = :schoolId", Object[].class)
+                    .setParameter("cIds", curriculumIds)
+                    .setParameter("activeStudentStatus", StudentStatus.STUDENT_STATUS_ACTIVE)
+                    .setParameter("schoolId", EntityUtil.getId(directive.getSchool()))
+                    .getResultList().stream()
+                    .collect(Collectors.groupingBy(r -> resultAsLong(r, 0),
+                            Collectors.mapping(r -> resultAsLong(r, 1), Collectors.toSet())))
+                    : Collections.emptyMap();
+
             Map<Long, Long> curriculumVersionCurriculum = new HashMap<>();
             Set<Long> uniqueRows = new LinkedHashSet<>();
             for (DirectiveFormStudent dfs : StreamUtil.nullSafeList(form.getStudents())) {
@@ -629,23 +691,20 @@ public class DirectiveService {
                 }
                 String citizenshipCode = dfs.getCitizenship();
                 Long curriculumVersionId = dfs.getCurriculumVersion();
-                if ((StringUtils.hasText(idcode) || (StringUtils.hasText(foreignIdcode) && citizenshipCode != null) || 
+                if ((StringUtils.hasText(idcode) || (StringUtils.hasText(foreignIdcode) && citizenshipCode != null) ||
                         (!StringUtils.hasText(dfs.getIdcode()) && !StringUtils.hasText(dfs.getForeignIdcode()) &&
                                 StringUtils.hasText(dfs.getFirstname()) && StringUtils.hasText(dfs.getLastname()) &&
                                 dfs.getBirthdate() != null && StringUtils.hasText(dfs.getCitizenship()))) && curriculumVersionId != null) {
-                    Long curriculumId = em.createQuery("select cv.curriculum.id from CurriculumVersion cv"
-                            + " where cv.id = ?1", Long.class)
-                            .setParameter(1, curriculumVersionId)
-                            .getSingleResult();
+                    Long curriculumId = curriculumsByVersions.get(curriculumVersionId);
                     curriculumVersionCurriculum.put(curriculumVersionId, curriculumId);
                     Person person = null;
                     if (StringUtils.hasText(idcode)) {
-                        person = personRepository.findByIdcode(idcode);
+                        person = peopleByIdcode.get(idcode);
                     } else {
-                        person = findForeignPerson(dfs);
+                        person = findForeignPersonOptimized(dfs, peopleByForeignCode, peopleWOIdcodeAndForeignCode);
                     }
                     if (person != null) {
-                        if (studentExists(EntityUtil.getId(directive.getSchool()), EntityUtil.getId(person), curriculumId)) {
+                        if (activeStudents.containsKey(curriculumId) && activeStudents.get(curriculumId).contains(EntityUtil.getId(person))) {
                             uniqueRows.add(Long.valueOf(rowNum));
                         }
                     }
@@ -778,6 +837,11 @@ public class DirectiveService {
                     occupationCertificates(fetchedStudentIds) : Collections.emptySet();
             Map<Long, DiplomaStudentDto> studentDiplomas = KASKKIRI_DUPLIKAAT.equals(directiveType) ?
                     studentDiplomas(EntityUtil.getId(directive.getSchool()), fetchedStudentIds) : Collections.emptyMap();
+            Map<Long, SaisApplication> saisApplications = KASKKIRI_IMMATV.equals(directiveType)
+                    ? studentSaisApplications(StreamUtil.nullSafeList(form.getStudents()).stream()
+                            .map(DirectiveFormStudent::getSaisApplication)
+                            .collect(Collectors.toList()))
+                    : Collections.emptyMap();
                     
             List<DirectiveStudent> messagesToStudents = new ArrayList<>();
             for(DirectiveFormStudent formStudent : StreamUtil.nullSafeList(form.getStudents())) {
@@ -788,10 +852,11 @@ public class DirectiveService {
                     Long studentId = formStudent.getStudent();
                     directiveStudent = createDirectiveStudent(studentId, directive);
                     if(KASKKIRI_IMMATV.equals(directiveType)) {
-                        SaisApplication sais = em.getReference(SaisApplication.class, formStudent.getSaisApplication());
+                        SaisApplication sais = saisApplications.get(formStudent.getSaisApplication());
                         assertSameSchool(directive, sais.getSaisAdmission().getCurriculumVersion().getCurriculum().getSchool());
                         directiveStudent.setSaisApplication(sais);
-                        setPerson(formStudent, directiveStudent);
+                        setPersonOptimized(formStudent, directiveStudent,
+                                peopleByIdcode, peopleByForeignCode, peopleWOIdcodeAndForeignCode);
                     } else {
                         setApplication(studentId, formStudent.getApplication(), directiveStudent);
                     }
@@ -804,8 +869,8 @@ public class DirectiveService {
                     setPerson(formStudent, directiveStudent);
                 }
 
-                EntityUtil.bindToEntity(formStudent, directiveStudent, classifierRepository, "application", "directive",
-                        "person", "student", "occupations", "modules", "bankAccount");
+                EntityUtil.bindToEntity(formStudent, directiveStudent, classifierRepository, false,
+                        "application", "directive", "person", "student", "occupations", "modules", "bankAccount");
 
                 directiveStudent.setStudentGroup(EntityUtil.getOptionalOne(StudentGroup.class, formStudent.getStudentGroup(), em));
                 directiveStudent.setCurriculumVersion(EntityUtil.getOptionalOne(CurriculumVersion.class, formStudent.getCurriculumVersion(), em));
@@ -941,10 +1006,10 @@ public class DirectiveService {
                 assertSameSchool(directive, directiveStudent.getStudyPeriodEnd() != null ? directiveStudent.getStudyPeriodEnd().getStudyYear().getSchool() : null);
             }
             // remove possible existing directive students not included in update command
-            students.removeAll(studentMapping.values());
             if (!KASKKIRI_TUGI.equals(directiveType)) {
-                studentMapping.values().forEach(ds -> studentRemovedFromDirective(user, ds));
+                studentsRemovedFromDirective(user, studentMapping.values());
             }
+            students.removeAll(studentMapping.values());
             if(!DirectiveType.KASKKIRI_IMMAT.equals(directiveType) && !DirectiveType.KASKKIRI_IMMATV.equals(directiveType) 
                     && !DirectiveType.KASKKIRI_KYLALIS.equals(directiveType)) {
                 for (DirectiveStudent directiveStudent : messagesToStudents) {
@@ -956,6 +1021,50 @@ public class DirectiveService {
             }
         }
         return EntityUtil.save(directive, em);
+    }
+
+    private List<Person> collectPeopleWithoutIdcodeAndForeignCode() {
+        return em.createQuery("select p from Person p where p.idcode is null and p.foreignIdcode is null ",
+                Person.class)
+                .getResultList();
+    }
+
+    private Map<String, Person> collectPeopleByForeignCodes(List<String> foreignCodes) {
+        if (foreignCodes == null || foreignCodes.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        return em.createQuery("select p from Person p " +
+                        "where p.foreignIdcode in :foreignCodes",
+                Person.class)
+                .setParameter("foreignCodes", foreignCodes)
+                .getResultList().stream()
+                .collect(Collectors.toMap(Person::getForeignIdcode, p -> p));
+    }
+
+    private Map<String, Person> collectPeopleByIdcodes(List<String> idCodes) {
+        if (idCodes == null || idCodes.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        return em.createQuery("select p from Person p " +
+                        "where p.idcode in :idCodes",
+                Person.class)
+                .setParameter("idCodes", idCodes)
+                .getResultList().stream()
+                .collect(Collectors.toMap(Person::getIdcode, p -> p));
+    }
+
+    private Map<Long, SaisApplication> studentSaisApplications(List<Long> saisIds) {
+        if (saisIds == null || saisIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        return em.createQuery("select sa from SaisApplication sa " +
+                "join fetch sa.saisAdmission sad " +
+                "join fetch sad.curriculumVersion cv " +
+                "join fetch cv.curriculum c " +
+                "join fetch c.school " +
+                "where sa.id in :saisIds", SaisApplication.class)
+                .setParameter("saisIds", saisIds)
+                .getResultList().stream().collect(Collectors.toMap(BaseEntityWithId::getId, sa -> sa));
     }
 
     /**
@@ -1049,7 +1158,7 @@ public class DirectiveService {
         EntityUtil.setUsername(user.getUsername(), em);
         // update possible applications as free for directives
         if (!ClassifierUtil.equals(KASKKIRI_TUGI, directive.getType())) {
-            directive.getStudents().forEach(ds -> studentRemovedFromDirective(user, ds));   
+            studentsRemovedFromDirective(user, directive.getStudents());
         }
         EntityUtil.deleteEntity(directive, em);
     }
@@ -1190,10 +1299,13 @@ public class DirectiveService {
     }
 
     private Map<Long, ExistingDirectiveStudentDto> studentAcademicLeaveDirectiveStudents(List<Long> applicationIds) {
-        List<?> data = em.createNativeQuery("select ds.student_id, ds.id, d.directive_nr, ds.start_date, ds.end_date " +
+        List<?> data = em.createNativeQuery("select ds.student_id, ds.id, d.directive_nr, " +
+                "coalesce(spStart.start_date, ds.start_date) start_date, coalesce(spEnd.end_date, ds.end_date) end_date " +
                 "from application a " +
                 "join directive d on d.id = a.directive_id " +
                 "join directive_student ds on ds.directive_id = d.id and ds.student_id = a.student_id " +
+                "left join study_period spEnd on spEnd.id = ds.study_period_end_id " +
+                "left join study_period spStart on spStart.id = ds.study_period_start_id " +
                 "where a.id in (?1)")
                 .setParameter(1, applicationIds)
                 .getResultList();
@@ -1785,15 +1897,43 @@ public class DirectiveService {
     }
 
     private List<DirectiveStudentDto> saisLoadStudents(Long schoolId, DirectiveDataCommand cmd) {
-        JpaQueryBuilder<SaisApplication> qb = new JpaQueryBuilder<>(SaisApplication.class, "sa").sort(new Sort("lastname", "firstname"));
-        qb.requiredCriteria("sa.saisAdmission.curriculumVersion.curriculum.school.id = :schoolId", "schoolId", schoolId);
-        qb.requiredCriteria("sa.status.code = :statusCode", "statusCode", SaisApplicationStatus.SAIS_AVALDUSESTAATUS_T);
-        qb.optionalCriteria("sa.saisAdmission.curriculumVersion.id in (:curriculumVersion)", "curriculumVersion", cmd.getCurriculumVersion());
-        qb.optionalCriteria("sa.saisAdmission.studyLevel.code in (:studyLevel)", "studyLevel", cmd.getStudyLevel());
-        qb.filter("not exists(select ds2 from DirectiveStudent ds2 where ds2.canceled = false and ds2.saisApplication.id = sa.id)");
-        qb.filter("(sa.saisAdmission.is_archived is null or sa.saisAdmission.is_archived = false)");
+//        JpaQueryBuilder<SaisApplication> qb = new JpaQueryBuilder<>(SaisApplication.class, "sa").sort(new Sort("lastname", "firstname"));
+//        qb.requiredCriteria("sa.saisAdmission.curriculumVersion.curriculum.school.id = :schoolId", "schoolId", schoolId);
+//        qb.requiredCriteria("sa.status.code = :statusCode", "statusCode", SaisApplicationStatus.SAIS_AVALDUSESTAATUS_T);
+//        qb.optionalCriteria("sa.saisAdmission.curriculumVersion.id in (:curriculumVersion)", "curriculumVersion", cmd.getCurriculumVersion());
+//        qb.optionalCriteria("sa.saisAdmission.studyLevel.code in (:studyLevel)", "studyLevel", cmd.getStudyLevel());
+//        qb.filter("not exists(select ds2 from DirectiveStudent ds2 where ds2.canceled = false and ds2.saisApplication.id = sa.id)");
+//        qb.filter("(sa.saisAdmission.is_archived is null or sa.saisAdmission.is_archived = false)");
 
-        List<DirectiveStudentDto> students = StreamUtil.toMappedList(DirectiveStudentDto::of, qb.select(em).setMaxResults(STUDENTS_MAX).getResultList());
+//        List<DirectiveStudentDto> students = StreamUtil.toMappedList(DirectiveStudentDto::of, qb.select(em).getResultList());
+
+        boolean hasVersionCriteria = cmd.getCurriculumVersion() != null && !cmd.getCurriculumVersion().isEmpty();
+        boolean hasStudyLevelCriteria = cmd.getStudyLevel() != null && !cmd.getStudyLevel().isEmpty();
+        TypedQuery<SaisApplication> query = em.createQuery("select sa from SaisApplication sa " +
+                        "join fetch sa.saisAdmission sad " +
+                        "join fetch sad.curriculumVersion cv " +
+                        "join fetch cv.curriculum c " +
+                        "left join fetch sa.graduatedSchools " +
+                        "where c.school.id = :schoolId and sa.status.code = :statusCode " +
+                        (hasVersionCriteria ? "and cv.id in :curriculumVersion " : "") +
+                        (hasStudyLevelCriteria ? "and sad.studyLevel.code in :studyLevel " : "") +
+                        "and not exists(select ds2 from DirectiveStudent ds2 where ds2.canceled = false and ds2.saisApplication.id = sa.id) " +
+                        "and (sa.saisAdmission.is_archived is null or sa.saisAdmission.is_archived = false) " +
+                        "order by sa.lastname, sa.firstname",
+                SaisApplication.class)
+                .setParameter("schoolId", schoolId)
+                .setParameter("statusCode", SaisApplicationStatus.SAIS_AVALDUSESTAATUS_T.name());
+        if (hasVersionCriteria) {
+            query.setParameter("curriculumVersion", cmd.getCurriculumVersion());
+        }
+        if (hasStudyLevelCriteria) {
+            query.setParameter("studyLevel", cmd.getStudyLevel());
+        }
+        List<DirectiveStudentDto> students = query
+                .getResultList().stream()
+                .distinct()
+                .map(DirectiveStudentDto::of)
+                .collect(Collectors.toList());
 
         // suggest valid studentGroup, if possible
         List<StudentGroup> groups = findValidStudentGroups(schoolId, true);
@@ -1937,6 +2077,76 @@ public class DirectiveService {
         }
     }
 
+    private void setPersonOptimized(DirectiveFormStudent formStudent, DirectiveStudent directiveStudent,
+                                    Map<String, Person> peopleByIdcode, Map<String, Person> peopleByForeignCode,
+                                    List<Person> peopleWOIdcodeOrForeignCode) {
+        String idcode = formStudent.getIdcode();
+        if(StringUtils.hasText(idcode)) {
+            // add new person if person idcode is not known
+            Person person = peopleByIdcode.get(idcode);
+            SaisApplication sais = directiveStudent.getSaisApplication();
+            if(person == null) {
+                person = new Person();
+                person.setIdcode(idcode);
+                if(sais != null) {
+                    personFromSaisApplication(person, sais);
+                } else {
+                    person.setFirstname(formStudent.getFirstname());
+                    person.setLastname(formStudent.getLastname());
+                    person.setBirthdate(EstonianIdCodeValidator.birthdateFromIdcode(idcode));
+                    person.setSex(em.getReference(Classifier.class, EstonianIdCodeValidator.sexFromIdcode(idcode)));
+                    person.setCitizenship(EntityUtil.validateClassifier(EntityUtil.getOptionalOne(formStudent.getCitizenship(), em), MainClassCode.RIIK));
+                }
+                person = EntityUtil.save(person, em);
+            } else if(sais != null) {
+                // update existing person from sais application
+                personFromSaisApplication(person, sais);
+            } else {
+                updatePersonData(person, formStudent);
+            }
+            directiveStudent.setPerson(person);
+        } else if(StringUtils.hasText(formStudent.getForeignIdcode()) || (formStudent.getBirthdate() != null && StringUtils.hasText(formStudent.getSex()))) {
+            // add new person if person foreign idcode is not known or not set
+            Person person = findForeignPersonOptimized(formStudent, peopleByForeignCode, peopleWOIdcodeOrForeignCode);
+            SaisApplication sais = directiveStudent.getSaisApplication();
+            if(person == null) {
+                person = new Person();
+                if(sais != null) {
+                    personFromSaisApplication(person, sais);
+                } else {
+                    person.setForeignIdcode(formStudent.getForeignIdcode());
+                    person.setFirstname(formStudent.getFirstname());
+                    person.setLastname(formStudent.getLastname());
+                    person.setBirthdate(formStudent.getBirthdate());
+                    person.setSex(EntityUtil.validateClassifier(EntityUtil.getOptionalOne(formStudent.getSex(), em), MainClassCode.SUGU));
+                    person.setCitizenship(EntityUtil.validateClassifier(EntityUtil.getOptionalOne(formStudent.getCitizenship(), em), MainClassCode.RIIK));
+                }
+                person = EntityUtil.save(person, em);
+            } else if(sais != null) {
+                // update existing person from sais application
+                personFromSaisApplication(person, sais);
+            } else {
+                updatePersonData(person, formStudent);
+            }
+            directiveStudent.setPerson(person);
+        }
+    }
+
+    private Person findForeignPersonOptimized(DirectiveFormStudent formStudent,
+                                              Map<String, Person> peopleByForeignCode,
+                                              List<Person> peopleWOIdcodeOrForeignCode) {
+        TypedQuery<Person> q;
+        if (StringUtils.hasText(formStudent.getForeignIdcode())) {
+            return peopleByForeignCode.get(formStudent.getForeignIdcode());
+        }
+        return peopleWOIdcodeOrForeignCode.stream().filter(person ->
+                    formStudent.getFirstname().equalsIgnoreCase(person.getFirstname())
+                    && formStudent.getLastname().equalsIgnoreCase(person.getLastname())
+                    && Objects.equals(formStudent.getBirthdate(), person.getBirthdate())
+                    && Objects.equals(formStudent.getCitizenship(), EntityUtil.getNullableCode(person.getCitizenship())))
+                .findAny().orElse(null);
+    }
+
     private void setPerson(DirectiveFormStudent formStudent, DirectiveStudent directiveStudent) {
         String idcode = formStudent.getIdcode();
         if(StringUtils.hasText(idcode)) {
@@ -2074,6 +2284,33 @@ public class DirectiveService {
         if (!ClassifierUtil.equals(DirectiveType.KASKKIRI_DUPLIKAAT, directiveStudent.getDirective().getType())) {
             DirectiveUtil.cancelFormsAndDocuments(user.getUsername(), directiveStudent, em);
         }
+    }
+
+    private void studentsRemovedFromDirective(HoisUserDetails user, Collection<DirectiveStudent> directiveStudents) {
+        if (directiveStudents == null || directiveStudents.isEmpty()) {
+            return;
+        }
+        Set<Long> directiveStudentIds = directiveStudents.stream().map(EntityUtil::getId).collect(Collectors.toSet());
+        // fetch applications
+        Map<Long, Application> applicationsByDSId = em.createQuery("select ds.id, a from DirectiveStudent ds " +
+                "join ds.application a " +
+                "where ds.id in :directiveStudentIds", Object[].class)
+                .setParameter("directiveStudentIds", directiveStudentIds)
+                .getResultList().stream()
+                .collect(Collectors.toMap(r -> resultAsLong(r, 0), r -> (Application) r[1]));
+
+        directiveStudents.stream()
+                .map(ds -> applicationsByDSId.get(ds.getId()))
+                .filter(Objects::nonNull)
+                .filter(app -> !ClassifierUtil.equals(ApplicationStatus.AVALDUS_STAATUS_YLEVAAT, app.getType()))
+                .forEach(app -> {
+                    app.setStatus(em.getReference(Classifier.class, ApplicationStatus.AVALDUS_STAATUS_YLEVAAT.name()));
+                    EntityUtil.save(app, em);
+                });
+        // defect forms
+        DirectiveUtil.cancelFormsAndDocuments(user.getUsername(), directiveStudents.stream()
+                .filter(ds -> !ClassifierUtil.equals(DirectiveType.KASKKIRI_DUPLIKAAT, ds.getDirective().getType()))
+                .collect(Collectors.toList()), em);
     }
 
     private List<StudentGroup> findValidStudentGroups(Long schoolId, boolean withoutGuestGroups) {

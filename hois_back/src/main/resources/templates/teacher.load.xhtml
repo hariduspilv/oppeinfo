@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>{{'report.teacher.load.title' |translate}}</title>
+    <style type="text/css">
+      @page {
+        size: A4;
+        margin: 70px;
+      }
+
+      .wrap {
+        white-space: pre-wrap;
+        white-space: -moz-pre-wrap;
+        white-space: -pre-wrap;
+        white-space: -o-pre-wrap;
+        word-wrap: break-word;
+      }
+
+      html {
+        font-size: 11pt;
+        font-family: Calibri, serif;
+      }
+
+      div.description p {
+        font-size: 12pt;
+      }
+
+      p.header {
+        font-size: 16pt !important;
+        font-weight: bold;
+      }
+
+      p {
+        margin-top: 0;
+        margin-bottom: 8pt;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        page-break-inside: avoid;
+      }
+
+      table, table td, table th {
+        border: 1px solid black;
+      }
+
+      tr.bold,
+      td.bold {
+        font-weight: bold;
+      }
+
+      table.load-all th,
+      table.load-primary th,
+      table.load-other th,
+      table.load-primary td {
+        text-align: center;
+      }
+
+      table.load-primary tr:last-child td:first-child,
+      table.load-other tr:last-child td:first-child{
+        text-align: right;
+      }
+
+      th, td {
+        padding: 2pt 4pt;
+      }
+
+      td.subitem {
+        padding-left: 30pt;
+      }
+    </style>
+  </head>
+  <body>
+    <p>{{'report.teacher.load.output' |translate}} {{content.today | hoisDate}}</p>
+    <div>&nbsp;</div>
+    <div class="load">
+      <div class="description">
+        <p class="header">{{'report.teacher.load.loadSheet' |translate}}</p>
+        <p>{{('report.teacher.load.teacher' + (content.isHigherTeacher ? 'Higher' : 'Vocational')) |translate}}: <b>{{content.fullname}}</b></p>
+        <p>{{'report.teacher.load.occupation' |translate}}: {{content.occupation | name}}</p>
+        {% if content.ehisPositions is not empty %}
+        <p>{{'report.teacher.load.ehisPosition' |translate}}: {% for position in content.ehisPositions %}{% if not loop.first %}, {% endif %}{{position | name}}{% endfor %}</p>
+        {% endif %}
+        <p>{{'report.teacher.load.studyYear' |translate}}: {{content.studyYear | name}}</p>
+      </div>
+      <table class="load-all">
+        <thead>
+          <tr>
+            <th style="width: 60%"></th>
+            <th style="width: 20%">{{'report.teacher.load.loadAll' |translate}}</th>
+            <th style="width: 20%">{{'report.teacher.load.filling' |translate}}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="bold">{{'report.teacher.load.studyWork' |translate}}</td>
+            <td class="bold" style="text-align: center">{{content.loadHigherVocational | numberformat("0.##") }}</td>
+            <td style="text-align: center"></td>
+          </tr>
+          {% if content.hasVocational %}
+          <tr>
+            <td class="subitem">{{'report.teacher.load.vocationalStudy' |translate}}</td>
+            <td style="text-align: center">{{content.loadVocational | numberformat("0.##")}}</td>
+            <td style="text-align: center"></td>
+          </tr>
+          {% endif %}
+          {% if content.isHigherTeacher or content.hasHigher %}
+          <tr>
+            <td class="subitem">{{'report.teacher.load.higherStudy' |translate}}</td>
+            <td style="text-align: center">{{content.loadHigher | numberformat("0.##")}}</td>
+            <td style="text-align: center"></td>
+          </tr>
+          {% endif %}
+          <tr>
+            <td class="bold">{{'report.teacher.load.otherLoad' |translate}}</td>
+            <td class="bold" style="text-align: center">{{content.loadOther | numberformat("0.##")}}</td>
+            <td style="text-align: center">{{content.percentAll | numberformat("0.##")}}%</td>
+          </tr>
+          <tr class="bold">
+            <td>{{'report.teacher.load.all' |translate}}</td>
+            <td style="text-align: center">{{content.loadAll | numberformat("0.##")}}</td>
+            <td style="text-align: center"></td>
+          </tr>
+        </tbody>
+      </table>
+      <div>&nbsp;</div>
+      <table class="load-primary">
+        <thead>
+          <tr>
+            {% if content.hasHigher %}
+            <th>{{'report.teacher.load.subjectCode' |translate}}</th>
+            {% endif %}
+            <th style="text-align: left">
+              {% if content.hasHigher %}{{'report.teacher.load.subject' |translate}}{% endif %}
+              {% if content.hasHigher and content.hasVocational %}/<br/> {% endif %}
+              {% if content.hasVocational %}{{'report.teacher.load.journal' |translate}}{% endif %}
+            </th>
+            <th>
+              {{'report.teacher.load.groups' |translate}}
+              {% if content.hasHigher %}/<br/> {% endif %}
+              {% if content.hasHigher %}{{'report.teacher.load.subgroups' |translate}}{% endif %}
+            </th>
+            {% if content.hasHigher %}
+            <th>{{'report.teacher.load.studyPeriod' |translate}}</th>
+            {% endif %}
+            <th>{{'report.teacher.load.assessment' |translate}}</th>
+            {% if content.hasHigher %}
+            <th>{% if content.hasHigher %}{{'report.teacher.load.EAP' |translate}}{% endif %}</th>
+            {% endif %}
+            <th>{{'report.teacher.load.contactHours' |translate}}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for load in content.primaryLoads %}
+          <tr>
+            {% if content.hasHigher %}
+            <td>{{load.subjectCode}}</td>
+            {% endif %}
+            <td style="text-align: left">{{load | name}}</td>
+            <td>
+              {{load.groups}}
+              {% if load.subgroups is not empty %}
+              <br/>
+              <br/>
+              <span>{{load.subgroups}}</span>
+              {% endif %}
+            </td>
+            {% if content.hasHigher %}
+            <td>{{load.semester | name}}</td>
+            {% endif %}
+            <td>{{load.higher == true ? (load.assessment | classifierName(mainClassCode='HINDAMISVIIS')) : (load.assessment | classifierName('KUTSEHINDAMISVIIS')) }}</td>
+            {% if content.hasHigher %}
+            <td style="text-align: center">{{load.credits}}</td>
+            {% endif %}
+            <td style="text-align: center">{{load.contactHours}}</td>
+          </tr>
+          {% endfor %}
+          <tr class="bold">
+            <td colspan="{{ content.hasHigher ? 5 : 3 }}">{{'report.teacher.load.all' |translate | upper}}</td>
+            {% if content.hasHigher %}
+            <td style="text-align: center">{{content.loadCreditsEAP | numberformat("0.##")}}</td>
+            {% endif %}
+            <td style="text-align: center">{{content.loadHigherVocational | numberformat("0.##") }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <div>&nbsp;</div>
+      <table class="load-other">
+        <thead>
+          <tr>
+            <th style="text-align: left; width: 70%">{{'report.teacher.load.loadDescription' |translate}}</th>
+            <th style="width: 12%">{{'report.teacher.load.contactHours' |translate}}</th>
+            <th style="width: 18%">{{'report.teacher.load.fillingPercent' |translate}}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for load in content.otherLoads %}
+          <tr>
+            <td>{{load.nameEt}}</td>
+            <td style="text-align: center">{{load.hours | numberformat("0.##")}}</td>
+            <td style="text-align: center">{{load.percent | numberformat("0.##")}}%</td>
+          </tr>
+          {% endfor %}
+          <tr class="bold">
+            <td>{{'report.teacher.load.all' |translate | upper}}</td>
+            <td style="text-align: center">{{content.loadOther | numberformat("0.##")}}</td>
+            <td style="text-align: center">{{content.percentAll | numberformat("0.##")}}%</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div>&nbsp;</div>
+    <p style="font-style: italic">{{('report.teacher.load.teacher' + (content.isHigherTeacher ? 'Higher' : 'Vocational') + 'Signature') |translate}}</p>
+  </body>
+</html>

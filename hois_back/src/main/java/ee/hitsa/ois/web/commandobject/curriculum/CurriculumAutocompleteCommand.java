@@ -5,9 +5,10 @@ import ee.hitsa.ois.web.commandobject.SearchCommand;
 public class CurriculumAutocompleteCommand extends SearchCommand {
 
     private Boolean higher;
+    private Boolean higherOrVocational;
     private Boolean closed;
     private Long teacher;
-    private Integer minSpecialities;
+    private Boolean minSpecialities = Boolean.FALSE;
     private String studyLevel;
     private Boolean withMerCode = Boolean.FALSE;
     private Long userId;
@@ -18,6 +19,14 @@ public class CurriculumAutocompleteCommand extends SearchCommand {
 
     public void setHigher(Boolean higher) {
         this.higher = higher;
+    }
+
+    public Boolean getHigherOrVocational() {
+        return higherOrVocational;
+    }
+
+    public void setHigherOrVocational(Boolean higherOrVocational) {
+        this.higherOrVocational = higherOrVocational;
     }
 
     public Boolean getClosed() {
@@ -36,11 +45,11 @@ public class CurriculumAutocompleteCommand extends SearchCommand {
         this.teacher = teacher;
     }
 
-    public Integer getMinSpecialities() {
+    public Boolean getMinSpecialities() {
         return minSpecialities;
     }
 
-    public void setMinSpecialities(Integer minSpecialities) {
+    public void setMinSpecialities(Boolean minSpecialities) {
         this.minSpecialities = minSpecialities;
     }
 

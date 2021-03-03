@@ -287,8 +287,8 @@ function ($route, $scope, $localStorage, QueryUtils, config, StudentUtil) {
     return student && angular.isNumber(student.credits) && student.credits >= student.curriculumCredits;
   };
 
-}]).controller('StudentViewResultsVocationalController', ['$filter', '$q', '$route', '$scope', 'GRADING_SCHEMA_TYPE', 'Classifier', 'GradingSchema', 'VocationalGradeUtil', 'QueryUtils', '$rootScope',
-function ($filter, $q, $route, $scope, GRADING_SCHEMA_TYPE, Classifier, GradingSchema, VocationalGradeUtil, QueryUtils, $rootScope) {
+}]).controller('StudentViewResultsVocationalController', ['$filter', '$q', '$rootScope', '$route', '$scope', 'GRADING_SCHEMA_TYPE', 'ArrayUtils', 'AuthService', 'Classifier', 'GradingSchema', 'StudentUtil', 'VocationalGradeUtil', 'QueryUtils', 'message',
+function ($filter, $q, $rootScope, $route, $scope, GRADING_SCHEMA_TYPE, ArrayUtils, AuthService, Classifier, GradingSchema, StudentUtil, VocationalGradeUtil, QueryUtils, message) {
   $scope.auth = $route.current.locals.auth;
   var entryMapper = Classifier.valuemapper({ studyYear: 'OPPEAASTA', entryType: 'SISSEKANNE' });
   var moduleMapper = Classifier.valuemapper({ module: 'KUTSEMOODUL' });
@@ -299,6 +299,10 @@ function ($filter, $q, $route, $scope, GRADING_SCHEMA_TYPE, Classifier, GradingS
     $scope.existsSchoolGradingSchema = gradingSchema.existsSchoolGradingSchema();
     gradeMapper = gradingSchema.gradeMapper(gradingSchema.gradeSelection(), ['grade']);
   });
+
+  var studentIsActive = StudentUtil.isActive($scope.student.status);
+  $scope.canChangeStudentModules = ($scope.auth.isAdmin() || $scope.auth.isLeadingTeacher()) && studentIsActive &&
+    AuthService.isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_OPPUR');
 
   $scope.$watch('resultsCurrentNavItem', function () {
     loadCurrentNavItemData();
@@ -313,7 +317,7 @@ function ($filter, $q, $route, $scope, GRADING_SCHEMA_TYPE, Classifier, GradingS
       var moduleResultById = {};
       $scope.vocationalResults.results.forEach(function (it) {
         if (!angular.isObject(moduleResultById[it.module.id])) {
-          moduleResultById[it.module.id] = { themeResultById: {}, outcomeResultById: {}, totalSubmitted: 0 };
+          moduleResultById[it.module.id] = emptyModuleResultById();
         }
 
         if (angular.isObject(it.theme)) {
@@ -371,20 +375,14 @@ function ($filter, $q, $route, $scope, GRADING_SCHEMA_TYPE, Classifier, GradingS
             return module.curriculumModule.id === replacedModuleId;
           });
           if (angular.isObject(replacedModule)) {
-            var curriculumModuleIndex = $scope.vocationalResultsCurriculum.vocationalResultsModules.indexOf(replacedModule);
-            if (curriculumModuleIndex > -1) {
-              $scope.vocationalResultsCurriculum.vocationalResultsModules.splice(curriculumModuleIndex, 1);
-            }
+            ArrayUtils.remove($scope.vocationalResultsCurriculum.vocationalResultsModules, replacedModule);
           }
 
           var replacedExtraCurriculaModule = $scope.vocationalResultsCurriculum.extraCurriculaVocationalResultsModules.find(function (module) {
             return module.curriculumModule.id === replacedModuleId;
           });
           if (angular.isObject(replacedExtraCurriculaModule)) {
-            var extraCurriculuaModuleIndex = $scope.vocationalResultsCurriculum.extraCurriculaVocationalResultsModules.indexOf(replacedExtraCurriculaModule);
-            if (extraCurriculuaModuleIndex > -1) {
-              $scope.vocationalResultsCurriculum.extraCurriculaVocationalResultsModules.splice(extraCurriculuaModuleIndex, 1);
-            }
+            ArrayUtils.remove($scope.vocationalResultsCurriculum.extraCurriculaVocationalResultsModules, replacedExtraCurriculaModule);
           }
         });
       });
@@ -392,7 +390,7 @@ function ($filter, $q, $route, $scope, GRADING_SCHEMA_TYPE, Classifier, GradingS
       var replacedModuleResults = $filter('filter')($scope.vocationalResults.results, {'isFormalLearning': true, replacedModules: ''});
       $scope.vocationalResultsCurriculum.replacedModuleResults = replacedModuleResults.sort(function (r1, r2) {
         if (r1.module.nameEt && r2.module.nameEt) {
-          return $rootScope.currentLanguageNameField(r1.module).localeCompare($rootScope.currentLanguageNameField(r2.module));
+          return $rootScope.currentLanguageNameField(r1.module).hoisLocaleCompare($rootScope.currentLanguageNameField(r2.module));
         } else {
           return 0;
         }
@@ -424,9 +422,13 @@ function ($filter, $q, $route, $scope, GRADING_SCHEMA_TYPE, Classifier, GradingS
     }
   };
 
+  function emptyModuleResultById() {
+    return { themeResultById: {}, outcomeResultById: {}, totalSubmitted: 0 };
+  }
+
   function moduleComparator(m1, m2) {
     return moduleOrderComparator(m1, m2) || m1.curriculumModule.specOrderNr - m2.curriculumModule.specOrderNr ||
-      $rootScope.currentLanguageNameField(m1.curriculumModule).localeCompare($rootScope.currentLanguageNameField(m2.curriculumModule));
+      $rootScope.currentLanguageNameField(m1.curriculumModule).hoisLocaleCompare($rootScope.currentLanguageNameField(m2.curriculumModule));
   }
 
   function moduleOrderComparator(m1, m2) {
@@ -451,16 +453,17 @@ function ($filter, $q, $route, $scope, GRADING_SCHEMA_TYPE, Classifier, GradingS
       theme.curriculumModuleOutcomes.forEach(function (outcome) {
         moduleOutcomes.push(outcome.id);
       });
-    });
-    module.otherCurriculumVersionModuleThemes.forEach(function (theme) {
-      theme.curriculumModuleOutcomes.forEach(function (outcome) {
-        moduleOutcomes.push(outcome.id);
-      });
+      if (theme.matchedTheme !== null) {
+        theme.matchedTheme.curriculumModuleOutcomes.forEach(function (outcome) {
+          moduleOutcomes.push(outcome.id);
+        });
+      }
     });
     return moduleOutcomes;
   }
 
   function loadVocationalResults() {
+    $scope.vocationalResultsCurriculum = null;
     QueryUtils.loadingWheel($scope, true);
     QueryUtils.endpoint('/students/' + $scope.student.id + '/vocationalResults').get(function (vocationalResults) {
       vocationalResults.results = gradeMapper.objectmapper(vocationalResults.results);
@@ -531,6 +534,70 @@ function ($filter, $q, $route, $scope, GRADING_SCHEMA_TYPE, Classifier, GradingS
     });
   };
 
+  $scope.loadResultsMatching = function () {
+    QueryUtils.endpoint('/students/' + $scope.studentId + '/vocationalMatchedResults').query(function (matchedResults) {
+      $scope.formState.matchedResultsEditable = false;
+      matchedResultsToViewForm(matchedResults);
+    });
+  };
+
+  function matchedResultsToViewForm(matchedResults) {
+    matchedResults.forEach(function (row) {
+      gradeMapper.objectmapper(row.extraCurriculumResult);
+    });
+    $scope.matchedResults = matchedResults;
+  }
+
+  $scope.editMatchedResults = function () {
+    $scope.formState.resultsMatchingForm.$setPristine();
+    $scope.formState.matchedResultsEditable = true;
+    QueryUtils.endpoint('/students/' + $scope.studentId + '/vocationalMatchedResultsFormData').get(function (result) {
+      $scope.modulesAndThemes = result.modulesAndThemes;
+
+      gradeMapper.objectmapper(result.extraCurriculumResults);
+      $scope.extraCurriculumResults = result.extraCurriculumResults;
+      $scope.extraCurriculumResults.forEach(function (it) {
+        it.disabled = it.grade === null;
+      });
+
+      result.rows.forEach(function (it) {
+        gradeMapper.objectmapper(it.extraCurriculumResult);
+      });
+      $scope.matchedResults = result.rows;
+    });
+  };
+
+  $scope.addNewMatchedResult = function () {
+    $scope.matchedResults.push({ canEdit: true, matchingDate: new Date(), matcher: $scope.auth.fullname });
+    $scope.formState.resultsMatchingForm.$setDirty();
+  };
+
+  $scope.removeMatchedResult = function (row) {
+    ArrayUtils.remove($scope.matchedResults, row);
+    $scope.formState.resultsMatchingForm.$setDirty();
+  };
+
+  $scope.saveResultsMatching = function () {
+    $scope.formState.resultsMatchingForm.$setSubmitted();
+    if (!$scope.formState.resultsMatchingForm.$valid) {
+      message.error('main.messages.form-has-errors');
+      return false;
+    }
+
+    QueryUtils.endpoint('/students/' + $scope.student.id + '/vocationalMatchedResults/').post(
+      {rows: $scope.matchedResults}).$promise.then(function(matchedResults) {
+      message.updateSuccess();
+      matchedResultsToViewForm(matchedResults);
+      $scope.formState.matchedResultsEditable = false;
+      $scope.formState.resultsMatchingForm.$setPristine();
+
+      QueryUtils.endpoint('/students/' + $scope.student.id + '/curriculumFulfillment').get()
+        .$promise.then(function(curriculumFulfillment) {
+        $scope.student = angular.extend($scope.student, curriculumFulfillment);
+      });
+    });
+  };
+
   $scope.displayTeachers = function (teachers) {
     if (angular.isArray(teachers)) {
       return teachers.map(function (teacher) { return teacher.nameEt; }).sort().join(', ');
@@ -543,23 +610,25 @@ function ($filter, $q, $route, $scope, GRADING_SCHEMA_TYPE, Classifier, GradingS
 
   function setModuleSubmittedCreditsAndBacklogs(module) {
     var moduleResult = $scope.moduleResultById[module.curriculumModule.id];
+    if (!angular.isDefined(moduleResult)) {
+      $scope.moduleResultById[module.curriculumModule.id] = emptyModuleResultById();
+      moduleResult = $scope.moduleResultById[module.curriculumModule.id];
+    }
+
     module.themes.forEach(function (theme) {
-      setThemeIsOk(moduleResult, theme);
-    });
-    module.otherCurriculumVersionModuleThemes.forEach(function (theme) {
       setThemeIsOk(moduleResult, theme);
     });
     module.moduleBacklog = (moduleResult ? moduleResult.totalSubmitted : 0) - module.curriculumModule.credits;
   }
 
   function setThemeIsOk(moduleResult, theme) {
-    var themeResult = angular.isDefined(moduleResult) ? moduleResult.themeResultById[theme.id] : undefined;
+    var themeResult = moduleResult.themeResultById[theme.id];
     if (isThemeGraded(theme, themeResult)) {
-      var outcomeResults = angular.isDefined(moduleResult) ? moduleResult.outcomeResultById : undefined;
+      var outcomeResults = moduleResult.outcomeResultById;
       theme.isOk = isThemeOk(theme, themeResult, outcomeResults);
     }
 
-    if (theme.isOk) {
+    if (theme.isOk || angular.isObject(theme.matchedTheme)) {
       moduleResult.totalSubmitted += theme.credits;
     }
   }
@@ -613,6 +682,10 @@ function ($filter, $q, $route, $scope, GRADING_SCHEMA_TYPE, Classifier, GradingS
       } else {
         $scope.changeResultsCurrentNavItem('student.curriculumFulfillment');
       }
+    } else if ($scope.resultsCurrentNavItem === 'student.resultsMatching') {
+      $q.all(moduleMapper.promises.concat(gradingSchema.promises)).then(function () {
+        $scope.loadResultsMatching();
+      });
     }
   }
 
@@ -833,7 +906,7 @@ function ($filter, $q, $route, $scope, GRADING_SCHEMA_TYPE, Classifier, GradingS
 
     function moduleComparator(v1, v2) {
       return moduleOrderComparator(v1, v2) || moduleOrder.indexOf(v1.type) - moduleOrder.indexOf(v2.type) ||
-        $rootScope.currentLanguageNameField(v1).localeCompare($rootScope.currentLanguageNameField(v2));
+        $rootScope.currentLanguageNameField(v1).hoisLocaleCompare($rootScope.currentLanguageNameField(v2));
     }
 
     function moduleOrderComparator(m1, m2) {
@@ -1153,6 +1226,8 @@ function ($filter, $q, $route, $scope, GRADING_SCHEMA_TYPE, Classifier, GradingS
       OPPURSTAATUS_L: "OPPURSTAATUS_L"
     });
 
+    $scope.specialities = [];
+
     function afterLoad() {
       if ($scope.student.status in cannotEditStatuses) {
         message.error("main.messages.error.nopermission");
@@ -1188,6 +1263,19 @@ function ($filter, $q, $route, $scope, GRADING_SCHEMA_TYPE, Classifier, GradingS
         });
         $scope.student.foreignLanguageTypes = ArrayUtils.partSplit(languagesList, 2);
       });
+
+      QueryUtils.endpoint("/students/" + id + "/specialities").query({}, function (result) {
+        if ($scope.student.isVocational) {
+          $scope.specialities = (result || []).map(function (it) {
+            return it.code;
+          });
+          if ($scope.student.speciality && $scope.specialities.indexOf($scope.student.speciality) === -1) {
+            $scope.specialities.push($scope.student.speciality);
+          }
+          return;
+        }
+        $scope.specialities = result;
+      });
     }
 
 
@@ -1217,8 +1305,6 @@ function ($filter, $q, $route, $scope, GRADING_SCHEMA_TYPE, Classifier, GradingS
       $scope.student = student;
       afterLoad();
     });
-
-    $scope.specialities = QueryUtils.endpoint("/students/" + id + "/specialities").query();
 
     function withPhoto(afterPhotoLoad) {
       if ($scope.studentEditForm.photoFiles && $scope.studentEditForm.photoFiles.$modelValue[0]) {

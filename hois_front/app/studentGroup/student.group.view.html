@@ -39,7 +39,7 @@
           <hois-classifier-value ng-model="record.studyForm" main-classifier-code="OPPEVORM"></hois-classifier-value>
         </md-input-container>
 
-        <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset="{!record.isGuest ? '0': '5'}" flex-offset-xs="0" flex-offset-sm="0">
+        <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset="{{!record.isGuest ? '5': '0'}}" flex-offset-xs="0" flex-offset-sm="0">
           <label class="textInput">{{'studentGroup.language' | translate}}</label>
           <hois-classifier-value ng-model="record.language" main-classifier-code="OPPEKEEL"></hois-classifier-value>
         </md-input-container>
@@ -50,15 +50,23 @@
         </md-input-container>
       </div>
 
-      <div layout="row" layout-sm="column" layout-xs="column" ng-if="formState.onlyvocational || formState.isVocational">
-        <md-input-container flex="45" flex-sm="100" flex-xs="100">
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <md-input-container flex="45" flex-sm="100" flex-xs="100" ng-if="formState.onlyvocational || formState.isVocational">
           <label class="textInput">{{'studentGroup.teacher' | translate}}</label>
           <hois-value value="record.teacher.nameEt"></hois-value>
         </md-input-container>
 
-        <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-          <label class="textInput">{{'studentGroup.speciality' | translate}}</label>
-          <hois-value value="record.speciality ? (record.speciality | hoisValidDates) : record.speciality"></hois-value>
+        <md-input-container flex="{{formState.onlyvocational || formState.isVocational ? 50 : 45}}" flex-sm="100" flex-xs="100"
+                            flex-offset="{{formState.onlyvocational || formState.isVocational ? 5 : 0}}" flex-offset-xs="0" flex-offset-sm="0"
+                            ng-if="!formState.isVocational && record.curriculumAddress">
+          <label class="textInput">{{'studentGroup.curriculumAddress' | translate}}</label>
+          <hois-value value="currentLanguageNameField(record.curriculumAddress)"></hois-value>
+        </md-input-container>
+        <md-input-container flex="{{formState.onlyvocational || formState.isVocational ? 50 : 45}}" flex-sm="100" flex-xs="100"
+                            flex-offset="{{formState.onlyvocational || formState.isVocational ? 5 : 0}}" flex-offset-xs="0" flex-offset-sm="0"
+                            ng-if="formState.isVocational && record.ehisSchool">
+          <label class="textInput">{{'studentGroup.curriculumAddress' | translate}}</label>
+          <hois-classifier-value ng-value="record.ehisSchool" main-classifier-code="EHIS_KOOL"></hois-classifier-value>
         </md-input-container>
       </div>
 
@@ -88,6 +96,7 @@
             <th md-column md-order-by="rowno">{{'studentGroup.studentname' | translate}}</th>
             <th md-column ng-if="showPersonalData" md-order-by="idcode">{{'studentGroup.idcode' | translate}}</th>
             <th md-column md-order-by="curriculumVersion.{{currentLanguageNameField()}}">{{formState.curriculumVersionLabel | translate}}</th>
+            <th md-column ng-if="formState.hasSpecialities" md-order-by="speciality.{{currentLanguageNameField()}}">{{'studentGroup.speciality' | translate}}</th>
             <th md-column md-order-by="status.{{currentLanguageNameField()}}">{{'studentGroup.studentstatus' | translate}}</th>
           </tr>
         </thead>
@@ -100,6 +109,7 @@
             </td>
             <td md-cell ng-if="showPersonalData">{{::row.idcode}}</td>
             <td md-cell>{{currentLanguageNameField(row.curriculumVersion)}}</td>
+            <td md-cell ng-if="formState.hasSpecialities">{{currentLanguageNameField(row.speciality)}}</td>
             <td md-cell>{{currentLanguageNameField(row.status)}}</td>
           </tr>
         </tbody>

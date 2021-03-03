@@ -443,7 +443,18 @@
 						<div flex="5">&nbsp;</div>
 						<div>{{::item.address}}</div>
 						<div flex="5">&nbsp;</div>
-						<div flex="5"><a class="remove nomargin" ng-click="removeAddress(item)">&times;</a></div>
+						<div flex="5">
+              <a ng-if="item.canDelete" class="remove nomargin" ng-click="removeAddress(item)">&times;</a>
+              <a ng-if="!item.canDelete" class="remove nomargin" style="color: grey;">
+<!--                &times;-->
+                <span>
+                  *
+                  <md-tooltip md-direction="right">
+                    {{'curriculum.error.curriculumAddressCantBeDeleted' | translate}}
+                  </md-tooltip>
+                </span>
+              </a>
+            </div>
 					</div>
 				</div>
 			</div>
@@ -460,12 +471,12 @@
 			</div>
 		</fieldset>
 
-		<div ng-show="gradeRequired()">&nbsp;</div>
-		<fieldset tabindex="12" ng-show="gradeRequired()">
+		<div>&nbsp;</div>
+		<fieldset tabindex="12">
 			<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.grade.label' | translate}}</legend>
 			<md-button class="md-raised" ng-click="openAddGradeDialog()" ng-show="!formState.readOnly">{{'curriculum.grade.add' | translate}}</md-button>
 			<md-table-container>
-				<div ng-repeat = "item in curriculum.grades | orderBy: currentLanguageNameField()" layout="column" ng-show="gradeRequired()">
+				<div ng-repeat = "item in curriculum.grades | orderBy: currentLanguageNameField()" layout="column">
 					<div layout = "row" class="occupation-row align-center" ng-class-odd="'odd'" ng-class-even="'even'">
 						<div flex="35"><a ng-click="openAddGradeDialog(item)" href="">{{currentLanguageNameField(item)}}</a></div>
 					</div>

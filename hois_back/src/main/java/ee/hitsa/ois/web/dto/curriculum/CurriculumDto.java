@@ -67,7 +67,7 @@ public class CurriculumDto extends CurriculumForm {
         dto.setStudyPeriod(curriculum.getStudyPeriod());
         //TODO: autocomplete result here would be better
         dto.setSpecialities(StreamUtil.toMappedSet(CurriculumSpecialityDto::of, curriculum.getSpecialities()));
-
+        dto.setStudyFields(StreamUtil.toMappedSet(CurriculumStudyFieldDto::of, curriculum.getStudyFields()));
         dto.setModules(StreamUtil.toMappedSet(CurriculumModuleDto::of, curriculum.getModules()));
         dto.setStudyForms(StreamUtil.toMappedSet(f -> EntityUtil.getNullableCode(f.getStudyForm()), curriculum.getStudyForms()));
 
@@ -95,19 +95,20 @@ public class CurriculumDto extends CurriculumForm {
     public static CurriculumDto of(Curriculum curriculum) {
         CurriculumDto dto = EntityUtil.bindToDto
                 (curriculum, new CurriculumDto(), 
-                 "versions", "studyLanguages", "studyForms", "addresses", "schoolDepartments", "files", 
+                 "versions", "studyLanguages", "studyForms", "addresses", "schoolDepartments", "files", "studyFields", 
                  "jointPartners", "specialities", "modules", "occupations", "grades", "stateCurriculum", "teacher", "userCurriculums");
                 
         dto.setStudyLanguages(StreamUtil.toMappedSet(lang -> EntityUtil.getNullableCode(lang.getStudyLang()), curriculum.getStudyLanguages()));
         dto.setStudyForms(StreamUtil.toMappedSet(f -> EntityUtil.getNullableCode(f.getStudyForm()), curriculum.getStudyForms()));
         dto.setSchoolDepartments(StreamUtil.toMappedSet(d -> EntityUtil.getNullableId(d.getSchoolDepartment()), curriculum.getDepartments()));
-        dto.setAddresses(StreamUtil.toMappedSet(CurriculumAddressForm::of, curriculum.getAddresses()));
+        dto.setAddresses(StreamUtil.toMappedSet(CurriculumAddressDto::of, curriculum.getAddresses()));
         dto.setJointPartners(StreamUtil.toMappedSet(CurriculumJointPartnerDto::of, curriculum.getJointPartners()));
         dto.setSpecialities(StreamUtil.toMappedSet(CurriculumSpecialityDto::of, curriculum.getSpecialities()));
         //TODO: use partial dto
         dto.setModules(StreamUtil.toMappedSet(CurriculumModuleDto::of, curriculum.getModules()));
         dto.setGrades(StreamUtil.toMappedSet(CurriculumGradeDto::of, curriculum.getGrades()));
         dto.setFiles(StreamUtil.toMappedSet(CurriculumFileUpdateDto::of, curriculum.getFiles()));
+        dto.setStudyFields(StreamUtil.toMappedSet(CurriculumStudyFieldDto::of, curriculum.getStudyFields()));
 
         if (curriculum.getTeacher() != null) {
             dto.setTeacher(AutocompleteResult.of(curriculum.getTeacher()));

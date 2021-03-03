@@ -26,16 +26,16 @@
           </div>
 
           <div layout="row" layout-sm="column" layout-xs="column">
-            <md-input-container ng-if="journalEntry.entryType !== 'SISSEKANNE_O'" flex="45">
+            <md-input-container flex="25" flex-sm="100" flex-xs="100">
               <label>{{'journal.entry.type' | translate}}</label>
               <hois-classifier-select ng-model="journalEntry.entryType" model-value-attr="code" main-classifier-code="SISSEKANNE" required
                 ng-change="setJournalEntryTypeChanged(journalEntry.entryType)" filter-values="forbiddenEntryTypes"></hois-classifier-select>
             </md-input-container>
-            <md-input-container ng-if="journalEntry.entryType === 'SISSEKANNE_O'" flex="45">
-              <label>{{'journal.entry.type' | translate}}</label>
-              <hois-classifier-select ng-model="journalEntry.entryType" model-value-attr="code" main-classifier-code="SISSEKANNE" disabled></hois-classifier-select>
-            </md-input-container>
-            <md-input-container flex="45" flex-offset="10">
+            <div class="journal-is-test" flex="15" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-sm="0" flex-offset-xs="0"
+                 layout="row" layout-align="none none" layout-align-gt-sm="center center">
+              <md-checkbox ng-model="journalEntry.isTest">{{'journal.entry.notifyStudent' | translate}}</md-checkbox>
+            </div>
+            <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="10" flex-offset-sm="0" flex-offset-xs="0">
               <label>{{'journal.entry.name' | translate}}</label>
               <input type="text" ng-model="journalEntry.nameEt" md-maxlength="100">
             </md-input-container>

@@ -3,14 +3,19 @@ package ee.hitsa.ois.service.sais;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.concurrent.WrapperCallable;
+import ee.hitsa.ois.concurrent.request.SaisClassifierRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -70,7 +75,9 @@ public class SaisClassifierService {
         });
     }
 
-    public Page<SaisClassifierSearchDto> importFromSais(SaisClassifierSearchCommand criteria, Pageable pageable, HoisUserDetails user) {
+    public Void importFromSais(HoisUserDetails user,
+                               AtomicReference<Void> wrapper) {
+        wrapper.set(null);
         XRoadHeaderV4 xRoadHeader = getXroadHeader(user);
 
         saisLogService.withResponse(saisClient.classificationsExport(xRoadHeader), null, (result, logResult) -> {
@@ -107,10 +114,24 @@ public class SaisClassifierService {
             logResult.setRecordCount(Long.valueOf(saisClassifierRepository.count()));
             return null;
         });
-        return list(criteria, pageable);
+        return null;
     }
 
     private XRoadHeaderV4 getXroadHeader(HoisUserDetails user) {
         return sp.xroadHeader("ClassificationsExport", em.getReference(Person.class, user.getPersonId()).getIdcode());
+    }
+
+    public SaisClassifierRequest createRequest(HoisUserDetails user, String requestHash) {
+        return new SaisClassifierRequest(new WrapperCallable<Void>() {
+            @Override
+            public Void wrapperCall() throws InterruptedException {
+                return importFromSais(user, getWrapper());
+            }
+
+            @Override
+            public float getProgress() {
+                return 0;
+            }
+        }, requestHash);
     }
 }

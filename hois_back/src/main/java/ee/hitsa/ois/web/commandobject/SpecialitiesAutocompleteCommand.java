@@ -5,6 +5,8 @@ public class SpecialitiesAutocompleteCommand extends SearchCommand {
     private Long curriculum;
     private Long curriculumVersion;
     private Boolean filter;
+    private Boolean higher;
+    private Boolean vocational;
     
     public Long getCurriculum() {
         return curriculum;
@@ -28,5 +30,21 @@ public class SpecialitiesAutocompleteCommand extends SearchCommand {
 
     public void setFilter(Boolean filter) {
         this.filter = filter;
+    }
+
+    public Boolean getHigher() {
+        return higher;
+    }
+
+    public void setHigher(Boolean higher) {
+        this.higher = higher;
+    }
+
+    public Boolean getVocational() {
+        return vocational;
+    }
+
+    public void setVocational(Boolean vocational) {
+        this.vocational = vocational;
     }
 }

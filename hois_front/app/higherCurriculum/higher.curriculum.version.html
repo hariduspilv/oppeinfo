@@ -231,7 +231,7 @@
                 <td>
                   <div layout="column" layout-align="center center">
                     <md-input-container>
-                      <input ng-model="periods[0].credits" type="number" min="0" max="1000" pattern="^\d+(\.\d{1,2})?$" ng-readonly="readOnly" 
+                      <input ng-model="periods[0].credits" type="number" min="0" max="1000" pattern="^\d+(\.\d{1,2})?$" ng-readonly="readOnly"
                       style="width: 40px; padding-top: 0px; margin-top: 6px; height: 30px"
                       ng-style="{'border-color': !specialityCapacityValid(speciality) ? 'red' : default}" name="{{curriculum.specialities.indexOf(speciality)}}credits1[{{$index}}]"
                       aria-label="{{$index + 1 + '. ' + ('nominalCapacity.studyYear' | translate) + ' ' + ('nominalCapacity.autumn' | translate)}}">
@@ -242,7 +242,7 @@
                       </div>
                       <div ng-message="max">
                         {{'curriculum.error.max999' | translate}}
-                      </div>  
+                      </div>
                       <div ng-message="pattern">
                         {{'stateCurriculum.error.decimalPresision2' | translate}}
                       </div>
@@ -252,7 +252,7 @@
                 <td>
                   <div layout="column" layout-align="center center">
                     <md-input-container ng-if="periods.length > 1">
-                      <input ng-model="periods[1].credits" type="number" min="0" max="1000" pattern="^\d+(\.\d{1,2})?$" ng-readonly="readOnly" 
+                      <input ng-model="periods[1].credits" type="number" min="0" max="1000" pattern="^\d+(\.\d{1,2})?$" ng-readonly="readOnly"
                       style="width: 40px; padding-top: 0px; margin-top: 6px; height: 30px"
                       ng-style="{'border-color': !specialityCapacityValid(speciality) ? 'red' : default}" name="{{curriculum.specialities.indexOf(speciality)}}credits2[{{$index}}]"
                       aria-label="{{$index + 1 + '. ' + ('nominalCapacity.studyYear' | translate) + ' ' + ('nominalCapacity.autumn' | translate)}}">

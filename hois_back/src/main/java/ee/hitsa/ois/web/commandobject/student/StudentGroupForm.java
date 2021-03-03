@@ -11,6 +11,7 @@ import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.Conditional;
 import ee.hitsa.ois.validation.DateRange;
 import ee.hitsa.ois.validation.Required;
+import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
@@ -38,6 +39,9 @@ public class StudentGroupForm extends VersionedCommand {
     private LocalDate validThru;
     private List<Long> students;
     private Boolean isGuest;
+    private EntityConnectionCommand curriculumAddress;
+    @ClassifierRestriction(MainClassCode.EHIS_KOOL)
+    private String ehisSchool;
 
     public String getCode() {
         return code;
@@ -141,5 +145,21 @@ public class StudentGroupForm extends VersionedCommand {
 
     public void setIsGuest(Boolean isGuest) {
         this.isGuest = isGuest;
+    }
+
+    public EntityConnectionCommand getCurriculumAddress() {
+        return curriculumAddress;
+    }
+
+    public void setCurriculumAddress(EntityConnectionCommand curriculumAddress) {
+        this.curriculumAddress = curriculumAddress;
+    }
+
+    public String getEhisSchool() {
+        return ehisSchool;
+    }
+
+    public void setEhisSchool(String ehisSchool) {
+        this.ehisSchool = ehisSchool;
     }
 }

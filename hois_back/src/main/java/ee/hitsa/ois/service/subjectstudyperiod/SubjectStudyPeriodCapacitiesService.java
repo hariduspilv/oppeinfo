@@ -7,6 +7,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsShort;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -51,11 +52,14 @@ import ee.hitsa.ois.web.dto.SubjectStudyPeriodTeacherDto;
 public class SubjectStudyPeriodCapacitiesService {
 
     public static final String SQL_SELECT_TEACHER_CAPACITY =
-            "select distinct on (ssptc.subject_study_period_teacher_id, ssptc.subject_study_period_capacity_id)" +
-                    " ssptc.subject_study_period_teacher_id, ssptc.hours, ssptc.subject_study_period_capacity_id" +
-            " from subject_study_period_teacher_capacity ssptc" +
-            " order by ssptc.subject_study_period_teacher_id, ssptc.subject_study_period_capacity_id," +
-            " ssptc.subject_study_period_subgroup_id is not null, ssptc.hours desc";
+            "select wr_ssptc.subject_study_period_teacher_id, wr_ssptc.subject_study_period_capacity_id, " +
+                    "case when wr_ssptc.has_main then wr_ssptc.hours else wr_ssptc.subhours end as hours " +
+                    "from (select ssptc.subject_study_period_teacher_id, ssptc.subject_study_period_capacity_id, " +
+                        "bool_or(ssptc.subject_study_period_subgroup_id is null) as has_main, " +
+                        "sum(case when ssptc.subject_study_period_subgroup_id is null then ssptc.hours else 0 end) as hours, " +
+                        "sum(case when ssptc.subject_study_period_subgroup_id is not null then ssptc.hours else 0 end) as subhours " +
+                        "from subject_study_period_teacher_capacity ssptc " +
+                        "group by ssptc.subject_study_period_teacher_id, ssptc.subject_study_period_capacity_id) as wr_ssptc";
 
     @Autowired
     private SubjectService subjectService;
@@ -242,7 +246,16 @@ public class SubjectStudyPeriodCapacitiesService {
         Map<String, Object> period = new HashMap<>();
 
         Map<String, Short> periodCapacityHours = emptyOrderedCapacityHours(capacityCodes);
-        periodDto.getCapacities().forEach(c -> periodCapacityHours.put(c.getCapacityType(), c.getHours()));
+        Set<String> usedMainCapacity = new HashSet<>();
+        periodDto.getCapacities().forEach(c -> {
+            if (c.getSubgroup() == null) {
+                usedMainCapacity.add(c.getCapacityType());
+                periodCapacityHours.put(c.getCapacityType(), c.getHours());
+            } else if (!usedMainCapacity.contains(c.getCapacityType())) {
+                periodCapacityHours.merge(c.getCapacityType(), c.getHours(),
+                        (a, b) -> Short.valueOf((short) (a.shortValue() + b.shortValue())));
+            }
+        });
 
         for (String capacity : periodCapacityHours.keySet()) {
             Short totalHours = periodTotals.get(capacity) != null ? periodTotals.get(capacity)

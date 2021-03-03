@@ -197,7 +197,7 @@ function ($route, $location, $scope, $q, GRADING_SCHEMA_TYPE, Classifier, Gradin
     var student = $scope.record.protocolStudents.find(function(s){
       return s.id === calculatedGrade.protocolStudent;
     });
-    if (angular.isDefined(student) && student.canChangeGrade) {
+    if (angular.isDefined(student) && student.canBeEdited) {
       student.grade = analogGetter.get(calculatedGrade.grade);
       $scope.gradeChanged(student);
     }

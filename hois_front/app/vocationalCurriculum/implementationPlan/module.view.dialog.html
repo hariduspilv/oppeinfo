@@ -114,6 +114,10 @@
           <label>{{'module.competencesAquired' | translate}}</label>
           <hois-classifier-value ng-model="module.competences" main-classifier-code="KOMPETENTS"></hois-classifier-value>
         </md-input-container>
+        <md-input-container>
+          <label>{{'curriculum.studyField.label' | translate}}</label>
+          <hois-value value="module.studyFieldString" class="scrollable"></hois-value>
+        </md-input-container>
         <md-input-container flex>
           <md-checkbox ng-model="module.practice" disabled>{{'module.practice' | translate}}</md-checkbox>
         </md-input-container>

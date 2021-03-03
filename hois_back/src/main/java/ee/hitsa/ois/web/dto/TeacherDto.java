@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.dto;
 
+import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 
@@ -18,6 +19,8 @@ public class TeacherDto extends TeacherForm {
     private List<TeacherContinuingEducationForm> teacherContinuingEducations;
     private List<TeacherQualificationForm> teacherQualifications;
     private List<TeacherMobilityForm> teacherMobility;
+    private LocalDateTime ehisLastSuccessfulHDate;
+    private LocalDateTime ehisLastSuccessfulVDate;
     private Boolean canEdit;
 
     public static TeacherDto of(Teacher teacher) {
@@ -29,6 +32,8 @@ public class TeacherDto extends TeacherForm {
         dto.setTeacherQualifications(StreamUtil.toMappedList(it -> EntityUtil.bindToDto(it, new TeacherQualificationForm()), teacher.getTeacherQualification()));
         dto.setTeacherMobility(StreamUtil.toMappedList(it -> EntityUtil.bindToDto(it, new TeacherMobilityForm()), teacher.getTeacherMobility()));
         dto.fullname = teacher.getPerson().getFullname();
+        dto.ehisLastSuccessfulVDate = teacher.getEhisSentVdt();
+        dto.ehisLastSuccessfulHDate = teacher.getEhisSentHdt();
         return dto;
     }
 
@@ -70,6 +75,22 @@ public class TeacherDto extends TeacherForm {
 
     public void setTeacherMobility(List<TeacherMobilityForm> teacherMobility) {
         this.teacherMobility = teacherMobility;
+    }
+
+    public LocalDateTime getEhisLastSuccessfulHDate() {
+        return ehisLastSuccessfulHDate;
+    }
+
+    public void setEhisLastSuccessfulHDate(LocalDateTime ehisLastSuccessfulHDate) {
+        this.ehisLastSuccessfulHDate = ehisLastSuccessfulHDate;
+    }
+
+    public LocalDateTime getEhisLastSuccessfulVDate() {
+        return ehisLastSuccessfulVDate;
+    }
+
+    public void setEhisLastSuccessfulVDate(LocalDateTime ehisLastSuccessfulVDate) {
+        this.ehisLastSuccessfulVDate = ehisLastSuccessfulVDate;
     }
 
     public Boolean getCanEdit() {

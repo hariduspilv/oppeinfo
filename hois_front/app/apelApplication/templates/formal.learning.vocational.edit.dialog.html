@@ -267,11 +267,8 @@
           <div flex="50">
             <md-input-container style="width: 100%">
               <label>{{'apel.formalLearnings.module' | translate}}/{{'apel.formalLearnings.theme' | translate}}</label>
-              <md-select ng-model="selectedModuleOrTheme" aria-label="substitutable modules/themes" ng-change="formalSelectedModuleOrThemeChanged()">
-                <md-option ng-repeat="val in modulesAndThemes" ng-value="val">
-                  <span ng-style="{'font-weight': val.isModule ? 600 : 400}">{{currentLanguageNameField(val)}}</span>
-                </md-option>
-              </md-select>
+              <hois-module-theme-select ng-model="selectedModuleOrTheme" ng-change="formalSelectedModuleOrThemeChanged()"
+                values="modulesAndThemes" aria-label="substitutable modules/themes"></hois-module-theme-select>
             </md-input-container>
           </div>
           <md-table-container>

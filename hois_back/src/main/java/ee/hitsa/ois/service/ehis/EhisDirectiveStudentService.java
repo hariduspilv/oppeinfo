@@ -1,31 +1,5 @@
 package ee.hitsa.ois.service.ehis;
 
-import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
-import static ee.hitsa.ois.util.JpaQueryUtil.resultAsStringList;
-
-import java.math.BigInteger;
-import java.time.LocalDate;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
-import javax.persistence.Query;
-import javax.transaction.Transactional;
-
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.FinalThesis;
 import ee.hitsa.ois.domain.FinalThesisSupervisor;
@@ -84,6 +58,30 @@ import ee.hois.xroad.ehis.generated.KhlOppevormiMuutus;
 import ee.hois.xroad.ehis.generated.KhlOppur;
 import ee.hois.xroad.ehis.generated.KhlStipendium;
 import ee.hois.xroad.ehis.generated.KhlStipendiumArr;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import javax.persistence.Query;
+import javax.transaction.Transactional;
+import java.math.BigInteger;
+import java.time.LocalDate;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsStringList;
 
 @Transactional
 @Service
@@ -315,6 +313,14 @@ public class EhisDirectiveStudentService extends EhisService {
         KhlOppekavaMuutus khlOppekavaMuutus = new KhlOppekavaMuutus();
         khlOppekavaMuutus.setMuutusKp(date(directive.getConfirmDate()));
         khlOppekavaMuutus.setUusOppekava(requiredCurriculumCode(directiveStudent.getCurriculumVersion().getCurriculum(), student));
+        if (student.getStudentGroup() != null) {
+            if (StudentUtil.isHigher(student) && student.getStudentGroup().getCurriculumAddress() != null) {
+                khlOppekavaMuutus.setToimumiskoht(StringUtils.leftPad(
+                        student.getStudentGroup().getCurriculumAddress().getAddressOv(), 4, '0'));
+            } else if (StudentUtil.isVocational(student) && student.getStudentGroup().getEhisSchool() != null) {
+                khlOppekavaMuutus.setOppeasutusFil(student.getStudentGroup().getEhisSchool().getEhisValue());
+            }
+        }
 
         KhlKorgharidusMuuda khlKorgharidusMuuda = new KhlKorgharidusMuuda();
         khlKorgharidusMuuda.setOppekavaMuutus(khlOppekavaMuutus);
@@ -619,6 +625,12 @@ public class EhisDirectiveStudentService extends EhisService {
         Short course = null;
         if (student.getStudentGroup() != null) {
             course = student.getStudentGroup().getCourse();
+            if (StudentUtil.isHigher(student) && student.getStudentGroup().getCurriculumAddress() != null) {
+                khlKorgharidusLisa.setOppetooToimumiskoht(StringUtils.leftPad(
+                        student.getStudentGroup().getCurriculumAddress().getAddressOv(), 4, '0'));
+            } else if (StudentUtil.isVocational(student) && student.getStudentGroup().getEhisSchool() != null) {
+                khlKorgharidusLisa.setOppeasutusFil(student.getStudentGroup().getEhisSchool().getEhisValue());
+            }
         }
         khlKorgharidusLisa.setKursus(course != null ? BigInteger.valueOf(course.longValue()) : null);
         khlKorgharidusLisa.setOppekava(requiredCurriculumCode(student));

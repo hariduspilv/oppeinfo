@@ -71,7 +71,7 @@
                   <td md-cell>{{row.idcode}}</td>
                   <td md-cell>
                     <hois-grade-select class="protocolGradeSelect" ng-model="row.grade" values="grades" aria-label="grade"
-                      ng-change="gradeChanged(row)" ng-disabled="!formState.canEditProtocol"></hois-grade-select>
+                      ng-change="gradeChanged(row)" ng-disabled="!formState.canEditProtocol || !row.canBeEdited"></hois-grade-select>
                   </td>
                   <td md-cell ng-if="formState.canChangeConfirmedProtocolGrade">
                     <md-input-container ng-if="row.gradeHasChanged">
@@ -81,13 +81,17 @@
                       {{row.addInfo}}
                     </span>
                   </td>
-                  <td md-cell ng-repeat="grade in protocol.curriculumGrades">
+                  <td md-cell ng-if="row.canSetCurriculumGrade" ng-repeat="grade in protocol.curriculumGrades">
                     <md-checkbox ng-click="setCurriculumGrade(row, grade.id)" ng-checked="grade.id === row.curriculumGrade.id"
-                      ng-disabled="!formState.canEditProtocol" aria-label="{{currentLanguageNameField(grade)}}"></md-checkbox>
+                      ng-disabled="!formState.canEditProtocol || !row.canBeEdited" aria-label="{{currentLanguageNameField(grade)}}"></md-checkbox>
+                  </td>
+                  <td md-cell ng-if="protocol.curriculumGrades.length > 0 && !row.canSetCurriculumGrade" colspan="{{protocol.curriculumGrades.length}}">
+                    {{'finalProtocol.curriculumGradeNotSet' | translate}}
                   </td>
                   <td md-cell ng-repeat="occupation in protocol.occupations">
                     <md-checkbox ng-model="row.occupations[occupation.code].granted" aria-label="{{occupation.code}}"
-                      ng-disabled="!formState.canEditProtocol || !row.canGrantOccupation" ng-change="setOccupation(row, occupation.code)"></md-checkbox>
+                      ng-disabled="!formState.canEditProtocol || !student.canBeEdited || !row.canGrantOccupation"
+                      ng-change="setOccupation(row, occupation.code)"></md-checkbox>
                       {{row.occupations[occupation.code].certificateNr}}
                   </td>
                   <td md-cell>

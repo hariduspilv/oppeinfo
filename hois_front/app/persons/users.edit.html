@@ -86,7 +86,7 @@
         </md-table-container>
       </div>
     </div>
-    <ng-include src="'persons/users.edit.action.buttons.html'"></ng-include>
+    <ng-include src="'persons/users.edit.action.buttons.html'" ng-if="user.role"></ng-include>
   </form>
 </div>
 

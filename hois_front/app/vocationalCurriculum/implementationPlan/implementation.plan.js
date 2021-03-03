@@ -60,7 +60,14 @@ angular.module('hitsaOis')
 
     $scope.curriculumId = curriculumEntity.id;
     $scope.studyForms = curriculumEntity.studyForms;
+    $scope.studyFields = curriculumEntity.studyFields;
     $scope.curriculumStudyForms = curriculumEntity.studyForms;
+
+    $scope.filterStudyFields = function (module) {
+      return function (subject) {
+        return ArrayUtils.includes(module.studyFields, subject.id);
+      };
+    };
 
     var admissionYears = [null];
     var currentYear = new Date().getFullYear();
@@ -155,6 +162,9 @@ angular.module('hitsaOis')
           dialogScope.occupationsSelected = {};
           dialogScope.partOccupationsSelected = {};
           dialogScope.specialitiesSelected = {};
+          dialogScope.formState = {
+            studyFields: $scope.studyFields
+          };
           dialogScope.module = {
             outcomes: [],
             occupations: []
@@ -173,6 +183,11 @@ angular.module('hitsaOis')
                   }
                 }
               });
+            }
+            if (angular.isArray(curriculumModule.studyFields)) {
+              dialogScope.module.studyFieldString = dialogScope.formState.studyFields
+                .filter($scope.filterStudyFields(curriculumModule))
+                .map($rootScope.currentLanguageNameField).sort().join('\n');
             }
           }
       },

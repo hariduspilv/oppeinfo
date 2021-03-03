@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>State Curriculum</title>
+    <style type="text/css">
+      {% include "styles.css" %}
+    </style>
+  </head>
+  <body>
+    <table class="reporttable">
+      <tr>
+        <td class="reporttableheader" colspan="2">{{ content.nameEt }}</td>
+      </tr>
+      <tr>
+        <td class="label" rowspan="2">{{ "report.curriculum.name" | translate }}</td>
+        <td class="label">{{ content.nameEt }}</td>
+      </tr>
+      <tr>
+        <td><p class="long-text"><i>{{ content.nameEn }}</i></p></td>
+      </tr>
+      <tr>
+        <td class="label">{{ "report.curriculum.objectives" | translate }}</td>
+        <td><p class="long-text">{{ content.objectives }}</p></td>
+      </tr>
+      <tr>
+        <td class="label">{{ "report.statecurriculum.admissionRequirements" | translate }}</td>
+        <td><p class="long-text">{{ content.admissionRequirements }}</p></td>
+      </tr>
+      <tr>
+        <td class="label">{{ "report.statecurriculum.graduationRequirements" | translate }}</td>
+        <td><p class="long-text">{{ content.graduationRequirements }}</p></td>
+      </tr>
+      <tr>
+        <td class="label">{{ "report.statecurriculum.EKR" | translate }}</td>
+        <td>{{ content.iscedClass }}</td>
+      </tr>
+	  <tr>
+        <td class="label">{{ "report.statecurriculum.type" | translate }}</td>
+        <td>{{ content.stateCurrClass | classifierName(mainClassCode='EHIS_ROK') }}</td>
+      </tr>
+      <tr>
+        <td class="label">{{ "report.statecurriculum.structure" | translate }}</td>
+        <td>
+		<table class="reporttable reportsubtable">
+	        {% for subjectArea in content.subjectAreas %}
+	        <tr>
+				<td class="label">{{ "report.statecurriculum.subjectArea" | translate }}: {{ subjectArea.subjectArea | classifierName(mainClassCode='AINEVALDKOND') }}</td>
+			</tr>
+				{% for subject in subjectArea.subjects %}
+				<tr>
+					<td>{{ subject.subject | classifierName(mainClassCode='EHIS_AINE') }}</td>
+				</tr>
+				{% endfor %}
+			{% endfor %}
+		</table>
+
+        
+		</td>
+      </tr>
+	  {% if content.basicSchool != true %}
+	  <tr>
+        <td colspan="2">
+        	<span>{{ "report.statecurriculum.minimalCourses" | translate }}</span>
+        	<p class="state-curriculum-very-long-text">{{ content.courses }}</p>
+        </td>
+      </tr>
+	  {% endif %}	
+      <tr>
+        <td colspan="2">
+        	<span>{{ "report.statecurriculum.description" | translate }}</span>
+        	<p class="state-curriculum-very-long-text">{{ content.description }}</p>
+        </td>
+      </tr>
+	  <tr>
+        <td colspan="2">
+        	<span>{{ "report.statecurriculum.riigiteatajaUrl" | translate }}</span>
+        	<p class="state-curriculum-very-long-text">{{ content.riigiteatajaUrl }}</p>
+        </td>
+      </tr>
+    </table>
+    
+    
+    <p class="reporttableheader">{{ content.nameEt }} {{ "report.statecurriculum.subject.descriptions" | translate }}</p>
+    {% for subjectArea in content.subjectAreas %}
+		{% for subject in subjectArea.subjects %}
+		<table class="reporttable">
+			 <tr>
+				<td class="label">{{ "report.statecurriculum.subject.subjectArea" | translate }}</td>
+				<td class="label">{{ "report.statecurriculum.subject.name" | translate }}</td>
+				<td class="label">{{ "report.statecurriculum.subject.syllabus" | translate }}</td>
+				<td class="label">{{ "report.statecurriculum.subject.required" | translate }}</td>
+				<td class="label">{{ (content.basicSchool ? "report.statecurriculum.subject.weeks" : "report.statecurriculum.subject.courses") | translate }}</td>
+			 </tr>
+			<tr>
+				<td class="center">{{ subjectArea.subjectArea | classifierName(mainClassCode='AINEVALDKOND') }}</td>
+				<td class="center">{{ subject.subject | classifierName(mainClassCode='EHIS_AINE') }}</td>
+				<td class="center">{{ subject.riigiteatajaUrl }}</td>
+				<td class="center">{{ (subject.isRequired ? "yes" : "no") | translate }}</td>
+				<td class="center">{{ subject.coursesOrWeeks }}</td>
+			 </tr>
+			<tr>
+				<td colspan="5" class="align-top">
+					<span class="label">{{ "report.statecurriculum.subject.competences" | translate }}</span>
+				</td>
+			</tr>
+			{% for competence in subject.competences %}
+			<tr>
+				<td colspan="5">
+					<span>{{ competence.competence | classifierName(mainClassCode='PADEVUS') }}</span>
+					<p class="state-curriculum-very-long-text">{{ competence.description }}</p>
+				</td>
+			</tr>
+			{% endfor %}
+		</table>
+		<br/>
+		{% endfor %}
+    {% endfor %}
+    
+  </body>
+</html>

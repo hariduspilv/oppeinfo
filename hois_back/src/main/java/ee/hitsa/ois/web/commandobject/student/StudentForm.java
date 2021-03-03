@@ -27,6 +27,8 @@ public class StudentForm extends VersionedCommand {
     @ClassifierRestriction(MainClassCode.OPPEKEEL)
     private String studyLanguage;
     private AutocompleteResult curriculumSpeciality;
+    @ClassifierRestriction(MainClassCode.SPETSKUTSE)
+    private String speciality;
     private LocalDate nominalStudyEnd;
     @ClassifierRestriction(MainClassCode.FINTAPSUSTUS)
     private String finSpecific;
@@ -80,6 +82,14 @@ public class StudentForm extends VersionedCommand {
 
     public void setCurriculumSpeciality(AutocompleteResult curriculumSpeciality) {
         this.curriculumSpeciality = curriculumSpeciality;
+    }
+
+    public String getSpeciality() {
+        return speciality;
+    }
+
+    public void setSpeciality(String speciality) {
+        this.speciality = speciality;
     }
 
     public LocalDate getNominalStudyEnd() {

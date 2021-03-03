@@ -2,12 +2,21 @@ package ee.hitsa.ois.web;
 
 import static ee.hitsa.ois.util.UserUtil.assertIsSchoolAdmin;
 
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.List;
 import java.util.Optional;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
+import ee.hitsa.ois.domain.StudyYear;
+import ee.hitsa.ois.enums.Language;
+import ee.hitsa.ois.web.commandobject.teacher.TeacherOtherLoadForm;
+import ee.hitsa.ois.web.dto.EhisTeacherMetaLogDto;
+import ee.hitsa.ois.web.dto.TeacherOtherLoadDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -218,5 +227,41 @@ public class TeacherController {
     public FutureStatusResponse ehisStudentExportStatus(HoisUserDetails user, @RequestParam(required = true) String key) {
         assertIsSchoolAdmin(user);
         return asyncManager.getState(user, AsyncMemoryManager.EHIS_TEACHER, key, true);
+    }
+
+    @GetMapping("/ehisLastSentHistory")
+    public EhisTeacherMetaLogDto ehisLastSentHistory(HoisUserDetails user) {
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_ANDMEVAHETUS_EHIS);
+        return ehisTeacherExportService.getLastSentHistory(user.getSchoolId());
+    }
+
+    @GetMapping("/ehisSentHistory")
+    public Page<EhisTeacherMetaLogDto> ehisSentHistory(HoisUserDetails user, Pageable pageable) {
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_ANDMEVAHETUS_EHIS);
+        return ehisTeacherExportService.getSentHistory(user.getSchoolId(), pageable);
+    }
+
+    @GetMapping("/{id:\\d+}/otherLoads/{studyYearId:\\d+}")
+    public List<TeacherOtherLoadDto> otherLoads(HoisUserDetails user, @WithEntity Teacher teacher,
+                                                @WithEntity("studyYearId") StudyYear studyYear) {
+        TeacherUserRights.assertCanView(user, teacher);
+        return teacherService.getOtherLoads(teacher, studyYear);
+    }
+
+    @PostMapping("/{id:\\d+}/otherLoads/{studyYearId:\\d+}")
+    public List<TeacherOtherLoadDto> saveOtherLoads(HoisUserDetails user, @WithEntity Teacher teacher,
+                                                    @WithEntity("studyYearId") StudyYear studyYear,
+                                                    @RequestBody @Valid List<TeacherOtherLoadForm> form) {
+        TeacherUserRights.assertCanEdit(user, teacher);
+        return otherLoads(user, teacherService.saveOtherLoads(user, teacher, studyYear, form), studyYear);
+    }
+
+    @GetMapping("/{id:\\d+}/loads/{studyYearId:\\d+}/teacherload.pdf")
+    public void loads(HttpServletResponse response, HoisUserDetails user, @WithEntity Teacher teacher,
+                      @WithEntity("studyYearId") StudyYear studyYear, @RequestParam(required = false) Language lang) throws IOException {
+        TeacherUserRights.assertCanView(user, teacher);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
+        HttpUtil.pdf(response, String.format("%s_%s.pdf", teacher.getPerson().getFullname(), formatter.format(LocalDate.now())),
+                teacherService.teacherLoads(user, teacher, studyYear, lang != null ? lang : Language.ET));
     }
 }

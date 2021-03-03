@@ -197,10 +197,13 @@
               <td md-cell>
                 <table>
                   <tr ng-repeat="program in subject.programs | orderBy: 'teacherName'">
-                    <td>{{program.teacherName}}
+                    <td ng-if="program.teacherName">{{program.teacherName}}
                       <span ng-if="auth.isStudent() && program.id !== -1 && program.publicStudent">
-                        (<a href="#/subjectProgram/public/{{program.id}}/view" hide-xs>{{'declaration.seeProgram' | translate}}</a><a href="#/subjectProgram/public/{{program.id}}/view" show-xs>{{'declaration.seeProgramMobile' | translate}}</a>)
+                        (<a href="#/subjectProgram/public/{{program.id}}/view" hide-xs>{{'declaration.seeProgram' | translate}}</a><a href="#/subjectProgram/public/{{program.id}}/view" hide show-xs>{{'declaration.seeProgramMobile' | translate}}</a>)
                       </span>
+                    </td>
+                    <td ng-if="!program.teacherName && auth.isStudent() && program.id !== -1 && program.publicStudent">
+                      <a href="#/subjectProgram/public/{{program.id}}/view" hide-xs>{{'subjectProgram.jointProgram' | translate}}</a>
                     </td>
                   </tr>
                 </table>

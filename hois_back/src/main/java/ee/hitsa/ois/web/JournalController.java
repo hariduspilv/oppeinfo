@@ -284,9 +284,10 @@ public class JournalController {
     }
 
     @GetMapping("/studentJournalTasks")
-    public StudentJournalTaskListDto studentJournalTasks(HoisUserDetails user, @RequestParam("studentId") Long studentId) {
+    public StudentJournalTaskListDto studentJournalTasks(HoisUserDetails user, @RequestParam("studentId") Long studentId,
+            @RequestParam(value = "presentTasks", required = false) Boolean presentTasks) {
         UserUtil.assertIsSchoolAdminOrStudentOrRepresentative(user);
-        return journalService.studentJournalTasks(user.getSchoolId(), studentId);
+        return journalService.studentJournalTasks(user.getSchoolId(), studentId, presentTasks);
     }
 
     @GetMapping("/studentJournalStudy")

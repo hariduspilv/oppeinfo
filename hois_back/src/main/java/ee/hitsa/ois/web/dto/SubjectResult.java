@@ -1,5 +1,7 @@
 package ee.hitsa.ois.web.dto;
 
+import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionHigherModuleDto;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -16,6 +18,8 @@ public class SubjectResult extends AutocompleteResult {
     private LocalDate gradeDate;
     private BigDecimal credits;
     private String teachers;
+    private CurriculumVersionHigherModuleDto module;
+    private Boolean isOptional;
 
     public SubjectResult(Long id, String nameEt, String nameEn, String code, BigDecimal credits) {
         super(id, nameEt, nameEn);
@@ -98,4 +102,19 @@ public class SubjectResult extends AutocompleteResult {
         this.teachers = teachers;
     }
 
+    public CurriculumVersionHigherModuleDto getModule() {
+        return module;
+    }
+
+    public void setModule(CurriculumVersionHigherModuleDto module) {
+        this.module = module;
+    }
+
+    public Boolean getIsOptional() {
+        return isOptional;
+    }
+
+    public void setIsOptional(Boolean isOptional) {
+        this.isOptional = isOptional;
+    }
 }

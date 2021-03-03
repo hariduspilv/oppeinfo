@@ -25,10 +25,10 @@ public class StudentViewDto extends StudentForm {
     private AutocompleteResult school;
     private String status;
     private Long curriculum;
+    private Boolean curriculumHigher;
     private AutocompleteResult curriculumVersion;
     private AutocompleteResult curriculumObject;
     private AutocompleteResult studentGroup;
-    private String speciality;
     private Short course;
     private String studentCard;
     private String studentCardStatus;
@@ -130,14 +130,6 @@ public class StudentViewDto extends StudentForm {
 
     public void setStudentGroup(AutocompleteResult studentGroup) {
         this.studentGroup = studentGroup;
-    }
-
-    public String getSpeciality() {
-        return speciality;
-    }
-
-    public void setSpeciality(String speciality) {
-        this.speciality = speciality;
     }
 
     public Short getCourse() {
@@ -592,5 +584,13 @@ public class StudentViewDto extends StudentForm {
 
     public void setUserCanViewStudentAddInfo(Boolean userCanViewStudentAddInfo) {
         this.userCanViewStudentAddInfo = userCanViewStudentAddInfo;
+    }
+
+    public Boolean getCurriculumHigher() {
+        return curriculumHigher;
+    }
+
+    public void setCurriculumHigher(Boolean curriculumHigher) {
+        this.curriculumHigher = curriculumHigher;
     }
 }

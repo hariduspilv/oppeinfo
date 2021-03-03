@@ -47,7 +47,6 @@ public class TeacherForm extends VersionedCommand {
     private String addInfo;
     @ClassifierRestriction(MainClassCode.EHIS_EMAKEEL)
     private String nativeLanguage;
-    private LocalDateTime ehisLastSuccessfulDate;
     private String untisCode;
 
     public Boolean getIsStudyPeriodScheduleLoad() {
@@ -152,14 +151,6 @@ public class TeacherForm extends VersionedCommand {
 
     public void setNativeLanguage(String nativeLanguage) {
         this.nativeLanguage = nativeLanguage;
-    }
-
-    public LocalDateTime getEhisLastSuccessfulDate() {
-        return this.ehisLastSuccessfulDate;
-    }
-    
-    public void setEhisLastSuccessfulDate(LocalDateTime ehisLastSuccessfulDate) {
-        this.ehisLastSuccessfulDate = ehisLastSuccessfulDate;
     }
 
     public String getUntisCode() {

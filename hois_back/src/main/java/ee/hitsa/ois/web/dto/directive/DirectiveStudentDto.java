@@ -378,8 +378,10 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
         if (grade != null) {
             dto.setCurriculumGrade(AutocompleteResult.of(grade));
         }
-        dto.setModules(StreamUtil.nullSafeList(directiveStudent.getModules()).stream()
-                .map(m -> DirectiveFormStudentModule.of(m)).collect(Collectors.toList()));
+        if (!DirectiveType.KASKKIRI_IMMATV.equals(directiveType)) {
+            dto.setModules(StreamUtil.nullSafeList(directiveStudent.getModules()).stream()
+                    .map(m -> DirectiveFormStudentModule.of(m)).collect(Collectors.toList()));
+        }
         dto.setDirectiveStudent(EntityUtil.getNullableId(directiveStudent.getDirectiveStudent()));
         if (DirectiveType.KASKKIRI_DUPLIKAAT.equals(directiveType)) {
             dto.setDiplomaDto(DiplomaStudentDto.fill(directiveStudent));

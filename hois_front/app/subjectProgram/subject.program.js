@@ -124,12 +124,17 @@ function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $locat
           $scope.subjectProgram = Endpoint.get({id: subjectProgramId}, dtoToModel);
         }
         $scope.subjectProgram.$promise.then(function(response) {
+          if (!isView && !$scope.subjectProgram.canEdit) {
+            message.error('main.messages.error.nopermission');
+            $scope.back($scope.getDefaultBack());
+            return;
+          }
           subjectId = response.subjectId;
           getAdditionalData(subjectId, $scope.subjectProgram.id);
+          checkLock();
         }).catch(function() {
           $scope.back($scope.getDefaultBack());
         });
-        $scope.subjectProgram.$promise.then(checkLock);
       });
     } else {
       $scope.subjectProgram = new Endpoint(initial);
@@ -403,11 +408,7 @@ function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $locat
     dialogService.confirmDialog({prompt: 'subjectProgram.operation.delete.message'}, function() {
       $scope.subjectProgram.$delete().then(function () {
         message.info('main.messages.delete.success');
-        if (formType === formTypes.periods) {
-          $location.url("/subjectStudyPeriods");
-        } else if (formType === formTypes.programs) {
-          $location.url("/subjectProgram");
-        }
+        $scope.back($scope.getDefaultBack() + "?_noback");
       });
     });
   };
@@ -453,11 +454,11 @@ function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $locat
     checkLock(function () {
       if ($scope.subjectProgram.status !== 'AINEPROGRAMM_STAATUS_I') {
         dialogService.confirmDialog({prompt: 'subjectProgram.messages.editAccept'}, function() {
-          $location.url("/subjectProgram/" + formType + "/" + subjectProgramId + "/edit");
+          $location.url("/subjectProgram/" + formType + "/" + subjectProgramId + "/edit?_noback");
         });
       } else {
         checkLock(function () {
-          $location.url("/subjectProgram/" + formType + "/" + subjectProgramId + "/edit");
+          $location.url("/subjectProgram/" + formType + "/" + subjectProgramId + "/edit?_noback");
         }, true);
       }
     }, true);
@@ -553,7 +554,7 @@ function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $locat
       if ($scope.auth.isTeacher()) {
         return "#/teachers/myData";
       } else if (($scope.subjectProgram.teachers || []).length === 1) {
-        return "#/teachers/" + ($scope.auth.isTeacher() ? "myData" : $scope.subjectProgram.teachers[0].teacher.id);
+        return "#/teachers/" + ($scope.auth.isTeacher() ? "myData" : $scope.subjectProgram.teachers[0].teacherId);
       } else {
         return "#/subjectStudyPeriods";
       }
@@ -565,6 +566,7 @@ function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $locat
 }]).controller('SubjectProgramSearch', ['$scope', 'QueryUtils', '$route', 'DataUtils', 'Classifier', 'message', '$q',
 function ($scope, QueryUtils, $route, DataUtils, Classifier, message, $q) {
   $scope.myData = $route.current.locals.params.myData;
+  var initialSearch = $route.current.locals.params.initialSearch || !!$scope.$parent.initialProgramSearch;
 
   var baseUrl = '/subject/subjectProgram';
   QueryUtils.createQueryForm($scope, baseUrl + ($scope.myData ? '/myPrograms' : ''));
@@ -588,6 +590,7 @@ function ($scope, QueryUtils, $route, DataUtils, Classifier, message, $q) {
     });
   } else {
     $scope.subjectAutocompleteUrl = baseUrl + ($scope.myData ? "/program" : "/curriculum") + "/subjects";
+    deferred.resolve();
   }
 
   function preselectCurrentStudyYearOrPeriod() {
@@ -601,11 +604,15 @@ function ($scope, QueryUtils, $route, DataUtils, Classifier, message, $q) {
 
   function afterStudyPeriodsWithYearLoad() {
     preselectCurrentStudyYearOrPeriod();
-    deferred.promise.then(function () {
+    if (initialSearch) {
       if (!$scope.myData) {
+        deferred.promise.then(function () {
+          $scope.loadData();
+        });
+      } else {
         $scope.loadData();
       }
-    });
+    }
     $scope.studyPeriods.forEach(function (studyPeriod) {
       studyPeriod[$scope.currentLanguageNameField()] = $scope.currentLanguageNameField(studyPeriod.studyYear) + ' ' +
         $scope.currentLanguageNameField(studyPeriod);
@@ -646,4 +653,8 @@ function ($scope, QueryUtils, $route, DataUtils, Classifier, message, $q) {
       $scope.loadData();
     }
   };
+
+  $scope.$on('searchPrograms', function () {
+    $scope.load();
+  });
 }]);

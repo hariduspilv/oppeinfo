@@ -19,6 +19,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.domain.curriculum.CurriculumAddress;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -209,6 +210,12 @@ public class StudentGroupService {
             throw new AssertionFailedException("Curriculum mismatch");
         }
 
+        CurriculumAddress address = EntityUtil.getOptionalOne(CurriculumAddress.class, form.getCurriculumAddress(), em);
+        if (address != null && !EntityUtil.getId(address.getCurriculum()).equals(curriculumId)) {
+            throw new AssertionFailedException("Curriculum mismatch");
+        }
+        studentGroup.setCurriculumAddress(address);
+
         if (studentGroup.getCurriculumVersion() != null
                 && !studentGroup.getCurriculumVersion().equals(curriculumVersion)) {
             List<LessonPlan> pendingLessonPlans = pendingLessonPlans(studentGroup, form.getCurriculumVersion());
@@ -335,10 +342,24 @@ public class StudentGroupService {
         }
         data.put("studyForms", studyForms);
         data.put("origStudyLevel", EntityUtil.getCode(curriculum.getOrigStudyLevel()));
-        data.put("specialities", findSpecialities(curriculum));
+//        data.put("specialities", findSpecialities(curriculum));
+        data.put("hasSpecialities", hasSpecialities(curriculum));
         data.put("isVocational", Boolean.valueOf(CurriculumUtil.isVocational(curriculum)));
         data.put("studyPeriodInYears", Integer.valueOf((int) Math.ceil((double) curriculum.getStudyPeriod().intValue() / 12)));
+        data.put("curriculumAddresses", StreamUtil.nullSafeSet(curriculum.getAddresses()).stream()
+                .map(AutocompleteResult::of).collect(Collectors.toList()));
         return data;
+    }
+
+    private Boolean hasSpecialities(Curriculum curriculum) {
+        if (CurriculumUtil.isHigher(curriculum)) {
+            return Boolean.valueOf(curriculum.getSpecialities().size() > 1);
+        } else if (CurriculumUtil.isVocational(curriculum)) {
+            return Boolean.valueOf(curriculum.getOccupations().stream()
+                    .flatMap(co -> co.getSpecialities().stream())
+                    .findAny().isPresent());
+        }
+        return Boolean.FALSE;
     }
 
     private List<Map<String, Object>> findSpecialities(Curriculum curriculum) {

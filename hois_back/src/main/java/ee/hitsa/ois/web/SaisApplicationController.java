@@ -1,10 +1,16 @@
 package ee.hitsa.ois.web;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
+import ee.hitsa.ois.concurrent.AsyncManager;
+import ee.hitsa.ois.concurrent.AsyncMemoryManager;
+import ee.hitsa.ois.concurrent.request.SaisApplicationRequest;
+import ee.hitsa.ois.web.dto.FutureStatusResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,6 +19,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.sais.SaisApplication;
@@ -34,6 +41,8 @@ public class SaisApplicationController {
 
     @Autowired
     private SaisApplicationService saisApplicationService;
+    @Autowired
+    private AsyncManager asyncManager;
 
     @GetMapping
     public Page<SaisApplicationSearchDto> search(SaisApplicationSearchCommand command, Pageable pageable, HoisUserDetails user) {
@@ -59,12 +68,6 @@ public class SaisApplicationController {
         return saisApplicationService.importCsv(command.getFile().getFdata(), user);
     }
 
-    @PostMapping("importSais")
-    public SaisApplicationImportResultDto importFromSais(@Valid @RequestBody SaisApplicationImportForm form, HoisUserDetails user) {
-        UserUtil.assertIsSchoolAdmin(user);
-        return saisApplicationService.importFromSais(form,  user);
-    }
-
     @GetMapping("sample.csv")
     public void csvSampleFile(HttpServletResponse response) throws IOException {
         HttpUtil.csvUtf8WithBom(response, "sample.csv", saisApplicationService.sampleCsvFile());
@@ -73,5 +76,23 @@ public class SaisApplicationController {
     @GetMapping("classifiers.csv")
     public void classifiersFile(HttpServletResponse response) throws IOException {
         HttpUtil.csvUtf8WithBom(response, "classifiers.csv", saisApplicationService.classifiersFile());
+    }
+
+    @PostMapping("/importSais")
+    public Map<String, Object> importSais(HoisUserDetails user, @Valid @RequestBody SaisApplicationImportForm form) {
+        UserUtil.assertIsSchoolAdmin(user);
+        String requestHash = asyncManager.generateKey(user);
+        SaisApplicationRequest request = saisApplicationService.createRequest(user, requestHash, form);
+        asyncManager.createRequest(user, AsyncMemoryManager.SAIS_APPLIACTION, requestHash, request);
+        asyncManager.processRequest(request);
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("key", requestHash);
+        return map;
+    }
+
+    @GetMapping("/importSaisStatus")
+    public FutureStatusResponse importSaisStatus(HoisUserDetails user, @RequestParam() String key) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return asyncManager.getState(user, AsyncMemoryManager.SAIS_APPLIACTION, key, true);
     }
 }

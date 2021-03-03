@@ -1,0 +1,195 @@
+<style>
+    .subtable tr:first-child td {
+      border-top: none;
+    }
+  </style>
+  <div class="ois-form-layout-padding">
+      <div flex>
+        <form name="stateCurriculumForm" layout="column" class="nomargin">
+          <fieldset tabindex="1" flex>
+            <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.mainData' | translate}}</legend>
+            <div layout="column">
+              <div layout="row" layout-sm="column" layout-xs="column">
+                <md-input-container flex="50" flex-sm="100" flex-xs="100">
+                  <label>{{'stateCurriculum.enter.nameEt' | translate}}</label>
+                  <input ng-model="stateCurriculum.nameEt" type="text" readonly>
+                </md-input-container>
+                <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                  <label>{{'stateCurriculum.enter.nameEn' | translate}}</label>
+                  <input ng-model="stateCurriculum.nameEn" type="text" readonly>
+                </md-input-container>
+              </div>
+              <div layout="row" layout-sm="column" layout-xs="column">
+                <md-input-container flex="50" flex-sm="100" flex-xs="100">
+                  <md-input-container layout="row" layout-align="start center" flex>
+                    <md-radio-group layout="row" ng-model="stateCurriculum.stateCurrClass" disabled>
+                      <md-radio-button value="EHIS_ROK_GROK" aria-label="{{'stateCurriculum.curriculum.highSchool' | translate}}">
+                        {{'stateCurriculum.curriculum.highSchool' | translate}}</md-radio-button>
+                      <md-radio-button value="EHIS_ROK_PROK" aria-label="{{'stateCurriculum.curriculum.basicSchool' | translate}}">
+                        {{'stateCurriculum.curriculum.basicSchool' | translate}}</md-radio-button>
+                    </md-radio-group>
+                  </md-input-container>
+                </md-input-container>
+    
+                <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                  <label>{{'stateCurriculum.EKR' | translate}}</label>
+                  <hois-classifier-select ng-model="stateCurriculum.iscedClass" main-classifier-code="EKR"
+                    model-value-attr="code" disabled></hois-classifier-select>
+                </md-input-container>
+              </div>
+            </div>
+          </fieldset>
+          <div>&nbsp;</div>
+          <fieldset tabindex="2">
+            <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.commonData' | translate}}</legend>
+            <div layout="column">
+              <md-input-container flex>
+                <label>{{'stateCurriculum.enter.objectivesEt' | translate}}{{getStar()}}</label>
+                <textarea ng-model="stateCurriculum.objectivesEt" readonly max-rows="10"></textarea>
+              </md-input-container>
+              <md-input-container flex>
+                <label>{{'stateCurriculum.enter.objectivesEn' | translate}}</label>
+                <textarea ng-model="stateCurriculum.objectivesEn" readonly max-rows="10"></textarea>
+              </md-input-container>
+    
+              <md-input-container flex>
+                <label>{{'stateCurriculum.enter.admission.requirementsEt' | translate}}</label>
+                <textarea ng-model="stateCurriculum.admissionRequirementsEt" readonly max-rows="10"></textarea>
+              </md-input-container>
+              <md-input-container flex>
+                <label>{{'stateCurriculum.enter.admission.requirementsEn' | translate}}</label>
+                <textarea ng-model="stateCurriculum.admissionRequirementsEn" readonly max-rows="10"></textarea>
+              </md-input-container>
+              <md-input-container flex>
+                <label>{{'stateCurriculum.enter.graduation.requirementsEt' | translate}}</label>
+                <textarea ng-model="stateCurriculum.graduationRequirementsEt" readonly max-rows="10"></textarea>
+              </md-input-container>
+              <md-input-container flex>
+                <label>{{'stateCurriculum.enter.graduation.requirementsEn' | translate}}</label>
+                <textarea ng-model="stateCurriculum.graduationRequirementsEn" readonly max-rows="10"></textarea>
+              </md-input-container>
+            </div>
+          </fieldset>
+          <div>&nbsp;</div>
+          <fieldset tabindex="3" flex>
+            <legend md-colors="{color: 'primary-800'}" class="md-title-small" ng-class="{invalid: stateCurriculumForm.$submitted && !subjectsValid()}">{{'stateCurriculum.enter.subject.subjects' | translate}}</legend>
+            <md-table-container>
+              <table md-table class="secondary-table">
+                <thead md-head>
+                  <tr md-row>
+                    <th md-column>{{'stateCurriculum.enter.subject.label' | translate}}</th>
+                    <th md-column>{{'stateCurriculum.enter.subject.syllabus' | translate}}</th>
+                    <th md-column>{{'stateCurriculum.enter.subject.required' | translate}}</th>
+                    <th md-column>{{stateCurriculum.stateCurrClass === 'EHIS_ROK_GROK' ? ('stateCurriculum.enter.subject.courses' | translate) : ('stateCurriculum.enter.subject.weeks' | translate)}}</th>
+                    <th md-column>{{'stateCurriculum.enter.subject.competences' | translate}}</th>
+                  </tr>
+                </thead>
+                <tbody md-body ng-repeat="(key, value) in formState.modulesMap">
+                  <tr md-row class="occupation-header2">
+                    <td colspan="5">
+                      <div layout="row" style="margin-left: 10px;">
+                        {{'stateCurriculum.enter.subject.subjectArea' | translate}}: 
+                        <hois-classifier-value style="margin-left: 10px;" ng-model="key" main-classifier-code="AINEVALDKOND"></hois-classifier-value>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr ng-repeat="module in value | orderBy: 'module'" ng-class-odd="'odd'" ng-class-even="'even'">
+                    <td md-cell>
+                        <a ng-click="openViewSubjectDialog(module)">
+                          <hois-classifier-value ng-model="module.module" main-classifier-code="EHIS_AINE"></hois-classifier-value>
+                        </a>
+                    </td>
+                    <td md-cell ng-bind-html="module.riigiteatajaUrl | linky: '_blank'"></td>
+                    <td md-cell>
+                      <md-checkbox ng-model="module.isAdditional" aria-label="{{'stateCurriculum.enter.subject.required' | translate}}" disabled>
+                      </md-checkbox>
+                    </td>
+                    <td md-cell>{{module.coursesOrWeeks}}</td>
+                    <td md-cell>
+                      <table class="subtable">
+                        <tbody md-body>
+                          <tr md-row ng-repeat="competence in module.competences | orderBy: ['competence', 'description']">
+                            <td md-cell style="padding-left: 0px"><hois-classifier-value ng-model="competence.competence" main-classifier-code="PADEVUS"></hois-classifier-value></td>
+                            <td md-cell>{{competence.description}}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </md-table-container>
+          </fieldset>
+    
+          <div>&nbsp;</div>
+          <fieldset tabindex="5">
+            <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.additionalInfo' | translate}}</legend>
+    
+            <div layout="column">
+              <div layout="row" ng-if="stateCurriculum.stateCurrClass === 'EHIS_ROK_GROK'">
+                <md-input-container style="width: 180px">
+                  <label>{{'stateCurriculum.enter.courses' | translate}}</label>
+                  <input type="number" name="courses" ng-model="stateCurriculum.courses" readonly
+                    aria-label="{{'stateCurriculum.enter.courses' | translate}}">
+                </md-input-container>
+              </div>
+    
+              <md-input-container flex>
+                <label>{{'stateCurriculum.enter.comment' | translate}}</label>
+                <textarea ng-model="stateCurriculum.description" readonly max-rows="10"></textarea>
+              </md-input-container>
+              <div class="form-readonly" layout="column">
+                <br>
+                <md-input-container flex>
+                  <label>{{'stateCurriculum.enter.riigiteataja' | translate}}</label>
+                  <hois-value value="stateCurriculum.riigiteatajaUrl" hois-linky></hois-value>
+                </md-input-container>
+              </div>
+            </div>
+          </fieldset>
+    
+          <div>&nbsp;</div>
+          <fieldset tabindex="6">
+            <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.statuses' | translate}}</legend>
+            <div layout="column">
+              <div layout="row" flex>
+                <md-input-container>
+                  <label>{{'stateCurriculum.enter.validFrom' | translate}}{{getStar()}}</label>
+                  <md-datepicker ng-model="stateCurriculum.validFrom" disabled md-open-on-focus>
+                  </md-datepicker>
+                </md-input-container>
+                <md-input-container flex-offset="5">
+                  <label>{{'stateCurriculum.enter.validThru' | translate}}</label>
+                  <md-datepicker ng-model="stateCurriculum.validThru" disabled md-open-on-focus>
+                  </md-datepicker>
+                </md-input-container>
+              </div>
+              <div class="form-readonly top-margin" flex layout="row">
+                <md-input-container flex="100">
+                  <label class="label">{{'main.status' | translate}}</label>
+                  <hois-classifier-value ng-model="stateCurriculum.status" main-classifier-code="OPPEKAVA_STAATUS"></hois-classifier-value>
+                </md-input-container>
+              </div>
+            </div>
+          </fieldset>
+          <hois-created-modified object="stateCurriculum"></hois-created-modified>
+        </form>
+    
+        <div layout="row">
+            <div ng-show="stateCurriculum.status === STATUS.ENTERING">
+              <md-button ng-href="#/secondaryStateCurriculum/{{stateCurriculum.id}}/edit?_noback" class="md-raised md-primary" ng-if="stateCurriculum.canChange">{{'main.button.change' | translate}}
+              </md-button>
+            </div>
+            <div ng-show="stateCurriculum.status === STATUS.VERIFIED">
+              <md-button ng-click="goToEditForm()" class="md-raised md-primary" ng-if="stateCurriculum.canChange">{{'main.button.change' | translate}}
+              </md-button>
+              <md-button class="md-raised md-default" ng-click="close()" ng-if="stateCurriculum.canClose">
+                {{'stateCurriculum.statusButton.close' | translate}}
+              </md-button>
+            </div>
+          <a href="{{formState.secondaryStateCurriculumPdfUrl}}" target="_blank" class="md-button md-raised" ng-if="stateCurriculum.id && !isPublic">{{'main.button.print' | translate}}</a>
+          <md-button ng-click="back('#/stateCurriculum')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+        </div>
+      </div>
+    </div>
+    

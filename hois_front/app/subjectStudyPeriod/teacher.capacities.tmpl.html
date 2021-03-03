@@ -54,8 +54,8 @@
                            pattern="^\d+$" ng-disabled="!subject.capacityDiff">
                   </span>
                 </td>
-                <td class="bold">{{capacitiesUtil.capacitiesSumBySsp(teacher, subgroup.id)}}</td>
-                <td class="bold">{{capacitiesUtil.toEap(capacitiesUtil.capacitiesSumBySsp(teacher, subgroup.id)) | number: 2}}</td>
+                <td class="bold">{{capacitiesUtil.capacitiesSumBySspAndSubgroup(teacher, subgroup.id)}}</td>
+                <td class="bold">{{capacitiesUtil.toEap(capacitiesUtil.capacitiesSumBySspAndSubgroup(teacher, subgroup.id)) | number: 2}}</td>
               </tr>
             </tbody>
             <tbody>

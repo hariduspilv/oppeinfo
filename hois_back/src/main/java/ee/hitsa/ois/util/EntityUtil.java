@@ -71,6 +71,11 @@ public abstract class EntityUtil {
         return bindToEntity(command, entity, null, ignoredProperties);
     }
 
+
+    public static <E> E bindToEntity(Object command, E entity, ClassifierRepository repository, String...ignoredProperties) {
+        return bindToEntity(command, entity, repository, true, ignoredProperties);
+    }
+
     /**
      * Copy properties from command to entity.
      * Only properties with public getter/setter are copied. Empty strings are copied as nulls.
@@ -86,7 +91,8 @@ public abstract class EntityUtil {
      * @throws FatalBeanException if the copying failed
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public static <E> E bindToEntity(Object command, E entity, ClassifierRepository repository, String...ignoredProperties) {
+    public static <E> E bindToEntity(Object command, E entity, ClassifierRepository repository,
+                                     boolean validateClassifiers, String...ignoredProperties) {
         List<String> ignored = Arrays.asList(ignoredProperties);
         Map<String, ClassifierRestriction> classifierProperties = new HashMap<>();
         for(PropertyDescriptor spd : BeanUtils.getPropertyDescriptors(command.getClass())) {
@@ -143,7 +149,7 @@ public abstract class EntityUtil {
             }
         }
         if(!classifierProperties.isEmpty() && repository != null) {
-            bindClassifiers(command, entity, classifierProperties, repository);
+            bindClassifiers(command, entity, classifierProperties, repository, validateClassifiers);
         }
 
         return entity;
@@ -242,7 +248,7 @@ public abstract class EntityUtil {
      *
      * @param storedValues
      * @param idExtractor
-     * @param newIds
+     * @param newValues
      * @param newValueFactory
      * @param newIdExtractor
      * @return true if something was added/removed
@@ -270,7 +276,7 @@ public abstract class EntityUtil {
      *
      * @param storedValues
      * @param idExtractor
-     * @param newIds
+     * @param newValues
      * @param newValueFactory
      * @param newIdExtractor
      * @return true if something was added/removed
@@ -356,8 +362,17 @@ public abstract class EntityUtil {
         }
         storedValues.removeAll(mappedStoredValues.values());
     }
-    
-    public static void bindClassifiers(Object command, Object entity, Map<String, ClassifierRestriction> properties, ClassifierRepository loader) {
+
+    /**
+     *
+     * @param command
+     * @param entity
+     * @param properties
+     * @param loader
+     * @param validate - if true then it will make additional request for getMainClassCode.
+     */
+    public static void bindClassifiers(Object command, Object entity, Map<String, ClassifierRestriction> properties,
+                                       ClassifierRepository loader, boolean validate) {
         PropertyAccessor source = PropertyAccessorFactory.forBeanPropertyAccess(command);
         PropertyAccessor destination = PropertyAccessorFactory.forBeanPropertyAccess(entity);
         for(Map.Entry<String, ClassifierRestriction> me : properties.entrySet()) {
@@ -386,7 +401,9 @@ public abstract class EntityUtil {
                     } else {
                         c = loader.getOne(classCodeOrValue);
                     }
-                    validateClassifier(c, t);
+                    if (validate) {
+                        validateClassifier(c, t);
+                    }
 
                 }
                 destination.setPropertyValue(p, c);

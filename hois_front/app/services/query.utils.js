@@ -203,6 +203,9 @@ angular.module('hitsaOis').factory('QueryUtils', ['config', '$resource', '$route
 
     function _notBusy() {
       requests--;
+      if (requests < 0) {
+        requests = 0;
+      }
       if(requests === 0 && busyShowing) {
         $mdDialog.hide();
       }

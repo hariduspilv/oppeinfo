@@ -805,14 +805,14 @@ public class ApplicationService {
     private void setApplicationStatus(Application application, ApplicationStatus status) {
         application.setStatus(em.getReference(Classifier.class, status.name()));
     }
-    
+
     private void proccessApplicationConfirmation(Application application) {
-        if (ClassifierUtil.equals(ApplicationType.AVALDUS_LIIK_OVERSKAVA, application.getType()) || ClassifierUtil.equals(ApplicationType.AVALDUS_LIIK_RAKKAVA, application.getType())) {
+        if (ClassifierUtil.oneOf(application.getType(), ApplicationType.AVALDUS_LIIK_OVERSKAVA, ApplicationType.AVALDUS_LIIK_RAKKAVA)) {
             Student student = application.getStudent();
-            studentService.saveWithHistory(student);
             student.setCurriculumVersion(application.getNewCurriculumVersion());
             student.setStudentGroup(application.getStudentGroup());
-            EntityUtil.save(student, em);
+            studentService.removeVocationalMatchedResults(student);
+            studentService.saveWithHistory(student);
         }
     }
 

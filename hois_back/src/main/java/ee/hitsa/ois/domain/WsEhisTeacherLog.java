@@ -25,6 +25,10 @@ public class WsEhisTeacherLog extends BaseLog {
     @Column(nullable = false, updatable = false)
     private String logTxt;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ws_ehis_teacher_meta_log_id")
+    private WsEhisTeacherMetaLog metaLog;
+
     @Override
     public School getSchool() {
         return school;
@@ -64,5 +68,13 @@ public class WsEhisTeacherLog extends BaseLog {
 
     public void setLogTxt(String logTxt) {
         this.logTxt = logTxt;
+    }
+
+    public WsEhisTeacherMetaLog getMetaLog() {
+        return metaLog;
+    }
+
+    public void setMetaLog(WsEhisTeacherMetaLog metaLog) {
+        this.metaLog = metaLog;
     }
 }

@@ -83,6 +83,10 @@ angular.module('hitsaOis')
             failCallback();
           }
         }
+      }, function () {
+        if (angular.isFunction(failCallback)) {
+          failCallback();
+        }
       });
     };
 

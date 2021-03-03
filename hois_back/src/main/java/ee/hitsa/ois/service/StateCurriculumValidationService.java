@@ -71,8 +71,20 @@ public class StateCurriculumValidationService {
         }
     }
 
-    public void validateStateCurriculumForm(StateCurriculumForm stateCurriculumForm) {
-        ValidationFailedException.throwOnError(validator.validate(stateCurriculumForm, StateCurriculumValidator.Confirmed.class));
+    public void validateStateCurriculumFormConfirmVocational(StateCurriculumForm stateCurriculumForm) {
+        ValidationFailedException.throwOnError(validator.validate(stateCurriculumForm, StateCurriculumValidator.ConfirmedVocational.class));
+    }
+    
+    public void validateStateCurriculumFormConfirmSecondary(StateCurriculumForm stateCurriculumForm) {
+        ValidationFailedException.throwOnError(validator.validate(stateCurriculumForm, StateCurriculumValidator.ConfirmedSecondary.class));
+    }
+    
+    public void validateStateCurriculumFormOnVocational(StateCurriculumForm stateCurriculumForm) {
+        ValidationFailedException.throwOnError(validator.validate(stateCurriculumForm, StateCurriculumValidator.Vocational.class));
+    }
+    
+    public void validateStateCurriculumFormOnSecondary(StateCurriculumForm stateCurriculumForm) {
+        ValidationFailedException.throwOnError(validator.validate(stateCurriculumForm, StateCurriculumValidator.Secondary.class));
     }
 
     public void assertNameIsUnique(StateCurriculum stateCurriculum, StateCurriculumForm stateCurriculumForm) {

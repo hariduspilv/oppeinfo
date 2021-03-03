@@ -13,6 +13,7 @@ import javax.persistence.OneToMany;
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
+import ee.hitsa.ois.domain.curriculum.CurriculumAddress;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.teacher.Teacher;
@@ -46,6 +47,10 @@ public class StudentGroup extends BaseEntityWithId {
     private LocalDate validFrom;
     private LocalDate validThru;
     private Boolean isGuest;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private CurriculumAddress curriculumAddress;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Classifier ehisSchool;
     @OneToMany(mappedBy = "studentGroup", fetch = FetchType.LAZY)
     private List<SubjectStudyPeriodStudentGroup> subjectStudyPeriods;
 
@@ -168,5 +173,21 @@ public class StudentGroup extends BaseEntityWithId {
 
     public void setIsGuest(Boolean isGuest) {
         this.isGuest = isGuest;
+    }
+
+    public CurriculumAddress getCurriculumAddress() {
+        return curriculumAddress;
+    }
+
+    public void setCurriculumAddress(CurriculumAddress curriculumAddress) {
+        this.curriculumAddress = curriculumAddress;
+    }
+
+    public Classifier getEhisSchool() {
+        return ehisSchool;
+    }
+
+    public void setEhisSchool(Classifier ehisSchool) {
+        this.ehisSchool = ehisSchool;
     }
 }

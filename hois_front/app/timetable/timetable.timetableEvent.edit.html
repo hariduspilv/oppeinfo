@@ -90,7 +90,7 @@
                 <td md-cell>{{currentLanguageNameField(teacher.teacher)}}</td>
                 <td md-cell ng-if="!timetableEvent.isSingleEvent">
                   <md-checkbox ng-model="teacher.isSubstitute" aria-label="{{'timetable.timetableEvent.substitute' | translate}}"
-                    ng-disabled="auth.isAdmin()"></md-checkbox>
+                    ng-disabled="!auth.isAdmin()"></md-checkbox>
                 </td>
                 <td md-cell>
                   <a ng-if="!(auth.isTeacher && auth.teacher === teacher.teacher.id)" ng-click="deleteTeacher(teacher)" class="remove">&times;</a>

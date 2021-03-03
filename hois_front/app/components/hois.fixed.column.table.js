@@ -72,6 +72,7 @@ angular.module('hitsaOis').directive('fixedColumnTable', function ($timeout, $wi
         });
       }
 
+      var _init = false;
       function activate() {
         var tableClassQuery = angular.isDefined(scope.tableClass) ? 'table.' + scope.tableClass + ' > ' : '';
         applyClasses(tableClassQuery + 'thead > tr', 'cross', 'th');
@@ -124,9 +125,35 @@ angular.module('hitsaOis').directive('fixedColumnTable', function ($timeout, $wi
           return 'translate(' + x + 'px, ' + y + 'px)';
         }
 
-        container.addEventListener('scroll', function () {
-          updateHeaders();
-        });
+        if (!_init) {
+          _init = true;
+          container.addEventListener('scroll', function () {
+            updateHeaders();
+          });
+          // possible increase in performance if we try to use requestAnimationFrame with `ticking` and passive listener option
+
+          // var supportsPassive = false;
+          // try {
+          //   var opts = Object.defineProperty({}, 'passive', {
+          //     get: function() {
+          //       supportsPassive = true;
+          //     }
+          //   });
+          //   window.addEventListener("testPassive", null, opts);
+          //   window.removeEventListener("testPassive", null, opts);
+          // } catch (e) {}
+          //
+          // var ticking = false;
+          // container.addEventListener('scroll', function () {
+          //   if (!ticking) {
+          //     window.requestAnimationFrame(function () {
+          //       updateHeaders();
+          //       ticking = false;
+          //     })
+          //     ticking = true;
+          //   }
+          // }, supportsPassive ? { passive: true } : false);
+        }
       }
 
       $timeout(function () {

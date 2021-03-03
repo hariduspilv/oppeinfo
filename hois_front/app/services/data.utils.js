@@ -259,3 +259,8 @@ Date.prototype.withoutTime = function () {
   date.setHours(0, 0, 0, 0);
   return date;
 };
+
+
+String.prototype.hoisLocaleCompare = function (that) {
+  return this.localeCompare(that, 'et', {numeric: true,  sensitivity: 'base'});
+};

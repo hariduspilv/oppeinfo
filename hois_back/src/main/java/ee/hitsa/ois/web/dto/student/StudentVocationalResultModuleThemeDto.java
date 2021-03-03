@@ -145,6 +145,10 @@ public class StudentVocationalResultModuleThemeDto {
         return isCurrentCurriculumVersionResult;
     }
 
+    public boolean isModuleResult() {
+        return getTheme() == null && getOutcome() == null;
+    }
+
     public void setIsCurrentCurriculumVersionResult(Boolean isCurrentCurriculumVersionResult) {
         this.isCurrentCurriculumVersionResult = isCurrentCurriculumVersionResult;
     }

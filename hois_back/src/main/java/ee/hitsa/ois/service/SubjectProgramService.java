@@ -1,5 +1,6 @@
 package ee.hitsa.ois.service;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsDecimal;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
@@ -71,51 +72,61 @@ public class SubjectProgramService {
         StringBuilder from = new StringBuilder("from subject_program sp ");
         from.append("join subject_program_teacher spt on sp.id = spt.subject_program_id ");
         from.append("join subject_study_period_teacher sspt on sspt.id = spt.subject_study_period_teacher_id ");
-        from.append("join subject_study_period ssp on ssp.id = sspt.subject_study_period_id ");
+        from.append("join subject_study_period ssp on ssp.id = sp.subject_study_period_id ");
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from.toString()).sort(pageable);
         qb.optionalCriteria("sp.status_code = :status", "status", cmd.getStatus());
         qb.optionalCriteria("sspt.teacher_id = :teacherId", "teacherId", user.isTeacher() ? user.getTeacherId() : cmd.getTeacher() != null ? cmd.getTeacher().getId() : null);
         qb.optionalCriteria("ssp.subject_id = :subjectId", "subjectId", cmd.getSubject());
         qb.optionalCriteria("ssp.study_period_id = :periodId", "periodId", cmd.getStudyPeriod());
-        return JpaQueryUtil.pagingResult(qb, "distinct sp.id, ssp.subject_id, ssp.study_period_id, sspt.teacher_id, sp.status_code, ssp.id as sspId",
+        return JpaQueryUtil.pagingResult(qb, "distinct sp.id, ssp.subject_id, ssp.study_period_id, null as teacherid, sp.status_code, ssp.id as sspId, sp.is_joint",
                 em, pageable).map(r -> {
             SubjectProgramSearchDto dto = new SubjectProgramSearchDto();
             dto.setId(resultAsLong(r, 0));
             dto.setSubject(AutocompleteResult.of(em.getReference(Subject.class, resultAsLong(r, 1))));
             dto.setStudyPeriod(AutocompleteResult.of(em.getReference(StudyPeriod.class, resultAsLong(r, 2))));
-            dto.setTeacher(AutocompleteResult.of(em.getReference(Teacher.class, resultAsLong(r, 3))));
             dto.setStatus(resultAsString(r, 4));
             dto.setSubjectStudyPeriod(resultAsLong(r, 5));
+            dto.setJoint(resultAsBoolean(r, 6));
             return dto;
         });
     }
 
     public Page<SubjectProgramSearchDto> search(HoisUserDetails user, SubjectProgramSearchCommand cmd,
             Pageable pageable) {
-        StringBuilder from = new StringBuilder("from subject_program sp ");
-        from.append("join curriculum c on c.teacher_id = :mainTeacherId ");
-        from.append("join curriculum_version cv on c.id = cv.curriculum_id "); 
-        from.append("join curriculum_version_hmodule cvhm on cvhm.curriculum_version_id = cv.id "); 
-        from.append("join curriculum_version_hmodule_subject cvhms on cvhms.curriculum_version_hmodule_id = cvhm.id ");
-        from.append("join subject_program_teacher spt on sp.id = spt.subject_program_id ");
-        from.append("join subject_study_period_teacher sspt on sspt.id = spt.subject_study_period_teacher_id ");
-        from.append("join subject_study_period ssp on ssp.id = sspt.subject_study_period_id and ssp.subject_id = cvhms.subject_id ");
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from.toString()).sort(pageable);
-        qb.parameter("mainTeacherId", user.getTeacherId());
-        qb.requiredCriteria("c.school_id = :schoolId", "schoolId", user.getSchoolId());
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from subject_program sp " +
+                "join subject_study_period ssp on ssp.id = sp.subject_study_period_id ")
+                .sort(pageable);
+
+        qb.requiredCriteria("exists(select 1 from curriculum_version_hmodule_subject cvhms " +
+                "join curriculum_version_hmodule cvhm on cvhms.curriculum_version_hmodule_id = cvhm.id " +
+                "join curriculum_version cv on cvhm.curriculum_version_id = cv.id " +
+                "join curriculum c on c.id = cv.curriculum_id " +
+                "where c.teacher_id = :mainTeacherId and ssp.subject_id = cvhms.subject_id and c.school_id = :schoolId)",
+                "mainTeacherId", user.getTeacherId());
+        qb.parameter("schoolId", user.getSchoolId());
+
         qb.optionalCriteria("sp.status_code = :status", "status", cmd.getStatus());
-        qb.optionalCriteria("sspt.teacher_id = :teacherId", "teacherId", cmd.getTeacher() == null ? null : cmd.getTeacher().getId());
+        qb.optionalCriteria("exists(select 1 from subject_study_period_teacher sspt " +
+                "join subject_program_teacher spt on sspt.id = spt.subject_study_period_teacher_id " +
+                "where sspt.teacher_id = :teacherId and sp.id = spt.subject_program_id)", "teacherId", cmd.getTeacher());
         qb.optionalCriteria("ssp.subject_id = :subjectId", "subjectId", cmd.getSubject());
         qb.optionalCriteria("ssp.study_period_id = :periodId", "periodId", cmd.getStudyPeriod());
-        return JpaQueryUtil.pagingResult(qb, "distinct sp.id, ssp.subject_id, ssp.study_period_id, sspt.teacher_id, sp.status_code, ssp.id as sspId",
+        return JpaQueryUtil.pagingResult(qb, "distinct sp.id, ssp.subject_id, ssp.study_period_id, " +
+                        "(select string_agg(p.firstname || ' ' || p.lastname, ', ' order by p.lastname, p.firstname) from subject_program_teacher spt " +
+                            "join subject_study_period_teacher sspt on sspt.id = spt.subject_study_period_teacher_id " +
+                            "join teacher t on sspt.teacher_id = t.id " +
+                            "join person p on t.person_id = p.id " +
+                            "where sp.id = spt.subject_program_id) as teachers, " +
+                        "sp.status_code, ssp.id as sspId, sp.is_joint",
                 em, pageable).map(r -> {
             SubjectProgramSearchDto dto = new SubjectProgramSearchDto();
             dto.setId(resultAsLong(r, 0));
             dto.setSubject(AutocompleteResult.of(em.getReference(Subject.class, resultAsLong(r, 1))));
             dto.setStudyPeriod(AutocompleteResult.of(em.getReference(StudyPeriod.class, resultAsLong(r, 2))));
-            dto.setTeacher(AutocompleteResult.of(em.getReference(Teacher.class, resultAsLong(r, 3))));
+            dto.setTeachers(resultAsString(r, 3));
             dto.setStatus(resultAsString(r, 4));
             dto.setSubjectStudyPeriod(resultAsLong(r, 5));
+            dto.setJoint(resultAsBoolean(r, 6));
             return dto;
         });
     }
@@ -444,7 +455,8 @@ public class SubjectProgramService {
             from.append("join study_period sp on sp.id = ssp.study_period_id ");
             JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from.toString()).limit(1);
             qb.requiredCriteria("sspt.teacher_id = :teacherId", "teacherId", user.getTeacherId());
-            qb.requiredCriteria("spr.status_code = :status", "status", SubjectProgramStatus.AINEPROGRAMM_STAATUS_I);
+            qb.requiredCriteria("spr.status_code = :status and (not coalesce(spr.is_joint, false) " +
+                    "or (spr.is_joint is true and not coalesce(spt.is_ready, false)))", "status", SubjectProgramStatus.AINEPROGRAMM_STAATUS_I);
             qb.requiredCriteria("sp.end_date >= :now and sp.start_date <= :now", "now", LocalDate.now());
             if (qb.select("spr.id", em).getResultList().size() == 1) {
                 return new SimpleEntry<>("has", Boolean.TRUE);

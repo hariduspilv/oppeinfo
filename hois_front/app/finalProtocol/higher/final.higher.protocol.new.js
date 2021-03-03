@@ -1,12 +1,13 @@
 'use strict';
 
-angular.module('hitsaOis').controller('FinalHigherProtocolNewController', 
+angular.module('hitsaOis').controller('FinalHigherProtocolNewController',
 function ($scope, $route, $location, $q, QueryUtils, DataUtils, Classifier, message, ArrayUtils) {
   var endpoint = '/finalHigherProtocols';
 
   $scope.auth = $route.current.locals.auth;
   $scope.formState = {
     protocolType: 'PROTOKOLLI_LIIK_P',
+    moduleType: $route.current.params.moduleType,
     isFinalThesis: $route.current.params.moduleType === 'thesis' ? true : false,
     selectedStudents: [],
     subjects: []
@@ -18,16 +19,15 @@ function ($scope, $route, $location, $q, QueryUtils, DataUtils, Classifier, mess
 
   function getStudyPeriodSubjects() {
     if (!$scope.formState.isFinalThesis && $scope.formState.studyPeriod && $scope.formState.curriculum) {
-      $scope.formState.subjects = QueryUtils.endpoint(endpoint + '/subjects/exam/' 
+      $scope.formState.subjects = QueryUtils.endpoint(endpoint + '/subjects/exam/'
         + $scope.formState.studyPeriod + '/' + $scope.formState.curriculum).query();
     } else if ($scope.formState.isFinalThesis && $scope.formState.curriculum) {
       $scope.formState.subjects = QueryUtils.endpoint(endpoint + '/subjects/thesis/' + $scope.formState.curriculum).query();
     }
   }
-  
+
   $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query();
-  $scope.curriculums = QueryUtils.endpoint(endpoint + '/curriculums/' + $route.current.params.moduleType).query();
-  
+
   var promises = [];
   promises.push($scope.studyPeriods.$promise);
 
@@ -40,10 +40,11 @@ function ($scope, $route, $location, $q, QueryUtils, DataUtils, Classifier, mess
     getStudyPeriodSubjects();
   };
 
-  $scope.curriculumChanged = function () {
+  $scope.$watch('formState.curriculumObject', function () {
     $scope.formState.subject = undefined;
+    $scope.formState.curriculum = $scope.formState.curriculumObject ? $scope.formState.curriculumObject.id : null;
     getStudyPeriodSubjects();
-  };
+  });
 
   $scope.subjectChanged = function () {
     var query = QueryUtils.endpoint(endpoint + '/subject/' + $route.current.params.moduleType + '/' + $scope.formState.curriculum + '/' + $scope.formState.subject.id).get();

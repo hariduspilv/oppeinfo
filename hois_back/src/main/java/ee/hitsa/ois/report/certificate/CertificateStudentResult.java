@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.gradingschema.GradingSchemaRow;
@@ -111,7 +112,7 @@ public class CertificateStudentResult {
 
     public static CertificateStudentResult of(StudentVocationalResultModuleThemeDto dto,
             Map<String, Classifier> vocationalGrades, Map<Long, GradingSchemaRow> gradingSchemaRows,
-            Long studentCurriculumId) {
+            Set<Long> curriculumModuleIds) {
         CertificateStudentResult result = new CertificateStudentResult();
 
         result.setTheme(dto.getTheme() != null ? dto.getTheme().getNameEt() : null);
@@ -148,8 +149,12 @@ public class CertificateStudentResult {
         result.setDate(DateUtils.date(dto.getDate()));
         result.setAssessedBy(String.join(", ", StreamUtil.toMappedList(AutocompleteResult::getNameEt, dto.getTeachers().stream().filter(p->p.getNameEn()!=null).collect(Collectors.toList()))));
         if (StringUtils.isEmpty(result.getAssessedBy())) result.setAssessedBy(dto.getTeachersAsString());
-        
-        result.setIsSameCurriculum(studentCurriculumId != null ? Boolean.valueOf(studentCurriculumId.equals(result.getCurriculumId())) : Boolean.FALSE);
+
+        if (Boolean.TRUE.equals(dto.getIsApelTransfer()) && dto.getReplacedModules() != null) {
+            result.setIsSameCurriculum(Boolean.valueOf(!Collections.disjoint(dto.getReplacedModules(), curriculumModuleIds)));
+        } else {
+            result.setIsSameCurriculum(Boolean.valueOf(dto.getModule() != null && curriculumModuleIds.contains(dto.getModule().getId())));
+        }
         return result;
     }
 

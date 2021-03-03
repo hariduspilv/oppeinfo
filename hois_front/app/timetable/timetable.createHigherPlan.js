@@ -84,6 +84,7 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$filter
     };
 
     $scope.selectedTeacherChanged = function () {
+      $scope.plan.selectedGroup = undefined;
       if ($scope.plan.selectedTeacher) {
         QueryUtils.endpoint(baseUrl + '/:id/teacherSubjectStudyPeriods').query(
             {id: $scope.timetableId, teacherId: $scope.plan.selectedTeacher.id}, function (result) {

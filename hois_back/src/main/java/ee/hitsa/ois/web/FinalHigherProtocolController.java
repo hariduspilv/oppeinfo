@@ -11,6 +11,7 @@ import javax.validation.Valid;
 import ee.hitsa.ois.bdoc.MobileIdSigningSession;
 import ee.hitsa.ois.domain.OisFile;
 import ee.hitsa.ois.enums.Language;
+import ee.hitsa.ois.web.commandobject.SearchCommand;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 import ee.hitsa.ois.web.dto.EntityMobileSignDto;
 import org.digidoc4j.Container;
@@ -18,6 +19,7 @@ import org.digidoc4j.DataFile;
 import org.digidoc4j.DataToSign;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -93,7 +95,7 @@ public class FinalHigherProtocolController {
             @WithVersionedEntity(versionRequestBody = true) Protocol protocol,
             @Valid @RequestBody FinalHigherProtocolSaveForm finalProtocolSaveForm) {
         FinalProtocolUtil.assertCanEdit(user, protocol);
-        return get(user, finalProtocolService.save(protocol, finalProtocolSaveForm));
+        return get(user, finalProtocolService.save(protocol, finalProtocolSaveForm, false));
     }
 
     @DeleteMapping("/{id:\\d+}")
@@ -104,15 +106,15 @@ public class FinalHigherProtocolController {
     }
 
     @GetMapping("/curriculums/exam")
-    public List<AutocompleteResult> examCurriculums(HoisUserDetails user) {
+    public Page<AutocompleteResult> examCurriculums(HoisUserDetails user, SearchCommand lookup) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
-        return finalProtocolService.curriculumsForSelection(user.getSchoolId(), Boolean.FALSE);
+        return new PageImpl<>(finalProtocolService.curriculumsForSelection(user.getSchoolId(), lookup, Boolean.FALSE));
     }
 
     @GetMapping("/curriculums/thesis")
-    public List<AutocompleteResult> thesisCurriculums(HoisUserDetails user) {
+    public Page<AutocompleteResult> thesisCurriculums(HoisUserDetails user, SearchCommand lookup) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
-        return finalProtocolService.curriculumsForSelection(user.getSchoolId(), Boolean.TRUE);
+        return new PageImpl<>(finalProtocolService.curriculumsForSelection(user.getSchoolId(), lookup, Boolean.TRUE));
     }
 
     @GetMapping("/subjects/exam/{studyPeriodId:\\d+}/{curriculumVersionId:\\d+}")
@@ -162,8 +164,7 @@ public class FinalHigherProtocolController {
             @WithVersionedEntity(versionRequestBody = true) Protocol protocol,
             @Valid @RequestBody FinalHigherProtocolSignForm protocolSignForm, HttpSession httpSession) {
         FinalProtocolUtil.assertCanConfirm(user, protocol);
-        Protocol savedProtocol = finalProtocolService.save(protocol, protocolSignForm);
-        FinalProtocolUtil.assertCurriculumGradesInput(protocol);
+        Protocol savedProtocol = finalProtocolService.save(protocol, protocolSignForm, true);
 
         Boolean isLetterGrades = protocol.getSchool().getIsLetterGrade();
         UnsignedBdocContainer unsignedBdocContainer = bdocService.createUnsignedBdocContainer("lopueksami_protokoll.pdf",
@@ -188,7 +189,7 @@ public class FinalHigherProtocolController {
 
         httpSession.removeAttribute(BDOC_TO_SIGN);
         httpSession.removeAttribute(BDOC_CONT);
-        return get(user, finalProtocolService.confirm(user, protocol, null));
+        return get(user, finalProtocolService.confirm(user, protocol));
     }
 
     @PostMapping("/{id:\\d+}/mobileIdSignatureRequest")
@@ -197,8 +198,7 @@ public class FinalHigherProtocolController {
             @Valid @RequestBody FinalHigherProtocolSignForm protocolSaveForm,
             HttpSession httpSession, Language lang) {
         FinalProtocolUtil.assertCanConfirm(user, protocol);
-        Protocol savedProtocol = finalProtocolService.save(protocol, protocolSaveForm);
-        FinalProtocolUtil.assertCurriculumGradesInput(protocol);
+        Protocol savedProtocol = finalProtocolService.save(protocol, protocolSaveForm, true);
 
         Boolean isLetterGrades = protocol.getSchool().getIsLetterGrade();
         byte[] pdfData = pdfService.generate(FinalProtocolReport.VOCATIONAL_TEMPLATE_NAME,
@@ -228,7 +228,7 @@ public class FinalHigherProtocolController {
             OisFile signedBdoc = bdocService.mobileIdSign(session, "protokoll");
             if (signedBdoc != null) {
                 protocol.setOisFile(signedBdoc);
-                protocol = finalProtocolService.confirm(user, protocol, null);
+                protocol = finalProtocolService.confirm(user, protocol);
             }
             httpSession.removeAttribute(MOBILE_SESSIONID);
             httpSession.removeAttribute(BDOC_TO_SIGN);

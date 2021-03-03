@@ -8,6 +8,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsDecimal;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -26,11 +27,16 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.exception.HoisException;
+import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.web.dto.StudyPeriodWithWeeksDto;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -1801,7 +1807,7 @@ public class TeacherDetailLoadService {
         return capacities;
     }
     
-    public byte[] teacherDetailLoadSubjectJournalAsExcel(Long schoolId, TeacherDetailLoadCommand criteria) {
+    public void teacherDetailLoadSubjectJournalAsExcelOrZip(Long schoolId, TeacherDetailLoadCommand criteria, HttpServletResponse response, String filename) throws IOException {
         List<TeacherDetailLoadDto> teachers = Boolean.TRUE.equals(criteria.getIsHigher())
                 ? teacherHigherDetailLoad(schoolId, criteria, new PageRequest(0, Integer.MAX_VALUE)).getContent()
                 : teacherVocationalDetailLoad(schoolId, criteria, new PageRequest(0, Integer.MAX_VALUE)).getContent();
@@ -1836,8 +1842,43 @@ public class TeacherDetailLoadService {
             teachersReports.add(dto);
         }
         report.setTeachers(teachersReports);
-		return xlsService.generate("teachersdetailloadjournalsubject.xlsx", Collections.singletonMap("report", report));
+        generateTeacherDetailLoadFile(response, filename, report, criteria);
 	}
+
+    private void generateTeacherDetailLoadFile(HttpServletResponse response, String filename,
+                                            TeacherDetailLoadReport report, TeacherDetailLoadCommand criteria) throws IOException {
+        int teachersPerFile = Boolean.TRUE.equals(criteria.getByWeeks())
+                && !Boolean.TRUE.equals(criteria.getIsHigher()) ? 20 : 50;
+        if (report.getTeachers().size() <= teachersPerFile) {
+            HttpUtil.xlsx(response, filename + ".xlsx",
+                    xlsService.generate("teachersdetailloadjournalsubject.xlsx",
+                    Collections.singletonMap("report", report)));
+            return;
+        }
+
+        try (ZipOutputStream zipOut = new ZipOutputStream(response.getOutputStream())) {
+            HttpUtil.zip(response, filename + ".zip");
+            List<TeacherResultRowDto> teacherList = report.getTeachers() != null
+                    ? report.getTeachers() : Collections.emptyList();
+            int files = teacherList.size() / teachersPerFile;
+            for (int i = 0; i <= files; i++) {
+                List<TeacherResultRowDto> sublist = teacherList
+                        .subList(teachersPerFile * i, Math.min((i + 1) * teachersPerFile, teacherList.size()));
+                if (i != 0 && sublist.size() == 0) {
+                    continue; // last page should not be created with 0 teachers
+                }
+                report.setTeachers(sublist);
+                ZipEntry excel = new ZipEntry(String.format("%s_%d.xlsx", filename, i));
+                zipOut.putNextEntry(excel);
+                zipOut.write(xlsService.generate("teachersdetailloadjournalsubject.xlsx",
+                        Collections.singletonMap("report", report)));
+                zipOut.flush();
+            }
+            zipOut.closeEntry();
+        } catch (IOException e) {
+            throw new HoisException("Exception occured during making zip file.", e);
+        }
+    }
     
 	public byte[] teacherDetailLoadJournalSubjectsAsExcel(Long schoolId, TeacherDetailLoadCommand criteria,
             Teacher teacher) {

@@ -10,7 +10,10 @@ public class CurriculumResult extends AutocompleteResult {
     private final AutocompleteResult curriculum;
     private final String code;
     private Set<Long> specialities;
+    private Set<Long> occupationSpecialities;
     private String origStudyLevel;
+    private Boolean higher;
+    private Boolean vocational;
 
     public CurriculumResult(Long id, String nameEt, String nameEn, String code) {
         super(id, CurriculumUtil.curriculumName(code, nameEt), CurriculumUtil.curriculumName(code, nameEn));
@@ -48,5 +51,28 @@ public class CurriculumResult extends AutocompleteResult {
     public void setOrigStudyLevel(String origStudyLevel) {
         this.origStudyLevel = origStudyLevel;
     }
-    
+
+    public Set<Long> getOccupationSpecialities() {
+        return occupationSpecialities;
+    }
+
+    public void setOccupationSpecialities(Set<Long> occupationSpecialities) {
+        this.occupationSpecialities = occupationSpecialities;
+    }
+
+    public Boolean getHigher() {
+        return higher;
+    }
+
+    public void setHigher(Boolean higher) {
+        this.higher = higher;
+    }
+
+    public Boolean getVocational() {
+        return vocational;
+    }
+
+    public void setVocational(Boolean vocational) {
+        this.vocational = vocational;
+    }
 }

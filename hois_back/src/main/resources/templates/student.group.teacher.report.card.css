@@ -1,0 +1,27 @@
+.page-break-before {
+    page-break-before: always;
+}
+
+table tr {
+    page-break-inside: avoid;
+}
+
+.module-column {
+    width: 20%;
+}
+
+.journal-column {
+    width: 25%;
+}
+
+.absences {
+    page-break-inside: avoid;
+}
+
+.signature-table {
+    page-break-inside: avoid;
+}
+
+.signature-column {
+    vertical-align: baseline;
+}

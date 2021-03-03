@@ -78,16 +78,62 @@ angular.module('hitsaOis').factory('SspCapacities', ['DataUtils', function (Data
             return sum += newVal;
         }
 
+        function filterCapacities(capacities) {
+          return capacities.reduce(function (acc, cur) {
+            if (cur.hours === null || cur.hours === undefined) {
+              return acc;
+            }
+            if (!acc[cur.capacityType]) {
+              acc[cur.capacityType] = cur;
+              acc.capacities.push(cur);
+              return acc;
+            }
+            var existingMain = acc[cur.capacityType];
+            if (!existingMain.subgroup) {
+              return acc;
+            }
+            if (!cur.subgroup) {
+              acc[cur.capacityType] = cur;
+              var i = 0;
+              while (i < acc.capacities.length) {
+                if (cur.capacityType === acc.capacities[i].capacityType) {
+                  acc.capacities.splice(i, 1);
+                } else {
+                  ++i;
+                }
+              }
+              acc.capacities.push(cur);
+              return acc;
+            }
+            if (existingMain.hours < cur.hours) {
+              acc[cur.capacityType] = cur;
+            }
+            acc.capacities.push(cur);
+            return acc;
+          }, {capacities: []}).capacities
+        }
+
         this.capacitiesSumBySsp = function(ssp, subgroupId, ignoreSubgroup) {
-            return ssp.capacities.filter(function (it) {
-              return !!ignoreSubgroup || !subgroupId && !it.subgroup || it.subgroup === subgroupId;
-            }).reduce(countHours, 0);
+          return filterCapacities(ssp.capacities).reduce(countHours, 0);
+        };
+
+        this.capacitiesSumBySspAndSubgroup = function(ssp, subgroupId, ignoreSubgroup) {
+          return ssp.capacities.filter(function (it) {
+            return !!ignoreSubgroup || !subgroupId && !it.subgroup || it.subgroup === subgroupId;
+          }).reduce(countHours, 0);
         };
 
         this.capacitiesSumBySspAndTeacher = function (ssp, teacherId, ignoreSubgroup) {
           return this.capacitiesSumBySsp(ssp.teachers.find(function (sspTeacher) {
             return sspTeacher.teacherId === teacherId;
           }), null, ignoreSubgroup);
+        };
+
+        this.capacitiesSumBySspAndTeacherAndType = function (ssp, teacherId, type) {
+          var teacherSsp = ssp.teachers.find(function (sspTeacher) {
+            return sspTeacher.teacherId === teacherId;
+          });
+          return capacitiesSumByType(type, [teacherSsp]);
         };
 
         this.capacityBySsp = function(ssp, type) {
@@ -98,7 +144,8 @@ angular.module('hitsaOis').factory('SspCapacities', ['DataUtils', function (Data
             var mappedPlansBySubject = getMappedPlansBySsp();
             var sum = 0;
             for(var i = 0; i < ssps.length; i++) {
-                sum += ssps[i].capacities
+                sum +=
+                  filterCapacities(ssps[i].capacities)
                   .filter(filterByIsContact(isContact, mappedPlansBySubject[ssps[i].id ? ssps[i].id : ssps[i].sspId]))
                   .reduce(countHours, 0);
             }
@@ -169,8 +216,10 @@ angular.module('hitsaOis').factory('SspCapacities', ['DataUtils', function (Data
             var mappedPlansBySubject = getMappedPlansBySsp();
             var sum = 0;
             for(var i = 0; i < ssps.length; i++) {
-                sum += ssps[i].capacities.filter(filterByCapacityType(type)).filter(filterByIsContact(isContact,
-                  mappedPlansBySubject[ssps[i].id ? ssps[i].id : ssps[i].sspId])).reduce(countHours, 0);
+                sum +=
+                  filterCapacities(ssps[i].capacities.filter(filterByCapacityType(type)))
+                  .filter(filterByIsContact(isContact, mappedPlansBySubject[ssps[i].id ? ssps[i].id : ssps[i].sspId]))
+                  .reduce(countHours, 0);
             }
             return sum;
         }

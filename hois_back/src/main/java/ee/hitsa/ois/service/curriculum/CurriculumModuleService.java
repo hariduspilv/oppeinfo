@@ -22,7 +22,9 @@ import ee.hitsa.ois.domain.curriculum.CurriculumModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumModuleCompetence;
 import ee.hitsa.ois.domain.curriculum.CurriculumModuleOccupation;
 import ee.hitsa.ois.domain.curriculum.CurriculumModuleOutcome;
+import ee.hitsa.ois.domain.curriculum.CurriculumModuleStudyField;
 import ee.hitsa.ois.domain.curriculum.CurriculumOccupation;
+import ee.hitsa.ois.domain.curriculum.CurriculumStudyField;
 import ee.hitsa.ois.enums.CurriculumDraft;
 import ee.hitsa.ois.enums.CurriculumModuleType;
 import ee.hitsa.ois.enums.MainClassCode;
@@ -64,15 +66,27 @@ public class CurriculumModuleService {
             module.setBaseModule(baseModule);
         }
         if (module.getBaseModule() == null) {
-            EntityUtil.bindToEntity(dto, module, classifierRepository, "baseModule", "occupations", "competences", "outcomes");
+            EntityUtil.bindToEntity(dto, module, classifierRepository, "baseModule", "occupations", "competences", "outcomes", "studyFields");
             updateOutcomes(module, dto.getOutcomes());
         } else {
-            EntityUtil.bindToEntity(dto, module, classifierRepository, "baseModule", "occupations", "competences", "outcomes", "nameEt", "nameEn", "credits", "objectivesEt", "objectivesEn", "assessmentsEt", "assessmentsEn");
+            EntityUtil.bindToEntity(dto, module, classifierRepository, "baseModule", "occupations", "competences", "outcomes", "nameEt", 
+                    "nameEn", "credits", "objectivesEt", "objectivesEn", "assessmentsEt", "assessmentsEn", "studyFields");
             BaseModuleUtil.updateReferences(module.getBaseModule(), Collections.singleton(module), Collections.emptySet(), em);
         }
         updateOccupations(module, dto.getOccupations());
         updateCompetences(module, dto.getCompetences());
+        updateStudyFields(module, dto.getStudyFields());
         return EntityUtil.save(module, em);
+    }
+
+    private void updateStudyFields(CurriculumModule module, Set<Long> studyFields) {
+        EntityUtil.bindEntityCollection(module.getStudyFields(), p -> EntityUtil.getId(p.getCurriculumStudyField()), 
+                studyFields, p -> p, dto -> {
+                    CurriculumModuleStudyField studyField = new CurriculumModuleStudyField();
+                    studyField.setCurriculumModule(module);
+                    studyField.setCurriculumStudyField(em.getReference(CurriculumStudyField.class, dto));
+            return studyField;
+        });
     }
 
     public void updateOccupations(CurriculumModule module, Set<String> occupations) {

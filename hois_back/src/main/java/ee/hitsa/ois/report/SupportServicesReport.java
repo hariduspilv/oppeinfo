@@ -92,6 +92,7 @@ public class SupportServicesReport {
         private final List<String> contentArr;
         private final String validity;
         private final Boolean isPublic;
+        private final Boolean visible;
         private final Boolean hasFile;
         private final String submitter;
         
@@ -112,6 +113,7 @@ public class SupportServicesReport {
             Classifier validityCl = em.getReference(Classifier.class, service.getValidity());
             validity = TranslateUtil.name(validityCl, lang);
             isPublic = service.getIsPublic();
+            visible = service.getVisible();
             hasFile = Boolean.valueOf(service.getFile() != null);
             submitter = service.getEntrySubmitter();
         }
@@ -138,6 +140,10 @@ public class SupportServicesReport {
 
         public Boolean getIsPublic() {
             return isPublic;
+        }
+
+        public Boolean getVisible() {
+            return visible;
         }
 
         public Boolean getHasFile() {

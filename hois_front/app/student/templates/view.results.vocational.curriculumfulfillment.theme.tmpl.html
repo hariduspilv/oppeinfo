@@ -1,5 +1,5 @@
 <td md-cell>
-  <span ng-style="{'font-style': row.otherCurriculumVersionModuleTheme ? 'italic' : 'normal'}">
+  <span ng-if="!row.matchedTheme" ng-style="{'font-style': row.otherCurriculumVersionModuleTheme ? 'italic' : 'normal'}">
     <span ng-if="moduleResultById[module.curriculumModule.id].themeResultById[row.id].isApelTransfer" class="apelAsterisk">*</span>
     <span>
       <span>{{row.nameEt}}</span>
@@ -9,24 +9,48 @@
         && !moduleResultById[module.curriculumModule.id].themeResultById[row.id].isFormalLearning">
       - {{'student.result.informal' | translate}}</span>
   </span>
+
+  <span ng-if="row.matchedTheme">
+    <span>{{row.nameEt}}</span>
+    <span ng-if="row.studyYearNumber">({{row.studyYearNumber}}. {{'main.studyYearShort' | translate}})</span>
+  </span>
 </td>
 <td md-cell>{{row.credits}}</td>
 <td md-cell>
-  <hois-vocational-result value="moduleResultById[module.curriculumModule.id].themeResultById[row.id].grade"
-    exists-grading-schema="existsSchoolGradingSchema"></hois-vocational-result>
-  <span ng-if="row.moduleOutcomes && !moduleResultById[module.curriculumModule.id].themeResultById[row.id].grade">-</span>
-</td>
-<td md-cell>
-  <span ng-if="!row.moduleOutcomes">
-    {{moduleResultById[module.curriculumModule.id].themeResultById[row.id].date | hoisDate}}
+  <span ng-if="!row.matchedTheme">
+    <hois-vocational-result value="moduleResultById[module.curriculumModule.id].themeResultById[row.id].grade"
+      exists-grading-schema="existsSchoolGradingSchema"></hois-vocational-result>
+    <span ng-if="row.moduleOutcomes && !moduleResultById[module.curriculumModule.id].themeResultById[row.id].grade">-</span>
+  </span>
+
+  <span ng-if="row.matchedTheme">
+    <hois-vocational-result value="moduleResultById[row.matchedTheme.curriculumModuleId].themeResultById[row.matchedTheme.id].grade"
+      exists-grading-schema="existsSchoolGradingSchema"></hois-vocational-result>
   </span>
 </td>
 <td md-cell>
-  <span ng-if="!row.moduleOutcomes">
-    {{displayTeachers(moduleResultById[module.curriculumModule.id].themeResultById[row.id].teachers)}}
+  <span ng-if="!row.matchedTheme">
+    <span ng-if="!row.moduleOutcomes">
+      {{moduleResultById[module.curriculumModule.id].themeResultById[row.id].date | hoisDate}}
+    </span>
+  </span>
+
+  <span ng-if="row.matchedTheme">
+    {{moduleResultById[row.matchedTheme.curriculumModuleId].themeResultById[row.matchedTheme.id].date | hoisDate}}
+  </span>
+</td>
+<td md-cell>
+  <span ng-if="!row.matchedTheme">
+    <span ng-if="!row.moduleOutcomes">
+      {{displayTeachers(moduleResultById[module.curriculumModule.id].themeResultById[row.id].teachers)}}
+    </span>
+  </span>
+
+  <span ng-if="row.matchedTheme">
+    {{displayTeachers(moduleResultById[row.matchedTheme.curriculumModuleId].themeResultById[row.matchedTheme.id].teachers)}}
   </span>
 </td>
 <td md-cell>
   <span ng-if="row.isOk !== undefined">{{row.isOk ? 'main.yes' : 'main.no' | translate}}</span>
 </td>
-<td md-cell md-colors="{background: row.isOk ? 'green-600' : 'red-500'}"></td>
+<td md-cell md-colors="{background: row.isOk || row.matchedTheme || module.matchedModule ? 'green-600' : 'red-500'}"></td>

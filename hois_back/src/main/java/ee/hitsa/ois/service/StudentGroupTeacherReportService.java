@@ -7,6 +7,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -16,6 +17,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -26,8 +28,12 @@ import javax.transaction.Transactional;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.gradingschema.GradingSchemaRow;
+import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.enums.ProtocolStatus;
-import ee.hitsa.ois.report.studentgroupteacher.StudentGroupTeacherReport;
+import ee.hitsa.ois.report.studentgroupteacher.StudentGroupTeacherReportCard;
+import ee.hitsa.ois.report.studentgroupteacher.StudentGroupTeacherReportCardStudent;
+import ee.hitsa.ois.report.studentgroupteacher.StudentGroupTeacherReportCardTableRow;
+import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.web.dto.GradeDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumModuleOutcomeResult;
 import ee.hitsa.ois.web.dto.report.studentgroupteacher.StudentProgressDto;
@@ -92,6 +98,9 @@ public class StudentGroupTeacherReportService {
             + " join school_capacity_type sct on sct.capacity_type_code = ject.capacity_type_code"
                 + " and sct.school_id = j.school_id and sct.is_higher = false"
             + " where ject.journal_entry_id = je.id and sct.is_contact)";
+
+    private static final List<String> OTHER_RESULTS = EnumUtil.toNameList(JournalEntryType.SISSEKANNE_E,
+            JournalEntryType.SISSEKANNE_I, JournalEntryType.SISSEKANNE_P, JournalEntryType.SISSEKANNE_T);
 
     public StudentGroupTeacherDto studentGroupTeacher(StudentGroupTeacherCommand criteria) {
         if (Boolean.TRUE.equals(criteria.getAllModules()) || Boolean.TRUE.equals(criteria.getAllModulesAndOutcomes())) {
@@ -355,13 +364,8 @@ public class StudentGroupTeacherReportService {
                 + " join curriculum_version cv on sg2.curriculum_version_id = cv.id"
                 + " join curriculum_version_omodule cvo on cv.id = cvo.curriculum_version_id"
                 + " join curriculum_module cm2 on cvo.curriculum_module_id = cm2.id"
-                + " where sg2.id = :studentGroupId"
-                + " and (coalesce(sg2.speciality_code, 'x') = 'x' or coalesce(sg2.speciality_code, 'x') != 'x'"
-                + " and exists(select 1 from curriculum_module_occupation cmo"
-                + " left join classifier_connect ccc on cmo.occupation_code = ccc.connect_classifier_code"
-                + " where cmo.curriculum_module_id = cm2.id and"
-                + " (cmo.occupation_code = sg2.speciality_code or ccc.classifier_code = sg2.speciality_code))))"
-                + " group_curriculum on cm_id = cm.id) modules");
+                + " where sg2.id = :studentGroupId) group_curriculum on cm_id = cm.id"
+                + " ) modules");
         qb.parameter("studentGroupId", studentGroupId);
         qb.sort("case when lower(module_code) = '" + CurriculumModuleType.KUTSEMOODUL_P.name().toLowerCase() + "' then 1"
                 + " when lower(module_code) = '" + CurriculumModuleType.KUTSEMOODUL_Y.name().toLowerCase() + "' then 2"
@@ -546,6 +550,7 @@ public class StudentGroupTeacherReportService {
             for (AutocompleteResult journal : module.getJournals()) {
                 ResultColumnDto column = new ResultColumnDto();
                 column.setJournal(journal);
+                column.setModuleId(module.getId());
                 resultColumns.add(column);
             }
 
@@ -553,12 +558,14 @@ public class StudentGroupTeacherReportService {
                 for (AutocompleteResult theme : module.getPracticeModuleThemes()) {
                     ResultColumnDto column = new ResultColumnDto();
                     column.setPracticeModuleTheme(theme);
+                    column.setModuleId(module.getId());
                     resultColumns.add(column);
                 }
                 if (Boolean.TRUE.equals(module.getIsPracticeModuleGraded())) {
                     ResultColumnDto column = new ResultColumnDto();
                     column.setFullPracticeModule(
                             new AutocompleteResult(module.getId(), module.getNameEt(), module.getNameEn()));
+                    column.setModuleId(module.getId());
                     resultColumns.add(column);
                 }
             }
@@ -566,6 +573,7 @@ public class StudentGroupTeacherReportService {
             for (CurriculumModuleOutcomeResult outcome : module.getOutcomes()) {
                 ResultColumnDto column = new ResultColumnDto();
                 column.setOutcome(outcome);
+                column.setModuleId(module.getId());
                 setIsColumnModuleIntended(module, column, curriculumFreeChoiceModuleIds);
                 resultColumns.add(column);
             }
@@ -573,6 +581,7 @@ public class StudentGroupTeacherReportService {
             if (Boolean.TRUE.equals(criteria.getModuleGrade())) {
                 ResultColumnDto column = new ResultColumnDto();
                 column.setModule(new AutocompleteResult(module.getId(), module.getNameEt(), module.getNameEn()));
+                column.setModuleId(module.getId());
                 setIsColumnModuleIntended(module, column, curriculumFreeChoiceModuleIds);
                 resultColumns.add(column);
             }
@@ -904,6 +913,7 @@ public class StudentGroupTeacherReportService {
                 moduleResult.setId(c.getModule().getId());
                 column.setModuleResult(moduleResult);
             }
+            column.setModuleId(c.getModuleId());
             column.setIntendedModule(c.getIntendedModule());
             return column;
         }, resultColumns);
@@ -1281,7 +1291,12 @@ public class StudentGroupTeacherReportService {
             Set<Long> studentIds) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student s"
                 + " join student_vocational_result svr on s.id = svr.student_id"
-                + " join curriculum_version_omodule cvo on svr.curriculum_version_omodule_id = cvo.id");
+                + " join curriculum_version_omodule cvo on svr.curriculum_version_omodule_id = cvo.id"
+                + " left join student_vocational_omodule_theme svot on svot.student_id = s.id and"
+                    + " svot.old_curriculum_version_omodule_id = cvo.id and svot.old_curriculum_version_omodule_theme_id is null"
+                + " left join (curriculum_version_omodule svot_cvo"
+                    + " join curriculum_module svot_cm on svot_cm.id = svot_cvo.curriculum_module_id)"
+                    + " on svot_cvo.id = svot.curriculum_version_omodule_id ");
         qb.requiredCriteria("s.id in (:studentIds)", "studentIds", studentIds);
 
         if (Boolean.FALSE.equals(criteria.getOnlyModuleGrades()) || Boolean.TRUE.equals(criteria.getAllModules())) {
@@ -1297,7 +1312,7 @@ public class StudentGroupTeacherReportService {
         }
 
         qb.sort("svr.grade_date desc nulls last");
-        List<?> data = qb.select("s.id as student_id, cvo.curriculum_module_id as module_id,"
+        List<?> data = qb.select("s.id as student_id, coalesce(svot_cm.id, cvo.curriculum_module_id) module_id,"
                 + " svr.grade_code, svr.grading_schema_row_id, svr.grade_date", em).getResultList();
 
         Map<Long, List<StudentResultDto>> studentModuleResults = new HashMap<>();
@@ -1373,10 +1388,143 @@ public class StudentGroupTeacherReportService {
         return null;
     }
 
-    public StudentGroupTeacherReport studentGroupTeacherAsPdf(HoisUserDetails user, StudentGroupTeacherCommand criteria,
-            ClassifierCache classifierCache) {
-        return new StudentGroupTeacherReport(criteria, studentGroupTeacher(criteria), classifierCache,
-                gradingSchemaRowMap(user.getSchoolId()));
+    public StudentGroupTeacherReportCard studentReportCardsAsPdf(HoisUserDetails user,
+            StudentGroupTeacherCommand criteria, ClassifierCache classifierCache, Language lang) {
+        StudentGroupTeacherDto dto = studentGroupTeacher(criteria);
+
+        Map<Long, AutocompleteResult> moduleMap = StreamUtil.nullSafeList(dto.getModules()).stream()
+                .collect(Collectors.toMap(ModuleDto::getId, m -> new AutocompleteResult(m.getId(),
+                        m.getNameEt(), m.getNameEn())));
+        Map<Long, AutocompleteResult> journalMap = StreamUtil.nullSafeList(dto.getModules()).stream()
+                .flatMap(m -> m.getJournals().stream())
+                .collect(Collectors.toMap(AutocompleteResult::getId, o -> o, (o, n) -> o));
+        Map<Long, AutocompleteResult> outcomeMap = StreamUtil.nullSafeList(dto.getModules()).stream()
+                .flatMap(m -> m.getOutcomes().stream())
+                .collect(Collectors.toMap(AutocompleteResult::getId, o -> o, (o, n) -> o));
+        Map<Long, AutocompleteResult> practiceThemeMap = StreamUtil.nullSafeList(dto.getModules()).stream()
+                .flatMap(m -> m.getPracticeModuleThemes().stream())
+                .collect(Collectors.toMap(AutocompleteResult::getId, o -> o, (o, n) -> o));
+        Map<Long, GradingSchemaRow> gradingSchemaRowMap = gradingSchemaRowMap(user.getSchoolId());
+
+        StudentGroupTeacherReportCard report = new StudentGroupTeacherReportCard();
+        setReportCardCriteria(user, criteria, report);
+
+        for (StudentDto student : dto.getStudents()) {
+            StudentGroupTeacherReportCardStudent studentReport = new StudentGroupTeacherReportCardStudent();
+            studentReport.setFullname(student.getFullname());
+
+            for (StudentResultColumnDto resultColumn : student.getResultColumns()) {
+                if (resultColumn.getJournalResult() != null && !resultColumn.getJournalResult().getResults().isEmpty()) {
+                    StudentJournalResultDto journalResult = resultColumn.getJournalResult();
+
+                    StudentGroupTeacherReportCardTableRow tableRow = new StudentGroupTeacherReportCardTableRow();
+                    tableRow.setModule(moduleMap.get(resultColumn.getModuleId()));
+                    tableRow.setJournal(journalMap.get(journalResult.getId()));
+
+                    for (StudentJournalEntryResultDto result : journalResult.getResults()) {
+                        String grade = ReportUtil.vocationalGradeAsString(result.getGrade(), result.getVerbalGrade(),
+                                classifierCache, gradingSchemaRowMap, lang);
+
+                        if (OTHER_RESULTS.contains(result.getEntryType())) {
+                            tableRow.getOtherResults().add(grade);
+                        } else if (JournalEntryType.SISSEKANNE_H.name().equals(result.getEntryType())) {
+                            tableRow.getEvaluationResults().add(grade);
+                        } else if (JournalEntryType.SISSEKANNE_R.name().equals(result.getEntryType())) {
+                            tableRow.getPeriodResults().add(grade);
+                        } else if (JournalEntryType.SISSEKANNE_L.name().equals(result.getEntryType())) {
+                            tableRow.setFinalResult(grade);
+                        }
+                    }
+                    studentReport.getTableRows().add(tableRow);
+                } else if (resultColumn.getOutcomeResult() != null && resultColumn.getOutcomeResult().getGrade() != null) {
+                    StudentModuleResultDto outcomeResult = resultColumn.getOutcomeResult();
+
+                    StudentGroupTeacherReportCardTableRow tableRow = new StudentGroupTeacherReportCardTableRow();
+                    tableRow.setModule(moduleMap.get(resultColumn.getModuleId()));
+                    tableRow.setJournal(outcomeMap.get(outcomeResult.getId()));
+                    tableRow.setOutcomeResult(ReportUtil.vocationalGradeAsString(outcomeResult.getGrade(),
+                            null, classifierCache, gradingSchemaRowMap, lang));
+                    studentReport.getTableRows().add(tableRow);
+                } else if (resultColumn.getPracticeModuleThemeResult() != null
+                        && resultColumn.getPracticeModuleThemeResult().getGrade() != null) {
+                    StudentModuleResultDto practiceThemeResult = resultColumn.getPracticeModuleThemeResult();
+
+                    StudentGroupTeacherReportCardTableRow tableRow = new StudentGroupTeacherReportCardTableRow();
+                    tableRow.setModule(moduleMap.get(resultColumn.getModuleId()));
+                    tableRow.setJournal(practiceThemeMap.get(practiceThemeResult.getId()));
+                    tableRow.setFinalResult(ReportUtil.vocationalGradeAsString(practiceThemeResult.getGrade(),
+                            null, classifierCache, gradingSchemaRowMap, lang));
+                    tableRow.setIsPracticeResult(Boolean.TRUE);
+                    studentReport.getTableRows().add(tableRow);
+                } else if (resultColumn.getPracticeModuleResult() != null
+                        && resultColumn.getPracticeModuleResult().getGrade() != null) {
+                    StudentModuleResultDto practiceModuleResult = resultColumn.getPracticeModuleResult();
+
+                    StudentGroupTeacherReportCardTableRow tableRow = new StudentGroupTeacherReportCardTableRow();
+                    tableRow.setModule(moduleMap.get(resultColumn.getModuleId()));
+                    tableRow.setFinalResult(ReportUtil.vocationalGradeAsString(practiceModuleResult.getGrade(),
+                            null, classifierCache, gradingSchemaRowMap, lang));
+                    tableRow.setIsPracticeResult(Boolean.TRUE);
+                    tableRow.setIsPracticeModuleResult(Boolean.TRUE);
+                    studentReport.getTableRows().add(tableRow);
+                } else if (resultColumn.getModuleResult() != null && resultColumn.getModuleResult().getGrade() != null) {
+                    StudentGroupTeacherReportCardTableRow tableRow = new StudentGroupTeacherReportCardTableRow();
+                    tableRow.setModule(moduleMap.get(resultColumn.getModuleId()));
+                    tableRow.setModuleResult(ReportUtil.vocationalGradeAsString(resultColumn.getModuleResult().getGrade(),
+                            null, classifierCache, gradingSchemaRowMap, lang));
+                    studentReport.getTableRows().add(tableRow);
+                }
+            }
+
+            // sorting student table rows
+            Map<Long, List<StudentGroupTeacherReportCardTableRow>> tableRowsByModule = studentReport.getTableRows().stream()
+                    .collect(Collectors.groupingBy(r -> r.getModule().getId(), LinkedHashMap::new, Collectors.toList()));
+            tableRowsByModule.values().forEach(moduleRows -> moduleRows.sort(
+                    Comparator.comparing((StudentGroupTeacherReportCardTableRow r) -> r.getModuleResult() == null)
+                            .thenComparing(r -> r.getOutcomeResult() == null)
+                            .thenComparing(StudentGroupTeacherReportCardTableRow::getIsPracticeModuleResult,
+                                    Comparator.nullsLast(Comparator.naturalOrder()))
+                            .thenComparing(StudentGroupTeacherReportCardTableRow::getIsPracticeResult,
+                                    Comparator.nullsLast(Comparator.naturalOrder()))));
+            studentReport.setTableRows(tableRowsByModule.values().stream().flatMap(Collection::stream)
+                    .collect(Collectors.toList()));
+
+            studentReport.setAbsenceTypeTotals(student.getAbsenceTypeTotals());
+            report.getStudents().add(studentReport);
+        }
+        return report;
+    }
+
+    private void setReportCardCriteria(HoisUserDetails user, StudentGroupTeacherCommand criteria,
+            StudentGroupTeacherReportCard report) {
+        report.setSchool(AutocompleteResult.of(em.getReference(School.class, user.getSchoolId())));
+        report.setStudyYear(criteria.getStudyYearObject() != null ? AutocompleteResult.of(criteria.getStudyYearObject()) : null);
+        report.setStudentGroup(em.getReference(StudentGroup.class, criteria.getStudentGroup()).getCode());
+
+        report.setEntriesFrom(Stream.of(criteria.getStudyYearObject() != null ? criteria.getStudyYearObject().getStartDate() : null,
+                criteria.getStudyPeriodStart(), criteria.getFrom()).filter(Objects::nonNull)
+                .max(Comparator.comparing(LocalDate::toEpochDay)).orElse(null));
+        report.setEntriesThru(Stream.of(criteria.getStudyYearObject() != null ? criteria.getStudyYearObject().getEndDate() : null,
+                criteria.getStudyPeriodEnd(), criteria.getThru()).filter(Objects::nonNull)
+                .min(Comparator.comparing(LocalDate::toEpochDay)).orElse(null));
+
+        report.setShowLesson(Boolean.valueOf(criteria.getEntryTypes().contains(JournalEntryType.SISSEKANNE_T.name())));
+        report.setShowPracticalWork(Boolean.valueOf(criteria.getEntryTypes().contains(JournalEntryType.SISSEKANNE_P.name())));
+        report.setShowELearning(Boolean.valueOf(criteria.getEntryTypes().contains(JournalEntryType.SISSEKANNE_E.name())));
+        report.setShowIndividualWork(Boolean.valueOf(criteria.getEntryTypes().contains(JournalEntryType.SISSEKANNE_I.name())));
+
+        report.setShowOtherEntries(!Collections.disjoint(OTHER_RESULTS, criteria.getEntryTypes()));
+        report.setShowEvaluation(Boolean.valueOf(criteria.getEntryTypes().contains(JournalEntryType.SISSEKANNE_H.name())));
+        report.setShowPeriodGrade(Boolean.valueOf(criteria.getEntryTypes().contains(JournalEntryType.SISSEKANNE_R.name())));
+        report.setShowOutcome(Boolean.valueOf(criteria.getOutcomeResults().booleanValue()
+                || criteria.getAllModulesAndOutcomes().booleanValue()));
+        report.setShowFinalResult(Boolean.valueOf(criteria.getEntryTypes().contains(JournalEntryType.SISSEKANNE_L.name())));
+        report.setShowModuleGrade(criteria.getModuleGrade());
+        report.setTotalGradeColumns(Long.valueOf(Stream.of(report.getShowEvaluation(), report.getShowPeriodGrade(),
+                report.getShowOutcome(), report.getShowFinalResult(), report.getShowModuleGrade())
+                .filter(Boolean.TRUE::equals).count()));
+
+        report.setShowAbsences(Boolean.FALSE.equals(criteria.getAllModules()));
     }
 
     private Map<Long, GradingSchemaRow> gradingSchemaRowMap(Long schoolId) {

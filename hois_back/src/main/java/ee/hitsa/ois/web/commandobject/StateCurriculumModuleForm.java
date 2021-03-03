@@ -9,6 +9,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
+import ee.hitsa.ois.validation.StateCurriculumValidator.Vocational;
 import ee.hitsa.ois.web.dto.StateCurriculumModuleDto;
 
 /**
@@ -19,7 +20,7 @@ public class StateCurriculumModuleForm extends StateCurriculumModuleDto {
     @NotNull
     private Long stateCurriculum;
     
-    @NotEmpty
+    @NotEmpty(groups = {Vocational.class})
     @ClassifierRestriction(MainClassCode.KUTSE)
     private Set<String> stateCurriculumOccupations = new HashSet<>();
     

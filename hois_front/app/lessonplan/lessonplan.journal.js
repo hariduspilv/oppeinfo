@@ -14,7 +14,7 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$loca
 
     Classifier.queryForDropdown({ mainClassCode: 'PAEVIK_GRUPI_JAOTUS' }, function (response) {
       $scope.formState.groupProportions = response.sort(function (a, b) {
-        return a.value.localeCompare(b.value, undefined, {numeric: true, sensitivity: 'base'});
+        return a.value.hoisLocaleCompare(b.value);
       });
     });
 

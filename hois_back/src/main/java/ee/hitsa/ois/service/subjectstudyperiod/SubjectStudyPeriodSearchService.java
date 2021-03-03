@@ -135,13 +135,13 @@ public class SubjectStudyPeriodSearchService {
         StringBuilder select = new StringBuilder(SELECT);
         if (user.isTeacher()) {
             from.append("join subject_study_period_teacher sspt on sspt.subject_study_period_id = ssp.id ");
-            from.append("left join (select sp.id, sp.status_code, spt.subject_study_period_teacher_id "
-                        + "from subject_program_teacher spt "
-                        + "join subject_program sp "
-                        + "on spt.subject_program_id = sp.id "
-                    + "where not coalesce(sp.is_joint, false)) spr "
-                    + "on spr.subject_study_period_teacher_id = sspt.id and sspt.teacher_id = :currentTeacherId ");
-            select.append(", spr.id, spr.status_code");
+//            from.append("left join (select sp.id, sp.status_code, spt.subject_study_period_teacher_id "
+//                        + "from subject_program_teacher spt "
+//                        + "join subject_program sp "
+//                        + "on spt.subject_program_id = sp.id "
+//                    + "where not coalesce(sp.is_joint, false)) spr "
+//                    + "on spr.subject_study_period_teacher_id = sspt.id and sspt.teacher_id = :currentTeacherId ");
+//            select.append(", spr.id, spr.status_code");
         }
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from.toString()).sort(pageable);
 
@@ -160,9 +160,20 @@ public class SubjectStudyPeriodSearchService {
         qb.optionalCriteria(FILTER_BY_DECLARED_STUDENT_ID, "studentId", criteria.getStudent());
         if(user.isTeacher()) {
             if (SubjectProgramStatus.AINEPROGRAMM_STAATUS_L.name().equals(criteria.getProgramStatus())) {
-                qb.filter("not exists(select 1 from subject_program_teacher spt where spt.subject_study_period_teacher_id = spt:id spr.status_code is null");
+                qb.filter("(not exists(" +
+                        "select 1 from subject_program_teacher spt " +
+                        "join subject_program spr on spt.subject_program_id = spr.id " +
+                        "where spt.subject_study_period_teacher_id = sspt.id and not coalesce(spr.is_joint, false)) " +
+                        "and not exists(" +
+                        "select 1 from subject_program_teacher spt " +
+                        "join subject_program spr on spt.subject_program_id = spr.id " +
+                        "where spt.subject_study_period_teacher_id = sspt.id and spr.is_joint is true)) ");
             } else {
-                qb.optionalCriteria("spr.status_code = :status", "status", criteria.getProgramStatus());
+                qb.optionalCriteria("exists(" +
+                                "select 1 from subject_program_teacher spt " +
+                                "join subject_program spr on spt.subject_program_id = spr.id " +
+                                "where spt.subject_study_period_teacher_id = sspt.id and spr.status_code = :status) ",
+                        "status", criteria.getProgramStatus());
             }
             qb.requiredCriteria("sspt.teacher_id = :currentTeacherId", "currentTeacherId", user.getTeacherId());
         }

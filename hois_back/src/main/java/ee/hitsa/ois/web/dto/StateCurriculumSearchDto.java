@@ -13,6 +13,8 @@ public class StateCurriculumSearchDto {
     private String iscedClass;
     private String ekrLevel;
     private Boolean canChange;
+    private Boolean isVocational;
+    private String stateCurrClass;
     
     public String getEkrLevel() {
         return ekrLevel;
@@ -92,5 +94,21 @@ public class StateCurriculumSearchDto {
 
     public void setCanChange(Boolean canChange) {
         this.canChange = canChange;
+    }
+
+    public Boolean getIsVocational() {
+        return isVocational;
+    }
+
+    public void setIsVocational(Boolean isVocational) {
+        this.isVocational = isVocational;
+    }
+
+    public String getStateCurrClass() {
+        return stateCurrClass;
+    }
+
+    public void setStateCurrClass(String stateCurrClass) {
+        this.stateCurrClass = stateCurrClass;
     }
 }

@@ -281,6 +281,7 @@
           </div>
           <div layout="row">
             <md-button class="md-raised md-primary" ng-click="save()" ng-disabled="disablesave">{{'main.button.save' | translate}}</md-button>
+            <md-button ng-if="!auth.school.withoutEkis" class="md-raised" ng-click="save(true)">{{'practice.contract.cancelWithoutEkis' | translate}}</md-button>
             <md-button class="md-raised" ng-click="showCancel()">{{'main.button.cancel' | translate}}</md-button>
           </div>
         </fieldset>

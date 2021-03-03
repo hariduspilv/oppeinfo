@@ -12,7 +12,7 @@ public class SaisApplicationImportForm extends VersionedCommand {
     private LocalDate applicationDateFrom;
     private LocalDate applicationDateTo;
     private String idCode;
-    private String admissionCode;
+    private Long admissionId;
     private ArrayList<String> status;
 
     public LocalDate getApplicationDateFrom() {
@@ -39,12 +39,12 @@ public class SaisApplicationImportForm extends VersionedCommand {
         this.idCode = idCode;
     }
 
-    public String getAdmissionCode() {
-        return admissionCode;
+    public Long getAdmissionId() {
+        return admissionId;
     }
 
-    public void setAdmissionCode(String admissionCode) {
-        this.admissionCode = admissionCode;
+    public void setAdmissionId(Long admissionId) {
+        this.admissionId = admissionId;
     }
 
     public ArrayList<String> getStatus() {

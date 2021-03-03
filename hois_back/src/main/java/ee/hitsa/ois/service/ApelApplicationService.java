@@ -1096,18 +1096,6 @@ public class ApelApplicationService {
         }
     }
 
-    public CurriculumVersionHigherModuleDto subjectModule(Long curriculumVersionId, Long subjectId) {
-        List<CurriculumVersionHigherModule> modules = em.createQuery(
-                "select cvhs.module from CurriculumVersionHigherModuleSubject cvhs "
-                        + "where cvhs.module.curriculumVersion.id = ?1 and cvhs.subject.id = ?2",
-                CurriculumVersionHigherModule.class)
-                .setParameter(1, curriculumVersionId)
-                .setParameter(2, subjectId)
-                .setMaxResults(1).getResultList();
-
-        return !modules.isEmpty() ? CurriculumVersionHigherModuleDto.of(modules.get(0)) : null;
-    }
-
     public List<CurriculumVersionHigherModuleResult> studentModules(Student student) {
         // final thesis and final exam modules are not allowed
         JpaNativeQueryBuilder qb = studentResultHigherService.studentModulesQueryBuilder(student);

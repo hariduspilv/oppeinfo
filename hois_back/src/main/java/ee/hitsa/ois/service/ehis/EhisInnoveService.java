@@ -109,6 +109,7 @@ public class EhisInnoveService extends EhisService {
             entity.setValidity(em.getReference(Classifier.class, endDate != null && !endDate.isAfter(now) ? SupportServiceValidity.TUGIKEHTIV_L.name() : SupportServiceValidity.TUGIKEHTIV_K.name()));
             entity.setIsPublic(Boolean.FALSE);
             entity.setEhis(Boolean.TRUE);
+            entity.setVisible(Boolean.TRUE);
             entity.setStudent(student);
             student.getSupportServices().add(entity);
         });

@@ -16,17 +16,14 @@ public class StudentVocationalModuleDto {
     private Long id;
     private CurriculumModuleDto curriculumModule;
     private List<CurriculumVersionOccupationModuleThemeDto> themes = new ArrayList<>();
-    // themes that belong to module that has the same curriculum module but not the same curriculum version module
-    private List<CurriculumVersionOccupationModuleThemeDto> otherCurriculumVersionModuleThemes = new ArrayList<>();
     // theme ids that have been replaced in RAKKAV application
     private Set<Long> replacedThemes = new HashSet<>();
+    private StudentVocationalModuleDto matchedModule;
 
     public static StudentVocationalModuleDto of(CurriculumVersionOccupationModule module) {
         StudentVocationalModuleDto dto = new StudentVocationalModuleDto();
         dto.setId(EntityUtil.getId(module));
         dto.setCurriculumModule(CurriculumModuleDto.forCurriculumFulfillment(module.getCurriculumModule()));
-        dto.setThemes(StreamUtil.toMappedList(CurriculumVersionOccupationModuleThemeDto::forCurriculumFulfillment,
-                module.getThemes()));
         return dto;
     }
 
@@ -54,15 +51,6 @@ public class StudentVocationalModuleDto {
         this.curriculumModule = curriculumModule;
     }
 
-    public List<CurriculumVersionOccupationModuleThemeDto> getOtherCurriculumVersionModuleThemes() {
-        return otherCurriculumVersionModuleThemes;
-    }
-
-    public void setOtherCurriculumVersionModuleThemes(
-            List<CurriculumVersionOccupationModuleThemeDto> otherCurriculumVersionModuleThemes) {
-        this.otherCurriculumVersionModuleThemes = otherCurriculumVersionModuleThemes;
-    }
-
     public Set<Long> getReplacedThemes() {
         return replacedThemes;
     }
@@ -71,4 +59,11 @@ public class StudentVocationalModuleDto {
         this.replacedThemes = replacedThemes;
     }
 
+    public StudentVocationalModuleDto getMatchedModule() {
+        return matchedModule;
+    }
+
+    public void setMatchedModule(StudentVocationalModuleDto matchedModule) {
+        this.matchedModule = matchedModule;
+    }
 }

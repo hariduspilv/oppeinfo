@@ -10,7 +10,7 @@ public class ResultColumnDto {
     private AutocompleteResult fullPracticeModule;
     private CurriculumModuleOutcomeResult outcome;
     private AutocompleteResult module;
-    private String moduleType;
+    private Long moduleId;
     private Boolean intendedModule = Boolean.TRUE;
 
     public AutocompleteResult getJournal() {
@@ -53,12 +53,12 @@ public class ResultColumnDto {
         this.module = module;
     }
 
-    public String getModuleType() {
-        return moduleType;
+    public Long getModuleId() {
+        return moduleId;
     }
 
-    public void setModuleType(String moduleType) {
-        this.moduleType = moduleType;
+    public void setModuleId(Long moduleId) {
+        this.moduleId = moduleId;
     }
 
     public Boolean getIntendedModule() {

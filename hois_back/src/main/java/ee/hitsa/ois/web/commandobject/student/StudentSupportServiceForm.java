@@ -27,6 +27,7 @@ public class StudentSupportServiceForm {
     private OisFileCommand file;
     private String entrySubmitter;
     private Boolean ehis = Boolean.FALSE;
+    private Boolean visible = Boolean.FALSE;
 
     public Long getId() {
         return id;
@@ -98,5 +99,13 @@ public class StudentSupportServiceForm {
 
     public void setEhis(Boolean ehis) {
         this.ehis = ehis;
+    }
+
+    public Boolean getVisible() {
+        return visible;
+    }
+
+    public void setVisible(Boolean visible) {
+        this.visible = visible;
     }
 }

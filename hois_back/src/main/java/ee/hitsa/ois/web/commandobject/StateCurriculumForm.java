@@ -15,7 +15,8 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
-import ee.hitsa.ois.validation.StateCurriculumValidator.Confirmed;
+import ee.hitsa.ois.validation.StateCurriculumValidator.ConfirmedVocational;
+import ee.hitsa.ois.validation.StateCurriculumValidator.ConfirmedSecondary;
 import ee.hitsa.ois.web.dto.StateCurriculumModuleDto;
 
 public class StateCurriculumForm extends VersionedCommand {
@@ -24,22 +25,22 @@ public class StateCurriculumForm extends VersionedCommand {
     private String nameEt;
     @Size(max=255)
     private String nameEn;
-    @NotEmpty(groups = {Confirmed.class})
+    @NotEmpty(groups = {ConfirmedSecondary.class, ConfirmedVocational.class})
     @Size(max=20000)
     private String objectivesEt;
     @Size(max=20000)
     private String objectivesEn;
-    @NotEmpty(groups = {Confirmed.class})
+    @NotEmpty(groups = {ConfirmedVocational.class})
     @Size(max=20000)
     private String outcomesEt;
     @Size(max=20000)
     private String outcomesEn;
-    @NotEmpty(groups = {Confirmed.class})
+    @NotEmpty(groups = {ConfirmedSecondary.class, ConfirmedVocational.class})
     @Size(max=20000)
     private String admissionRequirementsEt;
     @Size(max=20000)
     private String admissionRequirementsEn;
-    @NotEmpty(groups = {Confirmed.class})
+    @NotEmpty(groups = {ConfirmedSecondary.class, ConfirmedVocational.class})
     @Size(max=20000)
     private String graduationRequirementsEt;
     @Size(max=20000)
@@ -50,11 +51,11 @@ public class StateCurriculumForm extends VersionedCommand {
     private BigDecimal credits;
     @Size(max=20000)
     private String practiceDescription;
-    @NotNull(groups = {Confirmed.class})
+    @NotNull(groups = {ConfirmedVocational.class})
     @Min(0)
     @Max(999)
     private BigDecimal optionalStudyCredits;
-    @NotNull(groups = {Confirmed.class})
+    @NotNull(groups = {ConfirmedSecondary.class, ConfirmedVocational.class})
     private LocalDate validFrom;
     private LocalDate validThru;
     @Size(max=20000)
@@ -63,20 +64,22 @@ public class StateCurriculumForm extends VersionedCommand {
     private String riigiteatajaUrl;
     @Size(max=4000)
     private String finalExamDescription;
+    private Boolean isVocational;
+    private Long courses;
 
     @NotNull
-    @ClassifierRestriction(MainClassCode.ISCED_RYHM)
+    @ClassifierRestriction({MainClassCode.ISCED_RYHM, MainClassCode.EKR})
     private String iscedClass;
     @NotNull
     @ClassifierRestriction(MainClassCode.EHIS_ROK)
     private String stateCurrClass;
     
     @Valid
-    @NotEmpty(groups = {Confirmed.class})
+    @NotEmpty(groups = {ConfirmedSecondary.class, ConfirmedVocational.class})
     private Set<StateCurriculumModuleDto> modules = new HashSet<>();
     
     @ClassifierRestriction(MainClassCode.KUTSE)
-    @NotEmpty(groups = {Confirmed.class})
+    @NotEmpty(groups = {ConfirmedVocational.class})
     private Set<String> occupations = new HashSet<>();
 
     public String getNameEt() {
@@ -253,5 +256,21 @@ public class StateCurriculumForm extends VersionedCommand {
 
     public void setOccupations(Set<String> occupations) {
         this.occupations = occupations;
+    }
+
+    public Boolean getIsVocational() {
+        return isVocational;
+    }
+
+    public void setIsVocational(Boolean isVocational) {
+        this.isVocational = isVocational;
+    }
+
+    public Long getCourses() {
+        return courses;
+    }
+
+    public void setCourses(Long courses) {
+        this.courses = courses;
     }
 }

@@ -66,7 +66,7 @@
         </div>
     </div>
     <div layout="row" layout-margin>
-        <md-button ng-if="(auth.isAdmin() && teacher.id && teacher.isVocational) || (auth.isTeacher() && teacher.isVocational)" 
+        <md-button ng-if="auth.isTeacher() && teacher.isVocational"
         ng-href="#/teachers/{{teacher.id}}/continuingEducation" class="md-primary md-raised">{{'main.button.change' | translate}}</md-button>
     </div>
 </div>

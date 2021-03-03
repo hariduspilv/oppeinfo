@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
@@ -34,12 +35,16 @@ import javax.validation.groups.Default;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 
+import ee.hitsa.ois.concurrent.WrapperCallable;
+import ee.hitsa.ois.concurrent.request.SaisApplicationRequest;
+import ee.hois.soap.LogResult;
 import ee.hois.xroad.sais2.generated.AppExportResponsev2;
 import ee.hois.xroad.sais2.generated.Applicationv2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -302,13 +307,13 @@ public class SaisApplicationService {
             }
             existingSaisAdmission = saisAdmissionRepository.findFirstByCurriculumVersionIdOrderByIdDesc(EntityUtil.getId(curriculumVersion));
         } else {
-            listSaisAdmission = saisAdmissionRepository.findByCodeAndCurriculumVersionCurriculumSchoolId(admissionCode, schoolId);
+            listSaisAdmission = saisAdmissionRepository.findFirstActiveSaisAdmissionByCodeAndSchoolId(admissionCode, schoolId, new PageRequest(0, 1));
         }
         SaisAdmission saisAdmission = null;
         if (existingSaisAdmission != null) {
         	saisAdmission = existingSaisAdmission;
-        } else if (listSaisAdmission != null && !listSaisAdmission.stream().filter(p->p.getArchived() == null || !p.getArchived().booleanValue()).collect(Collectors.toList()).isEmpty()) {
-        	saisAdmission = listSaisAdmission.stream().filter(p->p.getArchived() == null || !p.getArchived().booleanValue()).findFirst().get();
+        } else if (listSaisAdmission != null && !listSaisAdmission.isEmpty()) {
+        	saisAdmission = listSaisAdmission.stream().findFirst().get();
         	existingSaisAdmission = saisAdmission;
         } else {
         	saisAdmission = new SaisAdmission();
@@ -325,7 +330,8 @@ public class SaisApplicationService {
             curriculumVersion = saisAdmission.getCurriculumVersion();
         }
 
-        SaisApplication existingSaisApplication = saisApplicationRepository.findByApplicationNrAndSaisAdmissionCode(applicationNr, saisAdmission.getCode());
+        SaisApplication existingSaisApplication = saisApplicationRepository
+                .findByApplicationNrAndSaisAdmissionCodeAndSaisAdmissionCurriculumVersionCurriculumSchoolIdAndSaisIdIsNull(applicationNr, saisAdmission.getCode(), schoolId);
         if (existingSaisApplication != null && StringUtils.hasText(existingSaisApplication.getIdcode()) &&
                 StringUtils.hasText(row.getIdcode()) && !existingSaisApplication.getIdcode().equals(row.getIdcode())) {
             failed.add(new SaisApplicationImportedRowDto(rowNr, String.format("%son süsteemis juba seotud teise isikuga (%s).", messageForOther, existingSaisApplication.getIdcode())));
@@ -537,7 +543,10 @@ public class SaisApplicationService {
         return null;
     }
 
-    public SaisApplicationImportResultDto importFromSais(SaisApplicationImportForm form, HoisUserDetails user) {
+    public SaisApplicationImportResultDto importFromSais(SaisApplicationImportForm form, HoisUserDetails user,
+                                                         AtomicReference<SaisApplicationImportResultDto> wrapper,
+                                                         AtomicReference<Float> progress) {
+        wrapper.set(new SaisApplicationImportResultDto());
         ClassifierCache classifiers = new ClassifierCache(classifierService);
         XRoadHeaderV4 xRoadHeader = getXroadHeader(user);
 
@@ -552,37 +561,46 @@ public class SaisApplicationService {
         }
 
         EntityUtil.setUsername(user.getUsername(), em);
-        return importPages(xRoadHeader, schoolId, request, classifiers);
+        return importPages(xRoadHeader, schoolId, request, classifiers, wrapper, progress);
     }
 
-    private SaisApplicationImportResultDto importPages(XRoadHeaderV4 xRoadHeader, Long schoolId, AllAppsExportRequest request, ClassifierCache classifiers) {
-        SaisApplicationImportResultDto dto = new SaisApplicationImportResultDto();
+    private SaisApplicationImportResultDto importPages(XRoadHeaderV4 xRoadHeader, Long schoolId,
+                                                       AllAppsExportRequest request, ClassifierCache classifiers,
+                                                       AtomicReference<SaisApplicationImportResultDto> wrapper,
+                                                       AtomicReference<Float> progress) {
         EstonianIdCodeValidator idCodeValidator = new EstonianIdCodeValidator();
         Map<String, SaisAdmission> admissionMap = new HashMap<>();
         long fetchedCount = 0;
 
         while(request != null && request.getPage() != null) {
+            if (Thread.interrupted()) {
+                break;
+            }
             SaisApplicationResponse response = saisClient.applicationsExport(xRoadHeader, request);
             if(response.getResult() != null) {
-                fetchedCount += applyPaging(request, response.getResult(), fetchedCount);
+                fetchedCount = applyPaging(request, response.getResult(), fetchedCount);
             }
 
             saisLogService.withResponse(response, schoolId, (result, logContext) -> {
 
                 //look for all the application numbers to find previously imported applications with one query
                 List<Applicationv2> applications = result.getApplications() != null ? result.getApplications().getApplicationv2() : null;
-                List<String> previousApplicationNrs = StreamUtil.toMappedList(Application::getApplicationNumber, applications);
+                List<String> previousApplicationNrs = StreamUtil.toMappedList(Application::getId, applications);
                 Map<String, SaisApplication> previousApplications = previousApplicationNrs.isEmpty() ?
-                        Collections.emptyMap() : StreamUtil.toMap(SaisApplication::getApplicationNr,
-                                em.createQuery("select sa from SaisApplication sa where sa.applicationNr in ?1", SaisApplication.class)
-                                    .setParameter(1, previousApplicationNrs).getResultList());
+                        Collections.emptyMap() : StreamUtil.toMap(SaisApplication::getSaisId,
+                                em.createQuery("select sa from SaisApplication sa where sa.saisId in ?1 " +
+                                        "and sa.saisId is not null and sa.saisAdmission.curriculumVersion.curriculum.school.id = ?2 ",
+                                        SaisApplication.class)
+                                    .setParameter(1, previousApplicationNrs)
+                                    .setParameter(2, schoolId)
+                                    .getResultList());
                 Map<Long, Long> prevDirectives = !previousApplications.isEmpty() ? directiveStudentsWithSaisApplication(StreamUtil.toMappedList(SaisApplication::getId, previousApplications.values())) : null;
 
                 List<SaisApplicationImportedRowDto> failed = new ArrayList<>();
                 List<SaisApplicationImportedRowDto> successful = new ArrayList<>();
 
                 for(Applicationv2 application : StreamUtil.nullSafeList(applications)) {
-                    SaisApplication prevApp = previousApplications.get(application.getApplicationNumber());
+                    SaisApplication prevApp = previousApplications.get(application.getId());
                     if(prevApp != null && prevDirectives != null && prevDirectives.containsKey(prevApp.getId())) {
                         String error = String.format("Avaldusega nr %s on seotud käskkiri - seda ei uuendata.", application.getApplicationNumber());
                         failed.add(new SaisApplicationImportedRowDto(application.getApplicationNumber(), error));
@@ -596,19 +614,30 @@ public class SaisApplicationService {
                     }
                 }
 
-                dto.getFailed().addAll(failed);
-                dto.getSuccessful().addAll(successful);
+                wrapper.getAndUpdate(dto -> {
+                    dto.getFailed().addAll(failed);
+                    dto.getSuccessful().addAll(successful);
+                    return dto;
+                });
 
                 List<SaisApplicationImportedRowDto> importResult = new ArrayList<>(failed);
                 importResult.addAll(successful);
                 return importResult.stream().collect(Collectors
                         .toMap(SaisApplicationImportedRowDto::getApplicationNr, SaisApplicationImportedRowDto::toString)).toString();
             });
+
+            final long fetched = fetchedCount;
+
+            Optional.of(response)
+                    .map(LogResult::getResult)
+                    .map(AppExportResponsev2::getTotalCount)
+                    .ifPresent(totalCount -> progress.getAndUpdate(old -> fetched / totalCount.floatValue()));
+
             if(response.hasError()) {
                 break;
             }
         }
-        return dto;
+        return wrapper.get();
     }
 
     /**
@@ -648,19 +677,13 @@ public class SaisApplicationService {
         }
 
         saisApplication.setApplicationNr(application.getApplicationNumber());
-        if(admissionMap.get(application.getAdmissionCode()) == null) {
-            List<SaisAdmission> admissions = saisAdmissionRepository.findByCodeAndCurriculumVersionCurriculumSchoolId(application.getAdmissionCode(), schoolId);
-            Optional<SaisAdmission> admissionOptional = admissions.stream().filter(p->p.getArchived() == null || !p.getArchived().booleanValue()).findFirst();
-            SaisAdmission admission = null;
-            if (admissionOptional.isPresent()) {
-            	admission = admissionOptional.get();
-            }
-            if(admission != null) {
-                admissionMap.put(admission.getCode(), admission);
-            }
+        if(admissionMap.get(application.getAdmissionId()) == null) {
+            List<SaisAdmission> admissions = saisAdmissionRepository
+                    .findFirstActiveSaisAdmissionBySaisIdAndSchoolId(application.getAdmissionId(), schoolId, new PageRequest(0, 1));
+            admissions.stream().findFirst().ifPresent(admission -> admissionMap.put(admission.getSaisId(), admission));
         }
-        saisApplication.setSaisAdmission(admissionMap.get(application.getAdmissionCode()));
-        saisAdmission = admissionMap.get(application.getAdmissionCode());
+        saisApplication.setSaisAdmission(admissionMap.get(application.getAdmissionId()));
+        saisAdmission = admissionMap.get(application.getAdmissionId());
         saisApplication.setStatus(classifiers.getByEhisValue(classifierValue(application.getApplicationStatus()), MainClassCode.SAIS_AVALDUSESTAATUS));
         saisApplication.setFirstname(application.getFirstName());
         saisApplication.setLastname(application.getLastName());
@@ -930,16 +953,10 @@ public class SaisApplicationService {
             }
             request.setApplicationStatusValues(aos);
         }
-        if(form.getAdmissionCode() != null) {
-        	List<SaisAdmission> admissions = saisAdmissionRepository.findByCode(form.getAdmissionCode());
-        	Optional<SaisAdmission> admissionOptional = admissions.stream().filter(p->p.getArchived() == null || !p.getArchived().booleanValue()).findFirst();
-        	SaisAdmission saisAdmission = null;
-        	if (admissionOptional.isPresent()) {
-        		saisAdmission = admissionOptional.get();
-        	}
-        	if (saisAdmission != null) {
-        		request.setAdmissionId(saisAdmission.getSaisId());
-        	}
+        if(form.getAdmissionId() != null) {
+        	saisAdmissionRepository
+                    .findById(form.getAdmissionId())
+                    .ifPresent(admission -> request.setAdmissionId(admission.getSaisId()));
         }
         ArrayOfInt aoi = new ArrayOfInt();
         Classifier ehisSchool = em.getReference(School.class, schoolId).getEhisSchool();
@@ -974,4 +991,20 @@ public class SaisApplicationService {
 		}
 		return saisApplicationDto;
 	}
+
+    public SaisApplicationRequest createRequest(HoisUserDetails user, String requestHash, SaisApplicationImportForm form) {
+        return new SaisApplicationRequest(new WrapperCallable<SaisApplicationImportResultDto>() {
+            private final AtomicReference<Float> progress = new AtomicReference<>(0f);
+
+            @Override
+            public SaisApplicationImportResultDto wrapperCall() throws InterruptedException {
+                return importFromSais(form, user, getWrapper(), progress);
+            }
+
+            @Override
+            public float getProgress() {
+                return progress.get();
+            }
+        }, requestHash);
+    }
 }

@@ -3,8 +3,6 @@ package ee.hitsa.ois.util;
 import javax.persistence.EntityManager;
 
 import ee.hitsa.ois.domain.school.School;
-import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
-import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodTeacher;
 import ee.hitsa.ois.domain.subject.subjectprogram.SubjectProgramTeacher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;

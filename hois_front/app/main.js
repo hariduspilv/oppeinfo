@@ -133,18 +133,6 @@ $scope.shouldLeftBeOpen = $mdMedia('gt-sm');
       $translate.use(languageCode);
     };
 
-    // HACK: without rendering md-select doesn't translate until value changes
-    // https://github.com/angular/material/issues/11747
-    $rootScope.$on('$translateChangeSuccess', function () {
-      $timeout(function () {
-        var mdSelectElements = document.querySelectorAll('md-select');
-        mdSelectElements.forEach(function (select) {
-          var selectNgModel = angular.element(select).controller('ngModel');
-          selectNgModel.$render();
-        });
-      });
-    });
-
     $rootScope.frontendBaseUrl = function () {
       return new $window.URL($location.absUrl()).origin;
     };

@@ -1,0 +1,76 @@
+<div layout-padding>
+  <div flex>
+    <fieldset>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'ehis.teacher.teachersDataSendingHigher' | translate}}</legend>
+      <form ng-submit="exportTeachers()" layout="column" name="teacherExportForm">
+        <div flex>
+          <div flex="100" flex-sm="100" flex-xs="100" layout="row" class="horizontal-radio-group">
+            <div flex="25" flex-xs="100" layout-align="start center" layout="row">
+              <span flex class="md-body-1">{{'ehis.teacher.radioData' | translate}}</span>
+            </div>
+            <md-input-container layout="row" layout-align="start center" flex="60">
+              <md-radio-group name="datachoice" ng-model="teacher.allDates" required layout="row">
+                <md-radio-button ng-value="true" >{{ 'ehis.teacher.allData' | translate }}</md-radio-button>
+                <md-radio-button ng-value="false" >{{ 'ehis.teacher.changedData' | translate }}</md-radio-button>
+              </md-radio-group>
+            </md-input-container>
+          </div>
+          <div flex-xs="100" flex-gt-xs="100" layout="column" ng-if="!teacher.allDates">
+            <div layout="row">
+              <div flex="25" flex-md="100" flex-sm="100" flex-xs="100" layout-align="start center" layout="row">
+                <span flex class="md-body-1">{{'ehis.teacher.importRange' | translate}}</span>
+              </div>
+              <md-input-container flex="15" flex-md="100" flex-sm="100" flex-xs="100">
+                <label>{{'main.from' | translate}}</label>
+                <md-datepicker ng-required="!teacher.allDates" ng-model="teacher.changeDateFrom" md-max-date="teacher.changeDateTo"></md-datepicker>
+              </md-input-container>
+              <md-input-container flex="15" flex-md="100" flex-sm="100" flex-xs="100">
+                <label>{{'main.thru' | translate}}</label>
+                <md-datepicker ng-required="!teacher.allDates" ng-model="teacher.changeDateTo" md-min-date="teacher.changeDateFrom"></md-datepicker>
+              </md-input-container>
+            </div>
+          </div>
+          <div layout="row">
+            <div flex="60">
+              <md-checkbox ng-model="teacher.subjectData" class="md-primary">
+                {{(higher ? 'ehis.teacher.subjectData' : 'ehis.teacher.moduleData') | translate}}
+              </md-checkbox>
+            </div>
+          </div>
+          <div layout="row">
+            <md-button type="submit" class="md-raised md-primary" style="margin-left: 0;">{{'ehis.teacher.sendToEhis' | translate}}</md-button>
+          </div>
+        </div>
+      </form>
+    </fieldset>
+  </div>
+  <p class="md-body-2" md-colors="{color: 'warn'}" translate="ehis.messages.requestCancelledBy" translate-values="{user: cancelledBy}" ng-if="cancelledBy"></p>
+</div>
+
+<div ng-if="result.length > 0">
+  <div layout-padding>
+    <div flex>
+      {{'ehis.teacher.response' | translate}}
+    </div>
+  </div>
+  <div layout-padding >
+    <div flex>
+      <md-table-container>
+        <table md-table md-progress="result">
+          <thead md-head>
+            <tr md-row>
+              <th md-column >{{'ehis.teacher.name' | translate}}</th>
+              <th md-column >{{'ehis.teacher.message' | translate}}</th>
+            </tr>
+          </thead>
+          <tbody md-body>
+            <tr md-row ng-repeat="row in result" ng-class-odd="'odd'" ng-class-even="'even'">
+              <td md-cell>{{::row.fullName}}</td>
+              <td md-cell>{{::row.message}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </md-table-container>
+    </div>
+  </div>
+</div>

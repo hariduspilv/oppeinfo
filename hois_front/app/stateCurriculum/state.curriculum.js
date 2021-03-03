@@ -5,6 +5,7 @@ angular.module('hitsaOis')
     classifierAutocomplete, dialogService, QueryUtils, DataUtils, ArrayUtils, Curriculum, config, $rootScope) {
 
     $scope.isPublic = $route.current.locals.params && $route.current.locals.params.isPublic;
+    $scope.isSecondary = $route.current.locals.params && $route.current.locals.params.isSecondary;
 
     $scope.STATUS = Curriculum.STATUS;
 
@@ -16,11 +17,16 @@ angular.module('hitsaOis')
     var initialStateCurriculum = {
         status: $scope.STATUS.ENTERING,
         modules: [],
+        modulesMap: {},
         occupations: [],
         validFrom: new Date(),
         optionalStudyCredits: 0,
-        canChange: true
+        canChange: true,
+        stateCurrClass: $scope.isSecondary ? "EHIS_ROK_GROK" : undefined,
+        isVocational: $scope.isSecondary ? false : true,
+        credits: $scope.isSecondary ? 0 : undefined
     };
+
     var baseUrl = '/stateCurriculum';
     var Endpoint = QueryUtils.endpoint($scope.isPublic ? '/public/statecurriculum' : baseUrl);
     var id = $route.current.params.id;
@@ -30,7 +36,8 @@ angular.module('hitsaOis')
     $scope.formState = {
       strictValidation: false,
       readOnly: $route.current.$$route.originalPath.indexOf("view") !== -1,
-      stateCurriculumPdfUrl: config.apiUrl + baseUrl + '/print/' + id + '/stateCurriculum.pdf'
+      stateCurriculumPdfUrl: config.apiUrl + baseUrl + '/print/' + id + '/stateCurriculum.pdf',
+      secondaryStateCurriculumPdfUrl: config.apiUrl + baseUrl + '/print/' + id + '/secondaryStateCurriculum.pdf'
     };
 
     $scope.getCurriculumViewUrl = function(curriculumId) {
@@ -53,10 +60,35 @@ angular.module('hitsaOis')
     }
     getStateCurriculum();
 
+    function groupBy(xs, key) {
+      return xs.reduce(function(rv, x) {
+        (rv[x[key]] = rv[x[key]] || []).push(x);
+        return rv;
+      }, {});
+    };
+
+    function sortObject(obj) {
+      return Object.keys(obj).sort().reduce(function (result, key) {
+        result[key] = obj[key];
+        return result;
+      }, {});
+    }
+
+    if ($scope.isSecondary) {
+      $scope.$watchCollection('stateCurriculum.modules', function() {
+        if ($scope.isSecondary && $scope.stateCurriculum !== undefined) {
+          $scope.formState.modulesMap = groupBy($scope.stateCurriculum.modules, 'syllabus');
+          $scope.formState.modulesMap = sortObject($scope.formState.modulesMap);
+        }
+      });
+    }
+
     function setVariablesForExistingStateCurriculum() {
         DataUtils.convertStringToDates($scope.stateCurriculum, ["validFrom", "validThru"]);
-        fillCascadeDropdowns();
-        getAllSuboccupations();
+        if (!$scope.isSecondary) {
+          fillCascadeDropdowns();
+          getAllSuboccupations();
+        }
         $scope.formState.readOnly = $route.current.$$route.originalPath.indexOf("view") !== -1;
     }
 
@@ -131,10 +163,17 @@ angular.module('hitsaOis')
       if(!validationPassed(messages)) {
         return;
       }
+      if ($scope.stateCurriculum.stateCurrClass === 'EHIS_ROK_PROK') {
+        $scope.stateCurriculum.courses = undefined;
+      }
       $scope.stateCurriculum.$save().then(function(){
           DataUtils.convertStringToDates($scope.stateCurriculum, ["validFrom", "validThru"]);
           message.info('main.messages.create.success');
-          $location.url('/stateCurriculum/' + $scope.stateCurriculum.id + '/edit?_noback');
+          if ($scope.isSecondary) {
+            $location.url('/secondaryStateCurriculum/' + $scope.stateCurriculum.id + '/view?_noback');
+          } else {
+            $location.url('/stateCurriculum/' + $scope.stateCurriculum.id + '/view?_noback');
+          }
       });
     }
 
@@ -151,7 +190,11 @@ angular.module('hitsaOis')
           $scope.stateCurriculumForm.$setPristine();
 
           if(!$scope.formState.readOnly && $scope.stateCurriculum.status !== Curriculum.STATUS.ENTERING) {
-            $location.url('/stateCurriculum/' + $scope.stateCurriculum.id + '/view?_noback');
+            if ($scope.isSecondary) {
+              $location.url('/secondaryStateCurriculum/' + $scope.stateCurriculum.id + '/view?_noback');
+            } else {
+              $location.url('/stateCurriculum/' + $scope.stateCurriculum.id + '/view?_noback');
+            }
           }
         });
       }, 0);
@@ -164,6 +207,9 @@ angular.module('hitsaOis')
       };
       if(id) {
         $scope.formState.strictValidation = false;
+        if ($scope.stateCurriculum.stateCurrClass === 'EHIS_ROK_PROK') {
+          $scope.stateCurriculum.courses = undefined;
+        }
         update(new Endpoint($scope.stateCurriculum), messages);
       } else {
         createCurriculum(messages);
@@ -172,7 +218,7 @@ angular.module('hitsaOis')
 
     function setStatus(endpoint, messages) {
       dialogService.confirmDialog({prompt: messages.prompt}, function() {
-        if($scope.formState.strictValidation) {
+        if($scope.formState.strictValidation && !$scope.isSecondary) {
             $scope.occupationCheckBeforeSave(endpoint, messages);
         } else {
             update(endpoint, messages);
@@ -216,7 +262,9 @@ angular.module('hitsaOis')
     // validation
 
     function stateCurriculumFormIsValid() {
-        return $scope.stateCurriculumForm.$valid && (!$scope.strictValidation() || $scope.stateCurriculum.occupations.length > 0 && allOcupationsHavePModule() && allSubOccupationsHavePModule());
+        return $scope.stateCurriculumForm.$valid && 
+        // strict validate occupations for only non secondary schools
+        (!$scope.strictValidation() || $scope.isSecondary ||$scope.stateCurriculum.occupations.length > 0 && allOcupationsHavePModule() && allSubOccupationsHavePModule());
     }
 
     function allOcupationsHavePModule() {
@@ -501,6 +549,106 @@ angular.module('hitsaOis')
           });
       };
 
+      $scope.openViewSubjectDialog = function (editingSubject) {
+        var DialogController = function (scope) {
+            scope.highSchool = $scope.stateCurriculum.stateCurrClass === 'EHIS_ROK_GROK';
+            scope.data = angular.copy(editingSubject);
+        };
+        dialogService.showDialog('stateCurriculum/state.curriculum.subject.view.dialog.html', DialogController,
+            function () {
+            });
+        };
+
+      $scope.openAddSubjectDialog = function (editingSubject) {
+        var DialogController = function (scope) {
+            if (editingSubject) {
+                scope.data = angular.copy(editingSubject);
+            } else {
+                scope.data = {
+                  competences: [],
+                  credits: 0,
+                  objectivesEt: "null",
+                  assessmentsEt: "null",
+                  nameEt: "null"
+                };
+            }
+            scope.highSchool = $scope.stateCurriculum.stateCurrClass === 'EHIS_ROK_GROK';
+            scope.editing = angular.isDefined(editingSubject);
+
+            scope.editCompetence = function(competence) {
+              scope.isEditingCompetence = true;
+              scope.editedCompetence = competence;
+              scope.data.competence = competence.competence;
+              scope.data.description = competence.description;
+            };
+
+            scope.saveCompetence = function() {
+              if (scope.data.competence) {
+                  scope.isEditingCompetence = false;
+
+                  scope.editedCompetence.competence = scope.data.competence;
+                  scope.editedCompetence.description = scope.data.description;
+
+                  scope.data.competence = undefined;
+                  scope.data.description = undefined;
+                }
+            };
+
+            scope.addCompetence = function() {
+              if (angular.isString(scope.data.competence)) {
+                  scope.data.competences.push({competence: scope.data.competence, description: scope.data.description});
+                  scope.data.competence = undefined;
+                  scope.data.description = undefined;
+                }
+            };
+
+            scope.delete = function() {
+               dialogService.confirmDialog({prompt: 'stateCurriculum.subjectDeleteConfirm'}, function() {
+                 if(scope.data.id) {
+                  var ModuleEndpoint = QueryUtils.endpoint('/stateCurriculum/modules');
+                  var deletedModule = new ModuleEndpoint(scope.data);
+                  deletedModule.$delete().then(function() {
+                    message.info('main.messages.delete.success');
+                    ArrayUtils.remove($scope.stateCurriculum.modules, editingSubject);
+                  });
+                  } else {
+                    ArrayUtils.remove($scope.stateCurriculum.modules, editingSubject);
+                  }
+                  scope.cancel();
+                });
+            };
+        };
+
+        dialogService.showDialog('stateCurriculum/state.curriculum.subject.add.dialog.html', DialogController,
+            function (submitScope) {
+            var data = submitScope.data;
+                if($scope.stateCurriculum.id) {
+                  // subject is saved to modules
+                  var ModuleEndpoint = QueryUtils.endpoint('/stateCurriculum/modules');
+                  var savedModule = new ModuleEndpoint(data);
+                  savedModule.stateCurriculumModules = $scope.stateCurriculum.modules;
+                  savedModule.stateCurriculum = $scope.stateCurriculum.id;
+                  if(data.id) {
+                    savedModule.$update().then(function(response) {
+                        message.info('main.messages.update.success');
+                        angular.extend(editingSubject, response);
+                    });
+                  } else {
+                    savedModule.$save().then(function(response) {
+                        message.info('main.messages.create.success');
+                        $scope.stateCurriculum.modules.push(response);
+                    });
+                  }
+                } else {
+                  if(editingSubject) {
+                      angular.extend(editingSubject, data);
+                  } else {
+                      $scope.stateCurriculum.modules.push(data);
+                  }
+                }
+            });
+        };
+
     $scope.openAddModuleDialog = function (editingModule) {
         var DialogController = function (scope) {
             if (editingModule) {
@@ -668,10 +816,18 @@ angular.module('hitsaOis')
             dialogService.confirmDialog({
             prompt: 'stateCurriculum.prompt.viewForm.editConfirmed',
           }, function(){
-            $location.path('/stateCurriculum/' + $scope.stateCurriculum.id + '/edit');
+            if ($scope.isSecondary) {
+              $location.path('/secondaryStateCurriculum/' + $scope.stateCurriculum.id + '/edit');
+            } else {
+              $location.path('/stateCurriculum/' + $scope.stateCurriculum.id + '/edit');
+            }
             });
         } else {
+          if ($scope.isSecondary) {
+            $location.path('/secondaryStateCurriculum/' + $scope.stateCurriculum.id + '/edit');
+          } else {
             $location.path('/stateCurriculum/' + $scope.stateCurriculum.id + '/edit');
+          }
         }
       };
   });

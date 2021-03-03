@@ -1,5 +1,6 @@
 package ee.hitsa.ois.service;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.parameterAsTimestamp;
 import static ee.hitsa.ois.util.JpaQueryUtil.propertyContains;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsInteger;
@@ -39,7 +40,9 @@ import ee.hitsa.ois.domain.curriculum.CurriculumModuleOutcome;
 import ee.hitsa.ois.domain.gradingschema.GradingSchemaRow;
 import ee.hitsa.ois.domain.student.StudentCurriculumModuleOutcomesResult;
 import ee.hitsa.ois.domain.student.StudentCurriculumModuleOutcomesResultHistory;
+import ee.hitsa.ois.domain.student.StudentVocationalOccupationModuleTheme;
 import ee.hitsa.ois.domain.timetable.JournalEntryTeacher;
+import ee.hitsa.ois.domain.timetable.JournalOccupationModuleTheme;
 import ee.hitsa.ois.domain.timetable.TimetableEventTime;
 import ee.hitsa.ois.enums.ApelApplicationStatus;
 import ee.hitsa.ois.enums.Language;
@@ -177,10 +180,6 @@ public class JournalService {
     private TimetableEventService timetableEventService;
     @Autowired
     private AutomaticMessageService automaticMessageService;
-
-    private static final List<String> testEntryTypeCodes = EnumUtil.toNameList(JournalEntryType.SISSEKANNE_H,
-            JournalEntryType.SISSEKANNE_L, JournalEntryType.SISSEKANNE_E, JournalEntryType.SISSEKANNE_I,
-            JournalEntryType.SISSEKANNE_R, JournalEntryType.SISSEKANNE_P);
 
     private static final String JOURNAL_LIST_FROM = "from journal j " +
             "join journal_omodule_theme jot on j.id=jot.journal_id " +
@@ -585,18 +584,31 @@ public class JournalService {
             filters.add(cb.not(cb.exists(studentsQuery)));
 
             // who has no positive result in given module
-            Journal journal = journalRepository.findOne(journalId);
-            Set<Long> modules = StreamUtil.toMappedSet(
-                    t -> EntityUtil.getId(t.getCurriculumVersionOccupationModuleTheme().getModule().getCurriculumModule()),
-                    journal.getJournalOccupationModuleThemes());
+            Subquery<Long> journalModulesQuery = query.subquery(Long.class);
+            Root<JournalOccupationModuleTheme> journalModuleThemesRoot = journalModulesQuery
+                    .from(JournalOccupationModuleTheme.class);
+            journalModulesQuery.select(journalModuleThemesRoot.get("curriculumVersionOccupationModuleTheme")
+                    .get("module").get("curriculumModule").get("id")).where(
+                            cb.equal(journalModuleThemesRoot.get("journal").get("id"), journalId));
 
             Subquery<Long> vocationalResultsQuery = query.subquery(Long.class);
             Root<StudentVocationalResult> vocationalResultRoot = vocationalResultsQuery
                     .from(StudentVocationalResult.class);
             vocationalResultsQuery.select(vocationalResultRoot.get("student").get("id")).where(
+                    cb.equal(vocationalResultRoot.get("student").get("id"), root.get("id")),
                     vocationalResultRoot.get("grade").get("code").in(OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE),
-                    vocationalResultRoot.get("curriculumVersionOmodule").get("curriculumModule").get("id").in(modules));
+                    vocationalResultRoot.get("curriculumVersionOmodule").get("curriculumModule").get("id").in(journalModulesQuery));
             filters.add(cb.not(root.get("id").in(vocationalResultsQuery)));
+
+            // who has not matched given module with other result
+            Subquery<Long> matchedResultsQuery = query.subquery(Long.class);
+            Root<StudentVocationalOccupationModuleTheme> matchedResultsRoot = matchedResultsQuery
+                    .from(StudentVocationalOccupationModuleTheme.class);
+            matchedResultsQuery.select(matchedResultsRoot.get("student").get("id")).where(
+                    cb.equal(matchedResultsRoot.get("student").get("id"), root.get("id")),
+                    matchedResultsRoot.get("theme").get("id").isNull(),
+                    matchedResultsRoot.get("module").get("curriculumModule").get("id").in(journalModulesQuery));
+            filters.add(cb.not(root.get("id").in(matchedResultsQuery)));
 
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         }, pageable).map(JournalStudentDto::of);
@@ -617,6 +629,7 @@ public class JournalService {
                     + "join curriculum c on cv.curriculum_id = c.id");
             qb.requiredCriteria("s.id in (:studentIds)", "studentIds", studentIds);
 
+            qb.sort("sg.code, p.lastname, p.firstname");
             data = qb.select("s.id s_id, p.firstname, p.lastname, sg.code sg_code, c.id c_id, cv.code cv_code, "
                     + "c.name_et c_name_et, c.name_en c_name_en, s.status_code", em).getResultList();
 
@@ -661,10 +674,7 @@ public class JournalService {
                 + "join curriculum_version_omodule cvo2 on cvo2.id = svr.curriculum_version_omodule_id "
                     + "or cvo2.id = any(svr.arr_modules) "
                 + "join curriculum_module cm on cm.id = cvo2.curriculum_module_id "
-                + "where svr.grade_code in (:positiveGrades)"
-                    + "and cm.id in (select cvo3.curriculum_module_id from curriculum_version_omodule_theme cvot3 "
-                    + "join curriculum_version_omodule cvo3 on cvo3.id = cvot3.curriculum_version_omodule_id "
-                    + "where cvot3.id = cvot.id))");
+                + "where svr.grade_code in (:positiveGrades) and cm.id = cvo.curriculum_module_id)");
         qb.parameter("positiveGrades", OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE);
 
         // who has not replaced theme in RAKKAVA application
@@ -700,6 +710,13 @@ public class JournalService {
         qb.parameter("finalEntry", JournalEntryType.SISSEKANNE_L.name());
         qb.parameter("apelStatus", ApelApplicationStatus.VOTA_STAATUS_C.name());
 
+        // module or theme not matched with other result
+        qb.filter("s.id not in (select svot.student_id from student_vocational_omodule_theme svot "
+                + "join curriculum_version_omodule cvo3 on cvo3.id = svot.curriculum_version_omodule_id "
+                + "join curriculum_module cm3 on cm3.id = cvo3.curriculum_module_id "
+                + "where svot.student_id = s.id and cm3.id = cvo.curriculum_module_id "
+                + "and (svot.curriculum_version_omodule_theme_id is null or svot.curriculum_version_omodule_theme_id = cvot.id))");
+
         // has no positive results in all of the connected outcomes when theme is graded by them
         qb.filter("(coalesce(cvot.is_module_outcomes, false) = false or cvot.is_module_outcomes "
                 + "and (select count(cmo.id) != count(scmor.id) from curriculum_version_omodule_theme cvot4 "
@@ -709,6 +726,7 @@ public class JournalService {
                     + "and scmor.curriculum_module_outcomes_id = cmo.id "
                     + "and scmor.grade_code in (:positiveGrades) "
                     + "where cvot4.id = jot.curriculum_version_omodule_theme_id))");
+
         return qb;
     }
 
@@ -2167,32 +2185,41 @@ public class JournalService {
      * Get student's journal tasks for view.
      * @param schoolId
      * @param studentId
+     * @param presentTasks
      * @return study year info and a list of student's journal tasks, or null if there is no current study year
      */
-    public StudentJournalTaskListDto studentJournalTasks(Long schoolId, Long studentId) {
+    public StudentJournalTaskListDto studentJournalTasks(Long schoolId, Long studentId, Boolean presentTasks) {
         StudyYear studyYear = studyYearService.getCurrentStudyYear(schoolId);
         if (studyYear == null) {
             return null;
         }
 
-        Query q = em.createNativeQuery("select je.id, 'SISSEKANNE_T' as entry_type_code, j.name_et, je.homework_duedate task_date, je.homework AS task_content"
+        Query q = em.createNativeQuery("select je.id, null as entry_type_code, j.name_et,"
+                    + " je.homework_duedate task_date, je.homework as task_content, null as entry_name"
                 + " from journal_entry je join journal j on j.id=je.journal_id"
                 + " join journal_student js on j.id=js.journal_id"
                 + " join student s on js.student_id=s.id"
                 + " where j.study_year_id=?1 and s.id=?2"
                 + " and je.homework_duedate is not null and coalesce(je.homework, 'x') != 'x'"
                 + " and (je.journal_student_id is null or je.journal_student_id = js.id)"
-                + " union select je.id, je.entry_type_code, j.name_et, je.entry_date as task_date, je.content as task_content"
+                + (Boolean.TRUE.equals(presentTasks) ? " and je.homework_duedate >= ?3" : "")
+                + " union"
+                + " select je.id, je.entry_type_code, j.name_et, je.entry_date as task_date,"
+                    + " je.content as task_content, coalesce(je.name_et, et_cl.name_et) as entry_name"
                 + " from journal_entry je join journal j on j.id=je.journal_id"
                 + " join journal_student js on j.id=js.journal_id"
                 + " join student s on js.student_id=s.id"
-                + " where j.study_year_id=?1 and s.id=?2 and je.entry_type_code in (:testEntryTypes)"
+                + " join classifier et_cl on et_cl.code = je.entry_type_code"
+                + " where j.study_year_id=?1 and s.id=?2 and je.is_test = true"
                 + " and je.entry_date is not null and coalesce(je.content, 'x') != 'x'"
                 + " and (je.journal_student_id is null or je.journal_student_id = js.id)"
+                + (Boolean.TRUE.equals(presentTasks) ? " and je.entry_date >= ?3" : "")
                 + " order by task_date desc");
         q.setParameter(1, studyYear.getId());
         q.setParameter(2, studentId);
-        q.setParameter("testEntryTypes", testEntryTypeCodes);
+        if (Boolean.TRUE.equals(presentTasks)) {
+            q.setParameter(3, parameterAsTimestamp(LocalDate.now()));
+        }
         List<?> data = q.getResultList();
 
         return new StudentJournalTaskListDto(studyYear, StreamUtil.toMappedList(r -> new StudentJournalTaskDto((Object[]) r), data));

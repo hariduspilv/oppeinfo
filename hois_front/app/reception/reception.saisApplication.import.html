@@ -11,11 +11,11 @@
             </md-input-container>
             <md-input-container flex="15" flex-md="100" flex-sm="100" flex-xs="100">
               <label>{{'main.from' | translate}}</label>
-              <md-datepicker  ng-required="!((criteria.applicationDateFrom && criteria.applicationDateTo)|| criteria.idCode.length || criteria.admissionCode.length)" ng-model="criteria.applicationDateFrom" md-max-date="criteria.applicationDateTo"></md-datepicker>
+              <md-datepicker  ng-required="!((criteria.applicationDateFrom && criteria.applicationDateTo)|| criteria.idCode.length || !!criteria.admissionId)" ng-model="criteria.applicationDateFrom" md-max-date="criteria.applicationDateTo"></md-datepicker>
             </md-input-container>
             <md-input-container flex="15" flex-md="100" flex-sm="100" flex-xs="100">
               <label>{{'main.thru' | translate}}</label>
-              <md-datepicker  ng-required="!((criteria.applicationDateFrom && criteria.applicationDateTo)|| criteria.idCode.length || criteria.admissionCode.length)" ng-model="criteria.applicationDateTo" md-min-date="criteria.applicationDateFrom"></md-datepicker>
+              <md-datepicker  ng-required="!((criteria.applicationDateFrom && criteria.applicationDateTo)|| criteria.idCode.length || !!criteria.admissionId)" ng-model="criteria.applicationDateTo" md-min-date="criteria.applicationDateFrom"></md-datepicker>
             </md-input-container>
           </div>
           <div>
@@ -32,13 +32,13 @@
           <div layout="row" layout-sm="column" layout-xs="column"  >
             <md-input-container flex="60" flex-sm="100" flex-xs="100">
               <label class="textInput">{{'reception.application.candidateIdCode' | translate}}</label>
-              <input ng-model="criteria.idCode" type="text" ng-required="!((criteria.applicationDateFrom && criteria.applicationDateTo)|| criteria.idCode.length || criteria.admissionCode.length)">
+              <input ng-model="criteria.idCode" type="text" ng-required="!((criteria.applicationDateFrom && criteria.applicationDateTo)|| criteria.idCode.length || !!criteria.admissionId)">
             </md-input-container>
           </div>
           <div layout="row" layout-sm="column" layout-xs="column"  >
             <md-input-container flex="60" flex-sm="100" flex-xs="100">
               <label class="textInput">{{'reception.admission.code' | translate}}</label>
-              <hois-select ng-model="criteria.admissionCode" type="saisadmissioncodearchived" value-property="nameEt" ng-required="!((criteria.applicationDateFrom && criteria.applicationDateTo)|| criteria.idCode.length || criteria.admissionCode.length)"></hois-select>
+              <hois-select ng-model="criteria.admissionId" type="saisadmissioncodearchived" ng-required="!((criteria.applicationDateFrom && criteria.applicationDateTo)|| criteria.idCode.length || !!criteria.admissionId)"></hois-select>
             </md-input-container>
           </div>
           <div layout="row">

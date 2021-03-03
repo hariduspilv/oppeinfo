@@ -14,6 +14,7 @@ import javax.annotation.Nullable;
 import javax.transaction.Transactional;
 
 import ee.hitsa.ois.domain.gradingschema.GradingSchemaRow;
+import ee.hitsa.ois.util.ProtocolUtil;
 import ee.hitsa.ois.web.dto.GradeDto;
 import ee.hitsa.ois.web.dto.ModuleProtocolDto;
 import ee.hitsa.ois.web.dto.ModuleProtocolOutcomeResultDto;
@@ -266,8 +267,7 @@ public class ModuleProtocolService extends AbstractProtocolService {
     }
 
     public Collection<ModuleProtocolStudentSelectDto> occupationModuleStudents(HoisUserDetails user,
-                                                                               Long occupationalModuleId,
-                                                                               @Nullable Long studentGroupId) {
+            Long occupationalModuleId, @Nullable Long studentGroupId) {
         Map<Long, ModuleProtocolStudentSelectDto> result = studentsForSelection(user, occupationalModuleId, studentGroupId);
         addJournalAndPracticeJournalResults(result, occupationalModuleId);
         return result.values();
@@ -307,17 +307,9 @@ public class ModuleProtocolService extends AbstractProtocolService {
             });
         }
     }
-    
-    private static final String HAS_NO_POSITIVE_RESULT_IN_THIS_MODULE = "s.id not in (select ps.student_id from protocol_student ps "
-            + "inner join protocol p on p.id = ps.protocol_id "
-            + "inner join protocol_vdata pvd on pvd.protocol_id = p.id "
-            + "where p.is_vocational = true and (grade_code is null or grade_code in (:positiveGrades)) and pvd.curriculum_version_omodule_id = cvo.id "
-            + "union all "
-            + "select svr.student_id from student_vocational_result svr "
-            + "where svr.grade_code in (:positiveGrades) and (svr.curriculum_version_omodule_id = cvo.id or cvo.id = any(svr.arr_modules)))";
 
-    private Map<Long, ModuleProtocolStudentSelectDto> studentsForSelection(HoisUserDetails user, Long occupationalModuleId,
-                                                                           @Nullable Long studentGroupId) {
+    private Map<Long, ModuleProtocolStudentSelectDto> studentsForSelection(HoisUserDetails user,
+            Long occupationalModuleId, @Nullable Long studentGroupId) {
         JpaNativeQueryBuilder studentsQb = new JpaNativeQueryBuilder(
                 "from student s " +
                 "left join student_group sg on sg.id = s.student_group_id " + 
@@ -331,8 +323,8 @@ public class ModuleProtocolService extends AbstractProtocolService {
         studentsQb.requiredCriteria("s.status_code in :activeStatuses", "activeStatuses",
                 StudentStatus.STUDENT_STATUS_ACTIVE);
 
-        studentsQb.requiredCriteria(HAS_NO_POSITIVE_RESULT_IN_THIS_MODULE,
-                "positiveGrades", OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE);
+        studentsQb.requiredCriteria(isModuleValidForStudent("cvo.id"), "positiveGrades",
+                OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE);
         studentsQb.optionalCriteria("sg.id = :groupId", "groupId", studentGroupId);
 
         studentsQb.sort("p.lastname, p.firstname");
@@ -349,6 +341,24 @@ public class ModuleProtocolService extends AbstractProtocolService {
             dto.setStudentGroup(resultAsString(r, 6));
             return dto;
         }, (o, n) -> o, LinkedHashMap::new));
+    }
+
+    private static String isModuleValidForStudent(String refModule) {
+        return "s.id not in ("
+                // has no protocol without grade
+                + "select ps.student_id from protocol_student ps "
+                + "join protocol p on p.id = ps.protocol_id "
+                + "join protocol_vdata pvd on pvd.protocol_id = p.id "
+                + "where p.is_vocational = true and pvd.curriculum_version_omodule_id = " + refModule + " and grade_code is null "
+                + "union all "
+                // has no positive grade
+                + "select svr.student_id from student_vocational_result svr "
+                + "where svr.grade_code in (:positiveGrades) "
+                + "and (svr.curriculum_version_omodule_id = " + refModule + " or " + refModule + " = any(svr.arr_modules)) "
+                + "union all "
+                // has no match with another module
+                + "select svot.student_id from student_vocational_omodule_theme svot "
+                + "where svot.curriculum_version_omodule_id = " + refModule + " and svot.curriculum_version_omodule_theme_id is null)";
     }
 
     @org.springframework.transaction.annotation.Transactional(isolation = Isolation.SERIALIZABLE, propagation = Propagation.REQUIRES_NEW)
@@ -388,6 +398,10 @@ public class ModuleProtocolService extends AbstractProtocolService {
         EntityUtil.bindEntityCollection(protocol.getProtocolStudents(), ProtocolStudent::getId,
                 // no protocol students created here
                 form.getProtocolStudents(), ProtocolStudentSaveForm::getId, null, (dto, ps) -> {
+                    if (!ProtocolUtil.studentCanBeEdited(ps)) {
+                        return;
+                    }
+
                     if (gradeChangedButNotRemoved(dto, ps)) {
                         assertHasAddInfoIfProtocolConfirmed(dto, protocol);
                         addHistory(ps);
@@ -427,18 +441,9 @@ public class ModuleProtocolService extends AbstractProtocolService {
         qb.optionalCriteria("c.is_higher = :is_higher", "is_higher", Boolean.FALSE);
         qb.optionalContains("p.firstname || ' ' || p.lastname", "name", command.getStudentName());
 
-        qb.filter("s.id not in (select ps.student_id from protocol_student ps "
-            + "join protocol p on p.id = ps.protocol_id "
-            + "join protocol_vdata pvd on pvd.protocol_id = p.id "
-            + "where p.is_vocational = true and (grade_code is null or "
-            + "grade_code in (:positiveGrades)) "
-            + "and pvd.curriculum_version_omodule_id = :moduleId "
-            + "union all "
-            + "select svr.student_id from student_vocational_result svr "
-            + "where svr.grade_code in (:positiveGrades) "
-            + "and (svr.curriculum_version_omodule_id = :moduleId or :moduleId = any(svr.arr_modules)))");
+        qb.requiredCriteria(isModuleValidForStudent(":moduleId"), "positiveGrades",
+                OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE);
         qb.parameter("moduleId", EntityUtil.getId(protocol.getProtocolVdata().getCurriculumVersionOccupationModule()));
-        qb.parameter("positiveGrades", OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE);
 
         qb.requiredCriteria(NOT_ADDED_TO_PROTOCOL, "protocolId", EntityUtil.getId(protocol));
 

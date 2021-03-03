@@ -64,6 +64,8 @@ public class StudentBase extends BaseEntityWithId {
     private Classifier dormitory;
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier secondarySchoolCountry;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Classifier speciality;
 
     public CurriculumVersion getCurriculumVersion() {
         return curriculumVersion;
@@ -295,5 +297,13 @@ public class StudentBase extends BaseEntityWithId {
 
     public void setSecondarySchoolCountry(Classifier secondarySchoolCountry) {
         this.secondarySchoolCountry = secondarySchoolCountry;
+    }
+
+    public Classifier getSpeciality() {
+        return speciality;
+    }
+
+    public void setSpeciality(Classifier speciality) {
+        this.speciality = speciality;
     }
 }

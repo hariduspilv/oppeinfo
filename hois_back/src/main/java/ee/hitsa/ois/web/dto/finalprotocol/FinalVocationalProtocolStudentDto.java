@@ -7,10 +7,10 @@ import ee.hitsa.ois.domain.FinalThesis;
 import ee.hitsa.ois.domain.protocol.ProtocolStudent;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentOccupationCertificate;
-import ee.hitsa.ois.enums.StudyLanguage;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.FinalProtocolUtil;
 import ee.hitsa.ois.util.PersonUtil;
+import ee.hitsa.ois.util.ProtocolUtil;
 import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.GradeDto;
@@ -53,6 +53,7 @@ public class FinalVocationalProtocolStudentDto extends ModuleProtocolStudentDto 
             });
         }
 
+        dto.setCanBeEdited(Boolean.valueOf(ProtocolUtil.studentCanBeEdited(protocolStudent)));
         return dto;
     }
     

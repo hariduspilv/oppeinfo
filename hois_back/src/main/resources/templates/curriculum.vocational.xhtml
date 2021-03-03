@@ -114,6 +114,14 @@
             {% endif %}
         </td>
       </tr>
+	  <tr>
+        <td colspan="7">
+        	<span class="label">{{ "report.curriculum.studyFields" | translate }}</span><br/>
+        	{% for studyField in content.studyFields %}
+			  <p class="wrap">{{ studyField | name }}</p>
+			{% endfor %}
+        </td>
+      </tr>
       <tr>
         <td colspan="7">
         	<span class="label">{{ "report.curriculum.specialization" | translate }}</span><br/>

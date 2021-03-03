@@ -34,7 +34,8 @@ public class StudentAbsence extends BaseEntityWithId {
     @OneToOne
     private Contract contract;
 
-    @OneToOne
+//    @OneToOne
+    @ManyToOne
     private DirectiveStudent directiveStudent;
 
     @OneToMany(mappedBy="studentAbsence", cascade = CascadeType.ALL, orphanRemoval = true)

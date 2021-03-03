@@ -67,11 +67,11 @@ angular.module('hitsaOis').controller('ContractViewController', ['$scope', '$loc
       $scope.disablesave = true;
     };
 
-    $scope.save = function (success) {
+    $scope.save = function (withoutEkis) {
 
       var ContractEndpoint = QueryUtils.endpoint('/contracts/cancel');
-      if ($scope.auth.school.withoutEkis) {
-        var ContractEndpoint = QueryUtils.endpoint('/contracts/cancelWithoutEkis');
+      if ($scope.auth.school.withoutEkis || withoutEkis) {
+        ContractEndpoint = QueryUtils.endpoint('/contracts/cancelWithoutEkis');
       }
       FormUtils.withValidForm($scope.contractForm, function() {
         var contract = new ContractEndpoint($scope.contract);
@@ -79,9 +79,6 @@ angular.module('hitsaOis').controller('ContractViewController', ['$scope', '$loc
           contract.$update().then(function (response) {
             message.updateSuccess();
             entityToForm(response);
-            if (angular.isFunction(success)) {
-              success();
-            }
             $scope.contractForm.$setPristine();
             $route.reload();
           }).catch(angular.noop);

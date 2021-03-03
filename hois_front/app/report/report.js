@@ -213,9 +213,9 @@ function ($q, $scope, $route, Classifier, QueryUtils, classifierAutocomplete, me
     exmatReason: 'EKSMAT_POHJUS', akadReason: 'AKADPUHKUS_POHJUS',
     studentStatuses: 'OPPURSTAATUS', studyForm: 'OPPEVORM', studyLoad: 'OPPEKOORMUS', studyLevel: 'OPPEASTE', 
     language: 'OPPEKEEL', activeResult: 'KORGHINDAMINE', foreignLanguage: 'EHIS_VOORKEEL', previousStudyLevel: 'OPPEASTE', 
-    dormitory: 'YHISELAMU'});
+    dormitory: 'YHISELAMU', specialNeedCode: 'ERIVAJADUS', representativeRelation: 'OPPURESINDAJA'});
     
-  QueryUtils.createQueryForm($scope, '/reports/students/data', {sort: 'firstname, lastname, foreign_language_et'}, clMapper.objectmapper);
+  QueryUtils.createQueryForm($scope, '/reports/students/data', {sort: 'lastname, firstname'}, clMapper.objectmapper);
 
   function getSavedQueries() {
     $scope.formState.savedQueries = QueryUtils.endpoint('/reports/students/data/query/savedStudentQueries').query({isStudentQuery: true});
@@ -226,6 +226,7 @@ function ($q, $scope, $route, Classifier, QueryUtils, classifierAutocomplete, me
       personDataExpanded: true,
       studyDataExpanded: false,
       contactDataExpanded: false,
+      representativeDataExpanded: false,
       statisticsExpanded: false,
       addInfoExpanded: false,
       isSortingExpanded: false,
@@ -1246,7 +1247,7 @@ function ($httpParamSerializer, $q, $route, $scope, $sessionStorage, $timeout, $
     studyYears: QueryUtils.endpoint('/autocomplete/studyYears').query(),
     studyPeriods: {},
     xlsUrl: 'reports/studentgroupteacher/studentgroupteacher.xls',
-    pdfUrl: 'reports/studentgroupteacher/studentgroupteacher.pdf',
+    pdfUrl: 'reports/studentgroupteacher/studentreportcard.pdf',
     negativeResultsPdfUrl: 'reports/studentgroupteacher/negativeresults.pdf',
     negativeResultsXlsUrl: 'reports/studentgroupteacher/negativeresults.xls',
   };
@@ -1265,6 +1266,7 @@ function ($httpParamSerializer, $q, $route, $scope, $sessionStorage, $timeout, $
   }
 
   $scope.pdf = function (url, params) {
+    params.lang = $scope.currentLanguage().toUpperCase();
     return config.apiUrl + '/'+ url + '?' + $httpParamSerializer(params);
   };
 
@@ -1346,6 +1348,11 @@ function ($httpParamSerializer, $q, $route, $scope, $sessionStorage, $timeout, $
       }
     });
   });
+
+  $scope.studyYearChanged = function () {
+    $scope.formState.studyPeriod = null;
+    $scope.studyPeriodChanged();
+  };
 
   $scope.studyPeriodChanged = function () {
     $scope.criteria.studyPeriod = $scope.formState.studyPeriod ? $scope.formState.studyPeriod.id : null;

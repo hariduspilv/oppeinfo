@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 import javax.transaction.Transactional;
 
 import ee.hitsa.ois.domain.gradingschema.GradingSchemaRow;
+import ee.hitsa.ois.util.ProtocolUtil;
 import ee.hitsa.ois.util.StudentUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -242,6 +243,11 @@ public class FinalVocationalProtocolService extends AbstractProtocolService {
         EntityUtil.bindEntityCollection(protocol.getProtocolStudents(), ProtocolStudent::getId,
                 // no protocol students created here
                 form.getProtocolStudents(), FinalVocationalProtocolStudentSaveForm::getId, null, (dto, ps) -> {
+                    if (!ProtocolUtil.studentCanBeEdited(ps)) {
+                        return;
+                    }
+
+                    LocalDate gradeDate = protocol.getFinalDate() != null ? protocol.getFinalDate() : LocalDate.now();
                     if (gradeChangedButNotRemoved(dto, ps)) {
                         assertHasAddInfoIfProtocolConfirmed(dto, protocol);
                         addHistory(ps);
@@ -249,12 +255,15 @@ public class FinalVocationalProtocolService extends AbstractProtocolService {
                         Short mark = getMark(EntityUtil.getCode(grade));
                         GradingSchemaRow gradingSchemaRow = EntityUtil.getOptionalOne(GradingSchemaRow.class,
                                 dto.getGrade().getGradingSchemaRowId(), em);
-                        gradeStudent(ps, grade, mark, Boolean.FALSE, gradingSchemaRow, LocalDate.now());
+                        gradeStudent(ps, grade, mark, Boolean.FALSE, gradingSchemaRow, gradeDate);
                         ps.setAddInfo(dto.getAddInfo());
                     } else if (gradeRemoved(dto, ps)) {
                         assertHasAddInfoIfProtocolConfirmed(dto, protocol);
                         addHistory(ps);
                         removeGrade(ps);
+                    } else if (ps.getGrade() != null) {
+                        // works like higher main protocols
+                        ps.setGradeDate(gradeDate);
                     }
                     saveOccupationCertificates(ps, dto);
                     ps.setLanguage(!StudentUtil.isStudyingInEstonian(ps.getStudent()) ?
@@ -438,14 +447,9 @@ public class FinalVocationalProtocolService extends AbstractProtocolService {
         }));
     }
 
-    public Protocol confirm(HoisUserDetails user, Protocol protocol, FinalVocationalProtocolSaveForm protocolSaveForm) {
+    public Protocol confirm(HoisUserDetails user, Protocol protocol) {
         setConfirmation(user, protocol);
-        Protocol confirmedProtocol = null;
-        if (protocolSaveForm != null) {
-            confirmedProtocol = save(protocol, protocolSaveForm);
-        } else {
-            confirmedProtocol = EntityUtil.save(protocol, em);
-        }
+        Protocol confirmedProtocol = EntityUtil.save(protocol, em);
 
         if (confirmedProtocol.getProtocolStudents().stream().anyMatch(ps -> ps.getGrade() == null)) {
             throw new ValidationFailedException("finalProtocol.messages.gradeNotSelectedForAllStudents");

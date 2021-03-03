@@ -52,8 +52,8 @@
                   <th md-column>{{'student.idcode' | translate}}</th>
                   <th md-column>{{'finalProtocol.grade' | translate}}</th>
                   <th md-column ng-if="protocol.status.code === 'PROTOKOLL_STAATUS_K'">{{'finalProtocol.changeReason' | translate}}</th>
-                  <th md-column>{{'finalProtocol.givenCurriculumGrade' | translate}}</th>
-                  <th md-column>{{'finalProtocol.givenOccupation' | translate}}</th>
+                  <th md-column ng-if="protocol.curriculumGrades.length > 0">{{'finalProtocol.givenCurriculumGrade' | translate}}</th>
+                  <th md-column ng-if="protocol.occupations.length > 0">{{'finalProtocol.givenOccupation' | translate}}</th>
                 </tr>
               </thead>
               <tbody md-body>
@@ -66,8 +66,11 @@
                     <hois-higher-result value="row.grade" exists-grading-schema="existsSchoolGradingSchema" letter-grades="letterGrades"></hois-higher-result>
                   </td>
                   <td md-cell ng-if="protocol.status.code === 'PROTOKOLL_STAATUS_K'">{{row.addInfo}}</td>
-                  <td md-cell>{{currentLanguageNameField(row.curriculumGrade)}}</td>
-                  <td md-cell>
+                  <td md-cell ng-if="protocol.curriculumGrades.length > 0">
+                    <span ng-if="row.curriculumGrade">{{currentLanguageNameField(row.curriculumGrade)}}</span>
+                    <span ng-if="!row.canSetCurriculumGrade">{{'finalProtocol.curriculumGradeNotSet' | translate}}</span>
+                  </td>
+                  <td md-cell ng-if="protocol.occupations.length > 0">
                     <span ng-repeat="occupation in protocol.occupations track by $index">
                       <span ng-if="row.occupations[occupation.code].granted">
                         <span>{{currentLanguageNameField(occupation)}}</span>

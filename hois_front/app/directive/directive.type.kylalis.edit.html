@@ -1,5 +1,5 @@
-<md-table-container>
-    <table md-table class="secondary-table">
+<md-table-container fixed-column-table fixed-columns="5" resize-table search-criteria-height="250">
+    <table md-table class="secondary-table directive fixed5">
       <thead md-head>
         <tr md-row>
           <th md-column>{{'directive.student.order' | translate}}</th>
@@ -24,7 +24,7 @@
         </tr>
       </thead>
       <tbody md-body>
-        <tr md-row hois-table-row ng-repeat="row in record.students" ng-class-odd="'odd'" ng-class-even="'even'">
+        <tr md-row hois-table-row ng-repeat="row in record.students" ng-init="$last && removeLoadingWheel()" ng-class-odd="'odd'" ng-class-even="'even'">
           <td md-cell>{{$index + 1}}.</td>
           <td md-cell>
             <md-checkbox ng-model="row._foreign" ng-change="foreignChanged(row)" aria-label="{{'directive.student.foreign' | translate}}"></md-checkbox>
@@ -107,7 +107,7 @@
           </td>
           <td md-cell hois-table-data>
             <hois-table-data-master>
-              <hois-select ng-model="row.apelSchoolId" name="students[{{$index}}].apelSchool" values="formState.apelSchools" 
+              <hois-select ng-model="row.apelSchoolId" name="students[{{$index}}].apelSchool" values="formState.apelSchools"
                 aria-label="{{'directive.student.apelSchool' | translate}}" ng-change="setApelSchoolCountry(row)"></hois-select>
             </hois-table-data-master>
             <hois-table-data-detail>
@@ -142,8 +142,8 @@
           <td md-cell hois-table-data>
             <hois-table-data-master>
               <hois-classifier-select ng-model="row.abroadPurpose" name="students[{{$index}}].abroadPurpose" model-value-attr="code"
-                criteria="{vocational: formState.school.vocational ? true : undefined, higher: formState.school.higher ? true : undefined}" 
-                only-valid ignore-preselected main-classifier-code="VALISOPE_EESMARK" 
+                criteria="{vocational: formState.school.vocational ? true : undefined, higher: formState.school.higher ? true : undefined}"
+                only-valid ignore-preselected main-classifier-code="VALISOPE_EESMARK"
                 aria-label="{{'directive.student.abroadPurpose' | translate}}"></hois-classifier-select>
             </hois-table-data-master>
             <hois-table-data-detail>
@@ -174,8 +174,8 @@
           </td>
           <td md-cell hois-table-data>
             <hois-table-data-master>
-              <hois-select ng-model="row.curriculumVersion" name="students[{{$index}}].curriculumVersion" 
-                values="formState.curriculumVersions" ng-change="curriculumVersionChanged(row)" 
+              <hois-select ng-model="row.curriculumVersion" name="students[{{$index}}].curriculumVersion"
+                values="formState.curriculumVersions" ng-change="curriculumVersionChanged(row)"
                 aria-label="{{'directive.student.curriculumVersion' | translate}}"></hois-select>
             </hois-table-data-master>
             <hois-table-data-detail>
@@ -186,8 +186,8 @@
           </td>
           <td md-cell hois-table-data>
             <hois-table-data-master>
-              <hois-select ng-model="row.studentGroup" name="students[{{$index}}].studentGroup" 
-                values="formState.studentGroupMap[row.curriculumVersion]" 
+              <hois-select ng-model="row.studentGroup" name="students[{{$index}}].studentGroup"
+                values="formState.studentGroupMap[row.curriculumVersion]"
                 aria-label="{{'directive.student.studentGroup' | translate}}"></hois-select>
             </hois-table-data-master>
             <hois-table-data-detail>
@@ -213,7 +213,7 @@
           <td md-cell hois-table-data>
             <hois-table-data-master>
               <md-input-container style="width:100%;">
-                <textarea name="students[{{$index}}].addInfo" ng-model="row.addInfo" md-maxlength="4000" max-rows="5"  
+                <textarea name="students[{{$index}}].addInfo" ng-model="row.addInfo" md-maxlength="4000" max-rows="5"
                 aria-label="{{'directive.student.notes' | translate}}" ng-model-options="{allowInvalid: true}"></textarea>
               </md-input-container>
             </hois-table-data-master>
@@ -233,4 +233,3 @@
       </tbody>
     </table>
   </md-table-container>
-  

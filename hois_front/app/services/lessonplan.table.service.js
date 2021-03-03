@@ -43,6 +43,7 @@ angular.module('hitsaOis')
     var DIVIDER = 'dividerBorder';
     var FIX = 'fix';
     var MODULE_ROW = 'lessonplan-module-row';
+    var MATERIAL_ICON = 'material-icons';
     var TEACHER_STUDY_LOAD = 'lessonplan-teacher-load';
     var TEACHER_LOAD_LABEL = 'lessonplan-teacher-load-label';
     var TEACHER_CAPACITIES = 'material-icons pointer';
@@ -535,8 +536,20 @@ angular.module('hitsaOis')
       journalNameColumn.id = JOURNAL_ID + journal.id;
       journalNameColumn.className = DIVIDER;
       journalNameColumn.colSpan = 3;
-      journalNameColumn.style = 'font-weight: bold;';
-      journalNameColumn.innerHTML = journal.nameEt;
+
+      if (journal.isFree) {
+        var freeJournalColumn = document.createElement("td");
+        freeJournalColumn.title = $translate.instant('lessonplan.journal.notPaid');
+        freeJournalColumn.innerHTML = 'priority_high';
+        freeJournalColumn.classList.add(MATERIAL_ICON);
+        freeJournalColumn.classList.add('lessonplan-free-journal');
+        journalNameColumn.appendChild(freeJournalColumn);
+      }
+
+      var journalNameSpan = document.createElement("span");
+      journalNameSpan.innerHTML = journal.nameEt;
+      journalNameSpan.style = 'font-weight: bold;';
+      journalNameColumn.appendChild(journalNameSpan);
 
       if (journal.isIndividual) {
         var individualJournalColumn = document.createElement('span');
@@ -786,7 +799,7 @@ angular.module('hitsaOis')
 
       // if capacity types exists then this column is added to first capacity type
       if (totalCapacityTypes.length === 0) {
-        row.appendChild(grandTotalStringColumn(2));
+        row.appendChild(grandTotalStringColumn(3));
       }
 
       var totalsStringColumn = document.createElement('td');

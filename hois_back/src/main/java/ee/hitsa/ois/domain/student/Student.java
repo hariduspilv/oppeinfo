@@ -43,6 +43,13 @@ public class Student extends StudentBase {
     private Classifier type;
     @OneToOne(cascade = { CascadeType.PERSIST, CascadeType.REMOVE }, fetch = FetchType.LAZY)
     private StudentHistory studentHistory;
+    private String addInfo;
+    private String jobOccupation;
+    private String job;
+    private String otherContact;
+    private Boolean isAcadStudyAllowed;
+    private String representativeOtherContact;
+    private Long regNr;
     @OneToMany(mappedBy = "student")
     private List<StudentRepresentative> representatives;
     @OneToMany(mappedBy = "student")
@@ -63,13 +70,8 @@ public class Student extends StudentBase {
     private List<StudentSupportService> supportServices;
     @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<StudentLanguages> studentLanguages;
-    private String addInfo;
-    private String jobOccupation;
-    private String job;
-    private String otherContact;
-    private Boolean isAcadStudyAllowed;
-    private String representativeOtherContact;
-    private Long regNr;
+    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<StudentVocationalOccupationModuleTheme> matchedResults;
 
     public Person getPerson() {
         return person;
@@ -119,12 +121,76 @@ public class Student extends StudentBase {
         this.contractAgreed = contractAgreed;
     }
 
+    public Classifier getType() {
+        return type;
+    }
+
+    public void setType(Classifier type) {
+        this.type = type;
+    }
+
     public String getContractText() {
         return contractText;
     }
 
     public void setContractText(String contractText) {
         this.contractText = contractText;
+    }
+
+    public String getAddInfo() {
+        return addInfo;
+    }
+
+    public void setAddInfo(String addInfo) {
+        this.addInfo = addInfo;
+    }
+
+    public String getJobOccupation() {
+        return jobOccupation;
+    }
+
+    public void setJobOccupation(String jobOccupation) {
+        this.jobOccupation = jobOccupation;
+    }
+
+    public String getJob() {
+        return job;
+    }
+
+    public void setJob(String job) {
+        this.job = job;
+    }
+
+    public String getOtherContact() {
+        return otherContact;
+    }
+
+    public void setOtherContact(String otherContact) {
+        this.otherContact = otherContact;
+    }
+
+    public Boolean getIsAcadStudyAllowed() {
+        return isAcadStudyAllowed;
+    }
+
+    public void setIsAcadStudyAllowed(Boolean isAcadStudyAllowed) {
+        this.isAcadStudyAllowed = isAcadStudyAllowed;
+    }
+
+    public String getRepresentativeOtherContact() {
+        return representativeOtherContact;
+    }
+
+    public void setRepresentativeOtherContact(String representativeOtherContact) {
+        this.representativeOtherContact = representativeOtherContact;
+    }
+
+    public Long getRegNr() {
+        return regNr;
+    }
+
+    public void setRegNr(Long regNr) {
+        this.regNr = regNr;
     }
 
     public StudentHistory getStudentHistory() {
@@ -192,14 +258,6 @@ public class Student extends StudentBase {
         getSpecialNeeds().addAll(specialNeeds);
     }
 
-    public Classifier getType() {
-        return type;
-    }
-
-    public void setType(Classifier type) {
-        this.type = type;
-    }
-
     public List<DirectiveStudent> getDirectiveStudents() {
         return directiveStudents;
     }
@@ -217,54 +275,6 @@ public class Student extends StudentBase {
         getSupportServices().addAll(supportServices);
     }
 
-    public String getAddInfo() {
-        return addInfo;
-    }
-
-    public void setAddInfo(String addInfo) {
-        this.addInfo = addInfo;
-    }
-
-    public String getJobOccupation() {
-        return jobOccupation;
-    }
-
-    public void setJobOccupation(String jobOccupation) {
-        this.jobOccupation = jobOccupation;
-    }
-
-    public String getJob() {
-        return job;
-    }
-
-    public void setJob(String job) {
-        this.job = job;
-    }
-
-    public String getOtherContact() {
-        return otherContact;
-    }
-
-    public void setOtherContact(String otherContact) {
-        this.otherContact = otherContact;
-    }
-
-    public Boolean getIsAcadStudyAllowed() {
-        return isAcadStudyAllowed;
-    }
-
-    public void setIsAcadStudyAllowed(Boolean isAcadStudyAllowed) {
-        this.isAcadStudyAllowed = isAcadStudyAllowed;
-    }
-
-    public String getRepresentativeOtherContact() {
-        return representativeOtherContact;
-    }
-
-    public void setRepresentativeOtherContact(String representativeOtherContact) {
-        this.representativeOtherContact = representativeOtherContact;
-    }
-
     public List<StudentLanguages> getStudentLanguages() {
         return studentLanguages;
     }
@@ -273,11 +283,11 @@ public class Student extends StudentBase {
         this.studentLanguages = studentLanguages;
     }
 
-    public Long getRegNr() {
-        return regNr;
+    public List<StudentVocationalOccupationModuleTheme> getMatchedResults() {
+        return matchedResults != null ? matchedResults : (matchedResults = new ArrayList<>());
     }
 
-    public void setRegNr(Long regNr) {
-        this.regNr = regNr;
+    public void setMatchedResults(List<StudentVocationalOccupationModuleTheme> matchedResults) {
+        this.matchedResults = matchedResults;
     }
 }

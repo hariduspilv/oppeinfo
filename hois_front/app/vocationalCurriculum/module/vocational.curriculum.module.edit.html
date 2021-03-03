@@ -31,7 +31,7 @@
         class="small-margin"
         flex>
         <md-item-template>
-            <span md-highlight-text="bModule" md-highlight-flags="^i">{{currentLanguageNameField(bModule)}}</span>
+            <span md-highlight-text="baseModuleNameTemplate" md-highlight-flags="^i">{{currentLanguageNameField(bModule)}}</span>
         </md-item-template>
         <md-not-found>
             {{'main.messages.error.notFound' | translate}}
@@ -119,7 +119,7 @@
           ng-disabled="baseModuleUsed"
           flex>
           <md-item-template>
-              <span md-highlight-text="bModule" md-highlight-flags="^i">{{currentLanguageNameField(bModule)}}</span>
+              <span md-highlight-text="baseModuleName" md-highlight-flags="^i">{{currentLanguageNameField(bModule)}}</span>
           </md-item-template>
           <md-not-found>
               {{'main.messages.error.notFound' | translate}}
@@ -283,6 +283,11 @@
             aria-label="{{currentLanguageNameField(option)}}">
             {{currentLanguageNameField(option)}}</md-option>
         </md-select>
+      </md-input-container>
+      <md-input-container>
+        <label>{{'curriculum.studyField.label' | translate}}</label>
+        <hois-select values="formState.studyFields" ng-model="module.studyFields" value-property="id" multiple>
+        </hois-select>
       </md-input-container>
 
       <!-- <md-input-container flex>

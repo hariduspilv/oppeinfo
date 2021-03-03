@@ -27,6 +27,7 @@ public class StudentSupportServiceDto {
     /** FALSE - real StudentSupportService. TRUE - any other support service */
     private Boolean isArtificial = Boolean.FALSE;
     private Boolean ehis;
+    private Boolean visible;
     
     private Long endingDirectiveId;
     
@@ -47,6 +48,7 @@ public class StudentSupportServiceDto {
         
         endingDirectiveId = resultAsLong(record, 9);
         ehis = resultAsBoolean(record, 10);
+        visible = resultAsBoolean(record, 11);
     }
     
     public static StudentSupportServiceDto of(StudentSupportService supportService) {
@@ -143,5 +145,13 @@ public class StudentSupportServiceDto {
 
     public void setEhis(Boolean ehis) {
         this.ehis = ehis;
+    }
+
+    public Boolean getVisible() {
+        return visible;
+    }
+
+    public void setVisible(Boolean visible) {
+        this.visible = visible;
     }
 }

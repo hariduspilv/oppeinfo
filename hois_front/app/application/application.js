@@ -353,10 +353,6 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
     $q.resolve($scope.student.$promise, function() {loadForm(loadFormDeferred);});
   }
 
-  function sortByName(array) {
-    return $filter('orderBy')(array, $scope.currentLanguageNameField());
-  }
-
   function loadForm(loadFormDeferred) {
     if ($scope.student.curriculumVersion.isVocational) {
       $scope.modulesAndThemesQuery = QueryUtils.endpoint('/autocomplete/curriculumversionomodulesandthemes').query({
@@ -400,43 +396,13 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
 
   function resolve(loadFormDeferred) {
     if ($scope.student.curriculumVersion.isVocational) {
-      $scope.modulesAndThemes = getModulesAndThemes($scope.modulesAndThemesQuery);
+      $scope.modulesAndThemes = $scope.modulesAndThemesQuery;
     } else {
       $scope.studentSubjects = $scope.studentSubjects.map(function (autocompleteSubject) {
         return {subject: autocompleteSubject.id, nameEt: autocompleteSubject.nameEt, nameEn: autocompleteSubject.nameEn};
       });
     }
     loadFormDeferred.resolve();
-  }
-
-  function getModulesAndThemes(result) {
-    var modulesAndThemes = [];
-    if (result) {
-      result = sortByName(result);
-
-      for (var i = 0; i < result.length; i++) {
-        modulesAndThemes.push({
-          moduleId: result[i].id,
-          themeId: null,
-          nameEt: result[i].nameEt,
-          nameEn: result[i].nameEn,
-          isModule: true
-        });
-        var themes = sortByName(result[i].themes);
-        if (themes) {
-          for (var j = 0; j < themes.length; j++) {
-            modulesAndThemes.push({
-              moduleId: result[i].id,
-              themeId: themes[j].id,
-              nameEt: result[i].nameEt + "/" + themes[j].nameEt,
-              nameEn: result[i].nameEn + "/" + themes[j].nameEn,
-              isModule: false,
-            });
-          }
-        }
-      }
-      return modulesAndThemes;
-    }
   }
 
   function applicationOverskava(student, loadFormDeferred) {
@@ -465,6 +431,8 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
   function applicationRakkava(student, loadFormDeferred) {
     if (!$scope.application.id) {
       $scope.application.oldCurriculumVersion = student.curriculumVersion;
+    } else {
+      getThemeReplacementData();
     }
     $scope.formState = {
       curriculum: student.curriculum,
@@ -485,10 +453,6 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
       studentGroups: QueryUtils.endpoint("/autocomplete/studentgroups").query({valid: true, higher: false, curriculumId: student.curriculum, studyForm: (student.type !== 'OPPUR_E' ? student.studyForm : undefined)})
     };
     $q.all($scope.formState.curriculumVersions, $scope.formState.studentGroups).then(loadFormDeferred.resolve);
-
-    if ($scope.isView) {
-      getThemeReplacementData();
-    }
 
     $scope.newCurriculumVersionSelected = function () {
       getThemeReplacementData();

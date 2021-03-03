@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
@@ -29,6 +30,7 @@ import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumFile;
 import ee.hitsa.ois.domain.curriculum.CurriculumGrade;
 import ee.hitsa.ois.domain.curriculum.CurriculumSpeciality;
+import ee.hitsa.ois.domain.curriculum.CurriculumStudyField;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.exception.AssertionFailedException;
@@ -68,6 +70,7 @@ import ee.hitsa.ois.web.dto.curriculum.CurriculumFileUpdateDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumGradeDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumSearchDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumSpecialityDto;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumStudyFieldDto;
 import ee.hitsa.ois.web.dto.report.CurriculumVersionSummaryReport;
 import ee.hitsa.ois.xml.curriculum.CurriculumVersionXml;
 import ee.hitsa.ois.xml.curriculum.CurriculumXml;
@@ -385,6 +388,38 @@ public class CurriculumController {
 
         curriculumService.deleteCurriculumSpeciality(user, speciality);
     }
+    
+    @PostMapping("/{curriculumId:\\d+}/studyField")
+    public CurriculumStudyFieldDto createCurriculumSpeciality(HoisUserDetails user,
+            @NotNull @Valid @RequestBody CurriculumStudyFieldDto dto,
+            @WithEntity("curriculumId") Curriculum curriculum) {
+        
+        CurriculumUtil.assertCanChange(user, schoolService.getEhisSchool(user.getSchoolId()), curriculum);
+        curriculumValidationService.assertCurriculumCanBeEdited(curriculum);
+
+        return CurriculumStudyFieldDto.of(curriculumService.createStudyField(curriculum, dto));
+    }
+
+    @PutMapping("/{curriculumId:\\d+}/studyField/{id:\\d+}")
+    public CurriculumStudyFieldDto updateCurriculumSpeciality(HoisUserDetails user,
+            @NotNull @Valid @RequestBody CurriculumStudyFieldDto dto, @WithEntity CurriculumStudyField studyField,
+            @WithEntity("curriculumId") Curriculum curriculum) {
+        
+        CurriculumUtil.assertCanChange(user, schoolService.getEhisSchool(user.getSchoolId()), curriculum);
+        curriculumValidationService.assertCurriculumCanBeEdited(curriculum);
+
+        return CurriculumStudyFieldDto.of(curriculumService.updateStudyField(dto, studyField));
+    }
+
+    @DeleteMapping("/{curriculumId:\\d+}/studyField/{id:\\d+}")
+    public void deleteCurriculumSpeciality(HoisUserDetails user, @WithEntity CurriculumStudyField studyField,
+            @WithEntity("curriculumId") Curriculum curriculum) {
+
+        CurriculumUtil.assertCanChange(user, schoolService.getEhisSchool(user.getSchoolId()), curriculum);
+        curriculumValidationService.assertCurriculumCanBeEdited(curriculum);
+
+        curriculumService.deleteStudyField(user, studyField);
+    }
 
     /**
      * Getting school departments on initial page load on new curriculum form 
@@ -424,5 +459,10 @@ public class CurriculumController {
     public List<PersonResult> getTeachers(HoisUserDetails user, TeacherAutocompleteCommand lookup) {
         lookup.setValid(Boolean.TRUE);
         return autocompleteService.teachers(user.getSchoolId(), lookup, true);
+    }
+    
+    @GetMapping("/studyFields/{id:\\d+}")
+    public List<CurriculumStudyFieldDto> getCurriculumStudyFields(HoisUserDetails user, @WithEntity Curriculum curriculum) {
+        return curriculum.getStudyFields().stream().map(CurriculumStudyFieldDto::of).collect(Collectors.toList());
     }
 }

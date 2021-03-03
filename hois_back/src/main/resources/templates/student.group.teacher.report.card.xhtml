@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>{{ "studentreportcard.title" | translate }}</title>
+    <style type="text/css">
+      {% include "styles.css" %}
+      {% include "student.group.teacher.report.card.css" %}
+    </style>
+  </head>
+
+  <body>
+    {% for student in content.students %}
+      {% if loop.index == 0 %}
+      <div>
+      {% else %}
+      <div class="page-break-before">
+      {% endif %}
+        <p>{{ content.school | name }}</p>
+        <p>{{ "studentreportcard.reportCard" | translate }}</p>
+        <br/>
+
+        <p>
+          <span>{{ "studentreportcard.student" | translate }}:</span>
+          <span>{{ student.fullname }}</span>
+        </p>
+
+        <p>
+          <span>{{ "studentreportcard.studentGroup" | translate }}:</span>
+          <span>{{ content.studentGroup }}</span>
+        </p>
+
+        <p>
+          {% if content.entriesFrom is not empty %}
+            <span>
+              <span>{{ "studentreportcard.entriesFrom" | translate }}:</span>
+              <span>{{ content.entriesFrom | hoisDate }}</span>
+            </span>
+            <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+          {% endif %}
+
+          {% if content.entriesThru is not empty %}
+            <span>
+              <span>{{ "studentreportcard.entriesThru" | translate }}:</span>
+              <span>{{ content.entriesThru | hoisDate }}</span>
+            </span>
+          {% endif %}
+        </p>
+        <br/>
+
+        <table class="reporttable">
+          <tr>
+            <td class="label module-column" rowspan="2">{{ "studentreportcard.module" | translate }}</td>
+            <td class="label journal-column" rowspan="2">{{ "studentreportcard.journal" | translate }}</td>
+
+            {% if content.showOtherEntries %}
+              <td class="label" rowspan="2">
+                <span>{{ "studentreportcard.otherGrades" | translate }}</span>
+                <span>({{ [content.showLesson ? ("entry.lesson" | translate | lower) : null,
+                  content.showPracticalWork ? ("entry.practicalWork" | translate | lower) : null,
+                  content.showELearning ? ("entry.eLearning" | translate) : null,
+                  content.showIndividualWork ? ("entry.individualWork" | translate | lower) : null] | hoisNotNull | join(', ') }})</span>
+              </td>
+            {% endif %}
+
+            {% if content.totalGradeColumns > 0 %}
+              <td class="label" colspan="{{content.totalGradeColumns}}">
+                {{ content.studyYear != null ? (content.studyYear | name) : '' }} {{ "studentreportcard.totalGrades" | translate }}
+              </td>
+            {% endif %}
+          </tr>
+          <tr>
+            {% if content.showEvaluation %}
+              <td class="label">{{ "entry.evaluationShort" | translate }}</td>
+            {% endif %}
+
+            {% if content.showPeriodGrade %}
+              <td class="label">{{ "entry.periodGradeShort" | translate }}</td>
+            {% endif %}
+
+            {% if content.showOutcome %}
+              <td class="label">{{ "entry.outcomeShort" | translate }}</td>
+            {% endif %}
+
+            {% if content.showFinalResult %}
+              <td class="label">{{ "entry.finalResultShort" | translate }}</td>
+            {% endif %}
+
+            {% if content.showModuleGrade %}
+              <td class="label">{{ "studentreportcard.moduleResultShort" | translate }}</td>
+            {% endif %}
+          </tr>
+          {% for tableRow in student.tableRows %}
+            <tr>
+              <td>{{ tableRow.module != null ? (tableRow.module | name) : '' }}</td>
+              <td>
+                {% if tableRow.journal is not empty %}
+                  <span>{{ tableRow.journal | name }}</span>
+                {% elseif tableRow.isPracticeModuleResult %}
+                  <span>{{ "studentreportcard.wholePracticeModule" | translate }}</span>
+                {% endif %}
+              </td>
+
+              {% if content.showOtherEntries %}
+                <td class="center">
+                  {% for result in tableRow.otherResults %}
+                    {{ result }}{% if loop.index != loop.length - 1 %};{% else %}&nbsp;{% endif %}
+                  {% endfor %}
+                </td>
+              {% endif %}
+
+              {% if content.showEvaluation %}
+                <td class="center">
+                  {% for result in tableRow.evaluationResults %}
+                    {{ result }}{% if loop.index != loop.length - 1 %};{% else %}&nbsp;{% endif %}
+                  {% endfor %}
+                </td>
+              {% endif %}
+
+              {% if content.showPeriodGrade %}
+                <td class="center">
+                  {% for result in tableRow.periodResults %}
+                    {{ result }}{% if loop.index != loop.length - 1 %};{% else %}&nbsp;{% endif %}
+                  {% endfor %}
+                </td>
+              {% endif %}
+
+              {% if content.showOutcome %}
+                <td class="center">{{ tableRow.outcomeResult }}</td>
+              {% endif %}
+
+              {% if content.showFinalResult %}
+                <td class="center">{{ tableRow.finalResult }}</td>
+              {% endif %}
+
+              {% if content.showModuleGrade %}
+                <td class="center">{{ tableRow.moduleResult }}</td>
+              {% endif %}
+            </tr>
+          {% endfor %}
+        </table>
+
+        {% if content.totalGradeColumns > 0 %}
+          <p>
+            <span>{{ "studentreportcard.totalGrades" | translate }}:</span>
+
+            {% if content.showEvaluation %}
+              <span>{{ "entry.evaluationShort" | translate }} - {{ "entry.evaluation" | translate }};</span>
+            {% endif %}
+
+            {% if content.showPeriodGrade %}
+              <span>{{ "entry.periodGradeShort" | translate }} - {{ "entry.periodGrade" | translate }};</span>
+            {% endif %}
+
+            {% if content.showOutcome %}
+              <span>{{ "entry.outcomeShort" | translate }} - {{ "entry.outcome" | translate }};</span>
+            {% endif %}
+
+            {% if content.showFinalResult %}
+              <span>{{ "entry.finalResultShort" | translate }} - {{ "entry.finalResult" | translate }};</span>
+            {% endif %}
+
+            {% if content.showModuleGrade %}
+              <span>{{ "studentreportcard.moduleResultShort" | translate }} - {{ "studentreportcard.moduleResult" | translate }};</span>
+            {% endif %}
+          </p>
+        {% endif %}
+        <br/>
+
+        {% if content.showAbsences %}
+          <div class="absences">
+            <p>{{ "studentreportcard.absencesByReason" | translate }}:</p>
+            <table class="reporttable">
+              <tbody>
+                <tr>
+                  <td>{{ "studentreportcard.beingLate" | translate }}</td>
+                  <td>{{ student.absenceTypeTotals["PUUDUMINE_H"] }}</td>
+
+                  <td>{{ "studentreportcard.withoutReasonAbsence" | translate }}</td>
+                  <td>{{ student.absenceTypeTotals["PUUDUMINE_P"] }}</td>
+
+                  <td>{{ "studentreportcard.withReasonAbsence" | translate }}</td>
+                  <td>{{ student.absenceTypeTotals["PUUDUMINE_V"] + student.absenceTypeTotals["PUUDUMINE_PR"] }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <br/><br/>
+        {% endif %}
+
+        <table class="reporttable signature-table">
+          <tbody>
+            <tr>
+              <td class="signature-column">
+                <p>{{ "studentreportcard.courseTeacher" | translate }} ……………………………………………</p>
+                <p>&nbsp;</p>
+                <p>{{ "studentreportcard.date" | translate }} ……………………………………………</p>
+                <p>{{ "studentreportcard.signature" | translate | lower }} ……………………………………………</p>
+              </td>
+              <td class="signature-column">
+                <p>{{ "studentreportcard.representativeName" | translate }}</p>
+                <p>…………………………………………… {{ "studentreportcard.familiarizedWithReportCard" | translate }}</p>
+                <p>{{ "studentreportcard.date" | translate }} ……………………………………………</p>
+                <p>{{ "studentreportcard.signature" | translate | lower }} ……………………………………………</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    {% endfor %}
+  </body>
+</html>

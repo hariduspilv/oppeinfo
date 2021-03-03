@@ -15,6 +15,8 @@
       {{'teacher.rtipAbsence.label' | translate}}</md-nav-item>
   <md-nav-item ng-if="((auth.isAdmin() && teacher.id) || auth.isTeacher()) && teacher.isHigher" md-nav-href="#/teachers/{{::teacher.id}}/programs?_noback" name="teacher.programs">
       {{'teacher.subjectPrograms.label' | translate}}</md-nav-item>
+  <md-nav-item ng-if="((auth.isAdmin() && teacher.id) || auth.isTeacher())" md-nav-href="#/teachers/{{::teacher.id}}/load?_noback" name="teacher.load">
+    {{'teacher.load.label' | translate}}</md-nav-item>
 </md-nav-bar>
 
   <div class="ois-form-layout-padding" layout="column" ng-cloak>
@@ -277,14 +279,14 @@
               </md-input-container>
               <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                 <label>{{'teacher.teacherPositionEhis.contractEnd' | translate}}</label>
-                <md-datepicker ng-model="teacherPositionEhis.contractEnd" md-min-date="teacherPositionEhis.contractStart" md-open-on-focus></md-datepicker>
+                <md-datepicker ng-model="teacherPositionEhis.contractEnd" md-min-date="teacherPositionEhis.contractStart" ng-required="teacherPositionEhis.isContractEnded" md-open-on-focus></md-datepicker>
               </md-input-container>
             </div>
 
             <div layout="row" layout-sm="column" layout-xs="column">
               <md-input-container flex="25" flex-sm="100" flex-xs="100">
                 <label>{{'teacher.teacherPositionEhis.load' | translate}}</label>
-                <input ng-model="teacherPositionEhis.load" name="teacherPositionEhis[{{$index}}].load" type="number" required max="5" ng-min="{{teacherForm['teacherPositionEhis['+$index+'].contractType'].$viewValue === 'EHIS_LEPING_TL' ? 0.1 : 0}}" step="0.1">
+                <input ng-model="teacherPositionEhis.load" name="teacherPositionEhis[{{$index}}].load" type="number" required max="5" ng-min="{{teacherForm['teacherPositionEhis['+$index+'].contractType'].$viewValue === 'EHIS_LEPING_TL' ? 0.1 : 0}}" step="0.01">
                 <div ng-messages="teacherForm['teacherPositionEhis['+$index+'].load'].$error">
                   <div ng-message="max">
                     {{'main.messages.error.max' | translate: {max: 5} }}
@@ -393,7 +395,19 @@
       <md-button ng-if="auth.isTeacher()" ng-click="back('#/teachers/myData')" class="md-raised">{{'main.button.back' | translate}}</md-button>
       <md-button ng-if="teacher.id" ng-click="delete()" class="md-raised">{{'main.button.delete' | translate}}</md-button>
       <md-button ng-if="teacher.id && teacher.teacherPositionEhis && teacher.teacherPositionEhis.length" ng-click="sendToEhis()" class="md-raised">{{'main.button.sendToEhis' | translate}}</md-button>
-      <span ng-if="teacher.ehisLastSuccessfulDate && teacher.teacherPositionEhis.length > 0" style="font-size: 13px">{{'teacher.ehisSendOperation.success' | translate: {day: (teacher.ehisLastSuccessfulDate | hoisDateTime)} }}</span>
-      <span ng-if="!teacher.ehisLastSuccessfulDate && teacher.teacherPositionEhis.length > 0" style="font-size: 13px">{{'teacher.ehisSendOperation.fail' | translate}}</span>
+
+      <span ng-if="teacher.isVocational && teacher.isHigher && (teacher.ehisLastSuccessfulVDate || teacher.ehisLastSuccessfulHDate) && teacher.teacherPositionEhis.length > 0" style="font-size: 13px">
+        {{'teacher.ehisSendOperation.successHybrid' | translate: {
+          dayV: teacher.ehisLastSuccessfulVDate ? (teacher.ehisLastSuccessfulVDate | hoisDateTime) : '-',
+          dayH: teacher.ehisLastSuccessfulHDate ? (teacher.ehisLastSuccessfulHDate | hoisDateTime) : '-' } }}
+      </span>
+      <span ng-if="(teacher.isVocational || teacher.isHigher) && !(teacher.isVocational && teacher.isHigher) &&
+       (teacher.isVocational && teacher.ehisLastSuccessfulVDate || teacher.isHigher && teacher.ehisLastSuccessfulHDate) &&
+        teacher.teacherPositionEhis.length > 0" style="font-size: 13px">
+        {{'teacher.ehisSendOperation.success' | translate: {day: ((teacher.isVocational ? teacher.ehisLastSuccessfulVDate : teacher.ehisLastSuccessfulHDate) | hoisDateTime)} }}
+      </span>
+      <span ng-if="(teacher.isVocational || teacher.isHigher) && !(teacher.isVocational && teacher.ehisLastSuccessfulVDate) && !(teacher.isHigher && teacher.ehisLastSuccessfulHDate) && teacher.teacherPositionEhis.length > 0" style="font-size: 13px">
+        {{'teacher.ehisSendOperation.fail' | translate}}
+      </span>
     </form>
   </div>

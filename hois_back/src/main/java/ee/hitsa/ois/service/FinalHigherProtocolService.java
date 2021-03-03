@@ -8,6 +8,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -18,6 +19,9 @@ import java.util.stream.Collectors;
 import javax.transaction.Transactional;
 
 import ee.hitsa.ois.domain.gradingschema.GradingSchemaRow;
+import ee.hitsa.ois.enums.Language;
+import ee.hitsa.ois.util.ProtocolUtil;
+import ee.hitsa.ois.web.commandobject.SearchCommand;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -222,12 +226,7 @@ public class FinalHigherProtocolService extends AbstractProtocolService {
 
         protocol.setProtocolStudents(StreamUtil.toMappedList(dto -> {
             ProtocolStudent protocolStudent = EntityUtil.bindToEntity(dto, new ProtocolStudent());
-            protocolStudent.setStudent(em.getReference(Student.class, dto.getStudentId()));
-            return protocolStudent;
-        }, form.getProtocolStudents()));
-
-        protocol.setProtocolStudents(StreamUtil.toMappedList(dto -> {
-            ProtocolStudent protocolStudent = EntityUtil.bindToEntity(dto, new ProtocolStudent());
+            protocolStudent.setProtocol(protocol);
             protocolStudent.setStudent(em.getReference(Student.class, dto.getStudentId()));
             return protocolStudent;
         }, form.getProtocolStudents()));
@@ -235,12 +234,15 @@ public class FinalHigherProtocolService extends AbstractProtocolService {
         return EntityUtil.save(protocol, em);
     }
     
-    public Protocol save(Protocol protocol, FinalHigherProtocolSaveForm form) {
+    public Protocol save(Protocol protocol, FinalHigherProtocolSaveForm form, boolean strictValidation) {
         EntityUtil.bindToEntity(form, protocol, "committee", "protocolStudents", "protocolCommitteeMembers");
         protocol.setCommittee(form.getCommitteeId() != null ? em.getReference(Committee.class, form.getCommitteeId()) : null);
         saveCommitteeMembers(protocol, form);
         saveStudents(protocol, form);
-        
+
+        if (strictValidation) {
+            FinalProtocolUtil.assertCurriculumGradesInput(protocol);
+        }
         return EntityUtil.save(protocol, em);
     }
     
@@ -258,6 +260,11 @@ public class FinalHigherProtocolService extends AbstractProtocolService {
         EntityUtil.bindEntityCollection(protocol.getProtocolStudents(), ProtocolStudent::getId,
                 // no protocol students created here
                 form.getProtocolStudents(), FinalHigherProtocolStudentSaveForm::getId, null, (dto, ps) -> {
+                    if (!ProtocolUtil.studentCanBeEdited(ps)) {
+                        return;
+                    }
+
+                    LocalDate gradeDate = protocol.getFinalDate() != null ? protocol.getFinalDate() : LocalDate.now();
                     if (gradeChangedButNotRemoved(dto, ps)) {
                         assertHasAddInfoIfProtocolConfirmed(dto, protocol);
                         addHistory(ps);
@@ -265,14 +272,17 @@ public class FinalHigherProtocolService extends AbstractProtocolService {
                         Short mark = HigherAssessment.getGradeMark(dto.getGrade().getCode());
                         GradingSchemaRow gradingSchemaRow = EntityUtil.getOptionalOne(GradingSchemaRow.class,
                                 dto.getGrade().getGradingSchemaRowId(), em);
-                        gradeStudent(ps, grade, mark, isLetterGrade, gradingSchemaRow, LocalDate.now());
+                        gradeStudent(ps, grade, mark, isLetterGrade, gradingSchemaRow, gradeDate);
                         ps.setAddInfo(dto.getAddInfo());
                     } else if (gradeRemoved(dto, ps)) {
                         assertHasAddInfoIfProtocolConfirmed(dto, protocol);
                         addHistory(ps);
                         removeGrade(ps);
+                    } else if (ps.getGrade() != null) {
+                        // works like higher main protocols
+                        ps.setGradeDate(gradeDate);
                     }
-                    ps.setCurriculumGrade(dto.getCurriculumGradeId() != null
+                    ps.setCurriculumGrade(dto.getCurriculumGradeId() != null && FinalProtocolUtil.studentCanSetCurriculumGrade(ps)
                             ? em.getReference(CurriculumGrade.class, dto.getCurriculumGradeId()) : null);
                     saveOccupationCertificates(ps, dto);
                 });
@@ -296,7 +306,7 @@ public class FinalHigherProtocolService extends AbstractProtocolService {
         student.getProtocolStudentOccupations().removeIf(it -> currentCertificates.containsValue(it.getId()));
     }
     
-    public List<AutocompleteResult> curriculumsForSelection(Long schoolId, Boolean isFinalThesis) {
+    public List<AutocompleteResult> curriculumsForSelection(Long schoolId, SearchCommand lookup, Boolean isFinalThesis) {
         String from = "from curriculum c"
                 + " join curriculum_version cv on c.id=cv.curriculum_id"
                 + " join curriculum_version_hmodule cvh on cv.id=cvh.curriculum_version_id";
@@ -306,7 +316,10 @@ public class FinalHigherProtocolService extends AbstractProtocolService {
         qb.requiredCriteria("cv.status_code != :versionStatus", "versionStatus", CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_C.name());
         qb.requiredCriteria("cvh.type_code = :type", "type",
                 Boolean.TRUE.equals(isFinalThesis) ? HigherModuleType.KORGMOODUL_L : HigherModuleType.KORGMOODUL_F);
-        
+        qb.optionalContains(Arrays.asList("cv.code", "cv.code || ' ' || c.name_et", "cv.code || ' ' || c.name_en"),
+                "name", lookup.getName());
+
+        qb.sort(Language.EN.equals(lookup.getLang()) ? "cv.code, c.name_et" : "cv.code, c.name_en");
         List<?> data = qb.select("cv.id, cv.code, c.name_et, c.name_en", em).getResultList();
         Map<Long, AutocompleteResult> results = new HashMap<>();
         for (Object r : data) {
@@ -470,14 +483,9 @@ public class FinalHigherProtocolService extends AbstractProtocolService {
         return qb;
     }
     
-    public Protocol confirm(HoisUserDetails user, Protocol protocol, FinalHigherProtocolSaveForm protocolSaveForm) {
+    public Protocol confirm(HoisUserDetails user, Protocol protocol) {
         setConfirmation(user, protocol);
-        Protocol confirmedProtocol;
-        if (protocolSaveForm != null) {
-            confirmedProtocol = save(protocol, protocolSaveForm);
-        } else {
-            confirmedProtocol = EntityUtil.save(protocol, em);
-        }
+        Protocol confirmedProtocol = EntityUtil.save(protocol, em);
 
         if (confirmedProtocol.getProtocolStudents().stream().anyMatch(ps -> ps.getGrade() == null)) {
             throw new ValidationFailedException("finalProtocol.messages.gradeNotSelectedForAllStudents");

@@ -248,7 +248,7 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($q, 
     var student = $scope.protocol.protocolStudents.find(function(s) {
       return s.id === calculatedGrade.protocolStudent;
     });
-    if (angular.isDefined(student) && student.canChangeGrade) {
+    if (angular.isDefined(student) && student.canBeEdited) {
       student.grade = analogGetter.get(calculatedGrade.grade);
       $scope.gradeChanged(student);
     }
@@ -276,7 +276,7 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($q, 
 
   $scope.updateAllStudentsCheckBoxes = function (value) {
     $scope.protocol.protocolStudents.forEach(function (student) {
-      if (student.canChangeGrade) {
+      if (student.canBeEdited) {
         $scope.calculateGrades.protocolStudents[student.id] = value;
       }
     });

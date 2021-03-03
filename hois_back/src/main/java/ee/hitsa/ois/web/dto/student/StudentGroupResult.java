@@ -10,6 +10,7 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 public class StudentGroupResult extends AutocompleteResult {
 
     private Long curriculum;
+    private String merCode;
     private Long curriculumVersion;
     private String studyForm;
     private String language;
@@ -31,6 +32,14 @@ public class StudentGroupResult extends AutocompleteResult {
 
     public void setCurriculum(Long curriculum) {
         this.curriculum = curriculum;
+    }
+
+    public String getMerCode() {
+        return merCode;
+    }
+
+    public void setMerCode(String merCode) {
+        this.merCode = merCode;
     }
 
     public Long getCurriculumVersion() {

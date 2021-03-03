@@ -32,9 +32,12 @@
             <label>{{'student.vocational.curriculumVersion' | translate}}</label>
             <hois-value value="currentLanguageNameField(student.curriculumObject) + (student.curriculumObject ? ' / ' : '') + currentLanguageNameField(student.curriculumVersion)"></hois-value>
           </md-input-container>
-          <md-input-container flex="100" flex-gt-sm="15" flex-offset="0" flex-offset-gt-sm="{{(student.isGuestStudent || externalMissingCurriculum(student)) ? 0 : 5}}" ng-if="student.speciality">
-            <label>{{'studentGroup.speciality' | translate}}</label>
-            <hois-classifier-value ng-model="student.speciality" main-classifier-code="SPETSKUTSE"></hois-classifier-value>
+          <md-input-container flex="100" flex-gt-sm="15" flex-offset="0"
+                              flex-offset-gt-sm="{{(student.isGuestStudent || externalMissingCurriculum(student)) ? 0 : 5}}"
+                              ng-if="student.curriculumIncludesSpecialities || student.speciality">
+            <label class="textInput">{{'studentGroup.speciality' | translate}}</label>
+            <hois-classifier-value ng-if="student.speciality" ng-model="student.speciality" main-classifier-code="SPETSKUTSE"></hois-classifier-value>
+            <hois-value ng-if="!student.speciality" value="'student.result.vocational.notSelected' | translate" class="invalid"></hois-value>
           </md-input-container>
           <md-input-container flex="100" flex-gt-sm="15" flex-offset="0" flex-offset-gt-sm="5" ng-if="!student.isGuestStudent && !externalMissingCurriculum(student)">
             <label>{{'student.studyForm' | translate}}</label>
@@ -73,10 +76,11 @@
       </div>
     </div>
 
+    <div>&nbsp;</div>
     <div ng-controller="StudentViewResultsVocationalController as controller" ng-cloak>
       <md-content style="overflow: visible">
         <md-table-container>
-        <md-nav-bar md-selected-nav-item="resultsCurrentNavItem" nav-bar-aria-label="results selection" layout-margin ng-if="!student.isGuestStudent && !externalMissingCurriculum(student)">
+        <md-nav-bar md-selected-nav-item="resultsCurrentNavItem" nav-bar-aria-label="results selection" ng-if="!student.isGuestStudent && !externalMissingCurriculum(student)">
           <md-nav-item md-nav-click="changeResultsCurrentNavItem('student.curriculumFulfillment')" name="student.curriculumFulfillment">
             {{'student.result.curriculumFulfillment' | translate}}
           </md-nav-item>
@@ -89,7 +93,11 @@
           <md-nav-item ng-if="canWatchStudentConnectedEntities" md-nav-click="changeResultsCurrentNavItem('student.journalsAndProtocols')" name="student.journalsAndProtocols">
             {{'student.result.journalsAndProtocols' | translate}}
           </md-nav-item>
+          <md-nav-item md-nav-click="changeResultsCurrentNavItem('student.resultsMatching')" name="student.resultsMatching">
+            {{'student.result.resultsMatching' | translate}}
+          </md-nav-item>
         </md-nav-bar>
+        <div>&nbsp;</div>
         </md-table-container>
         <div layout-margin>
           <div ng-show="resultsCurrentNavItem === 'student.curriculumFulfillment'">
@@ -103,6 +111,9 @@
           </div>
           <div ng-if="canWatchStudentConnectedEntities" ng-show="resultsCurrentNavItem === 'student.journalsAndProtocols'">
             <div ng-include="'student/templates/journals.and.protocols.tmpl.html'"></div>
+          </div>
+          <div ng-show="resultsCurrentNavItem === 'student.resultsMatching'">
+            <div ng-include="'student/templates/view.results.vocational.resultsmatching.tmpl.html'"></div>
           </div>
         </div>
       </md-content>

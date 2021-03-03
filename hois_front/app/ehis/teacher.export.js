@@ -10,6 +10,9 @@ angular.module('hitsaOis').controller('TeacherExportController', ['$route', '$sc
     $scope.teacher = {};
     $scope.teacher.allDates = false;
 
+    $scope.showSentHistory = showSentHistory;
+    $scope.lastSentHistory = $scope.higher ? null : requestLastSentHistory();
+
     function send() {
       if ($scope.cancelledBy) {
         $scope.cancelledBy = null;
@@ -20,11 +23,12 @@ angular.module('hitsaOis').controller('TeacherExportController', ['$route', '$sc
         data: $scope.teacher,
         pollUrl: '/teachers/ehisTeacherExportStatus',
         successCallback: function (pollResult) {
-          message.info(pollResult && pollResult.result.length > 0 ? 'ehis.messages.exportFinished' : 
+          message.info(pollResult && pollResult.result.length > 0 ? 'ehis.messages.exportFinished' :
             ($scope.auth.higher ? 'ehis.messages.noTeachersFoundHigher' : 'ehis.messages.noTeachersFoundVocational'));
           $scope.result = pollResult.result;
           busyHandler.setProgress(100);
           QueryUtils.loadingWheel($scope, false);
+          $scope.lastSentHistory = $scope.higher ? null : requestLastSentHistory();
         },
         failCallback: function (pollResult) {
           if (pollResult) {
@@ -46,7 +50,7 @@ angular.module('hitsaOis').controller('TeacherExportController', ['$route', '$sc
         }
       });
     }
-  
+
     $scope.exportTeachers = function() {
       if($scope.teacherExportForm.$valid) {
         QueryUtils.endpoint('/teachers/ehisTeacherExportCheck').get($scope.criteria).$promise.then(function(checkResult) {
@@ -67,5 +71,20 @@ angular.module('hitsaOis').controller('TeacherExportController', ['$route', '$sc
         message.error('main.messages.form-has-errors');
       }
     };
+
+    function showSentHistory() {
+      dialogService.showDialog('ehis/teacher.export.sent.history.dialog.html',
+        function (dialogScope) {
+          QueryUtils.createQueryForm(dialogScope, '/teachers/ehisSentHistory', {order: '-ml.inserted'});
+          dialogScope.loadData();
+        });
+    }
+
+    function requestLastSentHistory() {
+      $scope.teacher.changeDateTo = new Date();
+      return QueryUtils.endpoint('/teachers/ehisLastSentHistory').get({}, function (response) {
+        $scope.teacher.changeDateFrom = response.thru;
+      });
+    }
   }
 ]);

@@ -738,6 +738,76 @@ angular.module('hitsaOis')
       $scope.selectedJointPartners = selectedJointPartners;
     }
 
+    $scope.openAddStudyFieldDialog = function (editingStudyField) {
+      var DialogController = function (scope) {
+          if (editingStudyField) {
+            scope.data = angular.copy(editingStudyField);
+          } else {
+            scope.data = {
+            };
+          }
+
+          scope.editing = angular.isDefined(editingStudyField);
+
+          scope.delete = function() {
+            dialogService.confirmDialog({prompt: 'curriculum.studyField.deleteConfirm'}, function() {
+              if(scope.data.id) {
+                var StudyFieldEndpoint = QueryUtils.endpoint('/curriculum/'+$scope.curriculum.id+'/studyField');
+                var deletedStudyField = new StudyFieldEndpoint(scope.data);
+                deletedStudyField.$delete().then(function() {
+                  message.info('main.messages.delete.success');
+                  ArrayUtils.remove($scope.curriculum.studyFields, editingStudyField);
+                });
+              } else {
+                ArrayUtils.remove($scope.curriculum.studyFields, editingStudyField);
+              }
+              scope.cancel();
+            });
+          };
+      };
+
+      dialogService.showDialog('generalCurriculum/dialog/studyField.add.dialog.html', DialogController,
+          function (submitScope) {
+          var data = submitScope.data;
+          if($scope.curriculum.id) {
+            // subject is saved to modules
+            var StudyFieldEndpoint = QueryUtils.endpoint('/curriculum/'+$scope.curriculum.id+'/studyField');
+            var savedStudyField = new StudyFieldEndpoint(data);
+            savedStudyField.curriculum = $scope.curriculum.id;
+            if(data.id) {
+              savedStudyField.$update().then(function(response) {
+                  message.info('main.messages.update.success');
+                  angular.extend(editingStudyField, response);
+              });
+            } else {
+              savedStudyField.$save().then(function(response) {
+                  message.info('main.messages.create.success');
+                  $scope.curriculum.studyFields.push(response);
+              });
+            }
+          } else {
+            if(editingStudyField) {
+                angular.extend(editingStudyField, data);
+            } else {
+                $scope.curriculum.studyFields.push(data);
+            }
+          }
+        });
+      };
+
+      $scope.openViewStudyFieldDialog = function (editingStudyField) {
+        var DialogController = function (scope) {
+            if (editingStudyField) {
+              scope.data = angular.copy(editingStudyField);
+            } else {
+              scope.data = {
+              };
+            }
+        };
+  
+        dialogService.showDialog('generalCurriculum/dialog/studyField.view.dialog.html', DialogController,function (submitScope) {});
+        };
+
     // $scope.$watchCollection('curriculum.jointPartners', updateJointPartners);
 
     function getSchoolDepartmentOptions() {
@@ -1473,6 +1543,12 @@ angular.module('hitsaOis')
       return result;
     }
 
+    $scope.filterStudyFields = function (module) {
+      return function (subject) {
+        return ArrayUtils.includes(module.studyFields, subject.id);
+      };
+    };
+
     $scope.compareUsingLanguage = function (o1, o2) {
       if (angular.isObject(o1) && angular.isObject(o2)) {
         var nameOb1 = $scope.currentLanguageNameField(o1.value);
@@ -1486,3 +1562,4 @@ angular.module('hitsaOis')
     };
 
   });
+  

@@ -31,7 +31,7 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodTeacherEditController',
         $scope.record.$promise.then(function(response){
             $scope.capacitiesUtil = new SspCapacities(response);
             $scope.capacityTypes = response.capacityTypes;
-            $scope.capacitiesUtil.addEmptyCapacities($scope.capacityTypes, true);
+            $scope.capacitiesUtil.addEmptyCapacities($scope.capacityTypes);
             $scope.$broadcast('refreshFixedColumns');
             $scope.$broadcast('refreshFixedTableHeight');
         });
@@ -47,12 +47,32 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodTeacherEditController',
 
     $scope.$watch('record.studyPeriod', loadTeachers);
 
-    $scope.sspTeacherCapacities = function (subjectStudyPeriod) {
-      var sspTeacher = subjectStudyPeriod.teachers.filter(function (it) {
-        return it.teacherId === teacher;
-      })[0];
-      return sspTeacher.capacities;
+    $scope.teacherCapacitiesSumBySspAndType = function (ssp, type) {
+      return $scope.capacitiesUtil.capacitiesSumBySspAndTeacherAndType(ssp, teacher, type);
     };
+    // $scope.sspTeacherCapacities = function (subjectStudyPeriod) {
+    //   return Object.values(sspTeacher.capacities.reduce(function (acc, cur) {
+    //     if (!acc[cur.capacityType]) {
+    //       acc[cur.capacityType] = {
+    //         capacityType: cur.capacityType,
+    //         hours: cur.hours,
+    //         isMain: !cur.subgroup
+    //       };
+    //       return acc;
+    //     }
+    //     var existing = acc[cur.capacityType];
+    //     if (!existing.isMain) {
+    //       return acc;
+    //     }
+    //     if (!cur.subgroup) {
+    //       acc[cur.capacityType].hours = cur.hours;
+    //       acc[cur.capacityType].isMain = true;
+    //       return acc;
+    //     }
+    //     acc[cur.capacityType].hours += cur.hours;
+    //     return acc;
+    //   }, {}));
+    // };
 
     function isValid() {
       $scope.subjectStudyPeriodTeacherEditForm.$setSubmitted();
@@ -94,10 +114,20 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodTeacherEditController',
       $scope.record.$put().then(function(response) {
           message.updateSuccess();
           $scope.record = response;
-          $scope.capacitiesUtil.addEmptyCapacities($scope.capacityTypes,true);
+          $scope.capacitiesUtil.addEmptyCapacities($scope.capacityTypes);
           $scope.subjectStudyPeriodTeacherEditForm.$setPristine();
           $scope.$broadcast('refreshFixedColumns');
           $scope.$broadcast('refreshFixedTableHeight');
       });
     }
+
+    $scope.teacherCapacities = function (subject) {
+      dialogService.showDialog('subjectStudyPeriod/teacher.capacities.tmpl.html', function (dialogScope) {
+        dialogScope.subject = subject;
+        dialogScope.capacityTypes = $scope.capacityTypes;
+        dialogScope.capacitiesUtil = $scope.capacitiesUtil;
+      }, function () {
+        $scope.save();
+      });
+    };
 }]);

@@ -67,8 +67,10 @@ public class CurriculumVersionOccupationModuleThemeDto extends VersionedCommand 
     private Set<CurriculumVersionOccupationModuleThemeCapacityDto> capacities;
     
     // used for curriculum fulfillment
+    private Long curriculumModuleId;
     private Boolean otherCurriculumVersionModuleTheme;
     private Set<CurriculumModuleOutcomeDto> curriculumModuleOutcomes;
+    private CurriculumVersionOccupationModuleThemeDto matchedTheme;
 
     public static CurriculumVersionOccupationModuleThemeDto of(CurriculumVersionOccupationModuleTheme theme) {
         CurriculumVersionOccupationModuleThemeDto dto = EntityUtil.bindToDto(theme, new CurriculumVersionOccupationModuleThemeDto(),
@@ -98,10 +100,9 @@ public class CurriculumVersionOccupationModuleThemeDto extends VersionedCommand 
         dto.setCredits(theme.getCredits());
         dto.setModule(EntityUtil.getId(theme.getModule()));
         dto.setModuleOutcomes(theme.getModuleOutcomes());
-        dto.setCurriculumModuleOutcomes(StreamUtil.toMappedSet(o -> CurriculumModuleOutcomeDto.of(o.getOutcome()),
-                theme.getOutcomes()));
         dto.setAssessment(EntityUtil.getNullableCode(theme.getAssessment()));
         dto.setStudyYearNumber(theme.getStudyYearNumber());
+        dto.setCurriculumModuleId(EntityUtil.getId(theme.getModule().getCurriculumModule()));
         return dto;
     }
 
@@ -241,6 +242,14 @@ public class CurriculumVersionOccupationModuleThemeDto extends VersionedCommand 
         this.capacities = capacities;
     }
 
+    public Long getCurriculumModuleId() {
+        return curriculumModuleId;
+    }
+
+    public void setCurriculumModuleId(Long curriculumModuleId) {
+        this.curriculumModuleId = curriculumModuleId;
+    }
+
     public Boolean getOtherCurriculumVersionModuleTheme() {
         return otherCurriculumVersionModuleTheme;
     }
@@ -255,5 +264,13 @@ public class CurriculumVersionOccupationModuleThemeDto extends VersionedCommand 
 
     public void setCurriculumModuleOutcomes(Set<CurriculumModuleOutcomeDto> curriculumModuleOutcomes) {
         this.curriculumModuleOutcomes = curriculumModuleOutcomes;
+    }
+
+    public CurriculumVersionOccupationModuleThemeDto getMatchedTheme() {
+        return matchedTheme;
+    }
+
+    public void setMatchedTheme(CurriculumVersionOccupationModuleThemeDto matchedTheme) {
+        this.matchedTheme = matchedTheme;
     }
 }

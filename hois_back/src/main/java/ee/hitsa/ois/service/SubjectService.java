@@ -20,6 +20,7 @@ import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.util.SubjectProgramValidation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -66,6 +67,8 @@ public class SubjectService {
     private ClassifierRepository classifierRepository;
     @Autowired
     private CurriculumVersionRepository curriculumVersionRepository;
+    @Autowired
+    private SubjectProgramValidation subjectProgramValidation;
 
     /**
      * Create new subject
@@ -257,9 +260,12 @@ public class SubjectService {
     public SubjectDto get(HoisUserDetails user, Subject subject) {
         SubjectDto dto;
         if (user.isSchoolAdmin()) {
-            dto = SubjectDto.of(subject, curriculumVersionRepository.findAllDistinctByModules_Subjects_Subject_id(subject.getId()));
+            dto = SubjectDto.ofWithPrograms(subject,
+                    curriculumVersionRepository.findAllDistinctByModules_Subjects_Subject_id(subject.getId()),
+                    false, user, subjectProgramValidation);
         } else {
-            dto = SubjectDto.forPublic(subject, curriculumVersionRepository.findAllDistinctByModules_Subjects_Subject_id(subject.getId()));
+            dto = SubjectDto.forPublic(subject, curriculumVersionRepository.findAllDistinctByModules_Subjects_Subject_id(subject.getId()),
+                    user, subjectProgramValidation);
         }
         dto.setCanEdit(Boolean.valueOf(SubjectUserRights.canEdit(user, subject)));
         dto.setCanDelete(Boolean.valueOf(SubjectUserRights.canDelete(user, subject)));

@@ -33,7 +33,12 @@ public class Curriculum extends BaseEntityWithId implements Translatable {
     private static final long serialVersionUID = -7063602940937795603L;
 
     @Column(name = "is_higher")
-    private Boolean higher;
+    private Boolean higher = Boolean.FALSE;
+    private Boolean isVocational = Boolean.FALSE;
+    private Boolean isBasic = Boolean.FALSE;
+    private Boolean isSecondary = Boolean.FALSE;
+    private Long courses;
+    private String gradingSystemDescription;
     private String nameEt;
     private String nameEn;
     private String nameRu;
@@ -192,6 +197,9 @@ public class Curriculum extends BaseEntityWithId implements Translatable {
 
     @OneToMany(mappedBy = "curriculum", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<CurriculumVersion> versions = new HashSet<>();
+    
+    @OneToMany(mappedBy = "curriculum", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<CurriculumStudyField> studyFields = new HashSet<>();
 
     public Boolean getHigher() {
         return higher;
@@ -818,6 +826,54 @@ public class Curriculum extends BaseEntityWithId implements Translatable {
 
     public static long getSerialversionuid() {
         return serialVersionUID;
+    }
+
+    public Boolean getIsVocational() {
+        return isVocational;
+    }
+
+    public void setIsVocational(Boolean isVocational) {
+        this.isVocational = isVocational;
+    }
+
+    public Boolean getIsBasic() {
+        return isBasic;
+    }
+
+    public void setIsBasic(Boolean isBasic) {
+        this.isBasic = isBasic;
+    }
+
+    public Boolean getIsSecondary() {
+        return isSecondary;
+    }
+
+    public void setIsSecondary(Boolean isSecondary) {
+        this.isSecondary = isSecondary;
+    }
+
+    public Long getCourses() {
+        return courses;
+    }
+
+    public void setCourses(Long courses) {
+        this.courses = courses;
+    }
+
+    public String getGradingSystemDescription() {
+        return gradingSystemDescription;
+    }
+
+    public void setGradingSystemDescription(String gradingSystemDescription) {
+        this.gradingSystemDescription = gradingSystemDescription;
+    }
+
+    public Set<CurriculumStudyField> getStudyFields() {
+        return studyFields;
+    }
+
+    public void setStudyFields(Set<CurriculumStudyField> studyFields) {
+        this.studyFields = studyFields;
     }
 
 }

@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.invoke.MethodHandles;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.time.LocalDate;
@@ -37,6 +38,8 @@ import org.jxls.formula.FastFormulaProcessor;
 import org.jxls.transform.Transformer;
 import org.jxls.transform.poi.PoiTransformer;
 import org.jxls.util.JxlsHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -61,6 +64,7 @@ import ee.hitsa.ois.xls.HasWorkbook;
 @Service
 public class XlsService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
     private static final String XLS_TEMPLATE_PATH = "/templates/";
 
     @Autowired
@@ -69,6 +73,7 @@ public class XlsService {
     @SuppressWarnings("resource")
     public byte[] generate(String templateName, Map<String, Object> data, List<SimpleEntry<String, AreaListener>> areaListeners) {
         try {
+//            LOGGER.info("Generating template: {}", templateName);
             String fullTemplatePath = XLS_TEMPLATE_PATH + templateName;
             try (InputStream is = ReportService.class.getResourceAsStream(fullTemplatePath)) {
                 if (is == null) {
@@ -124,11 +129,14 @@ public class XlsService {
             }
         } catch (IOException e) {
             throw new BadConfigurationException(String.format("XLS template %s not found. %s", templateName, e.getMessage()), e);
-        }
+        }/* finally {
+            LOGGER.info("Finished generating template: {}", templateName);
+        }*/
     }
 
     public byte[] generate(String templateName, Map<String, Object> data) {
         try {
+//            LOGGER.info("Generating template: {}", templateName);
             String fullTemplatePath = XLS_TEMPLATE_PATH + templateName;
             try (InputStream is = ReportService.class.getResourceAsStream(fullTemplatePath)) {
                 if (is == null) {
@@ -148,7 +156,9 @@ public class XlsService {
             }
         } catch (IOException e) {
             throw new BadConfigurationException(String.format("XLS template %s not found", templateName), e);
-        }
+        }/* finally {
+            LOGGER.info("Finished generating template: {}", templateName);
+        }*/
     }
 
     /**

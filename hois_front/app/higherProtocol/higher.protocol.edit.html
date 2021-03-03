@@ -114,7 +114,7 @@
           </thead>
           <tbody md-body>
             <tr md-row ng-repeat="student in record.protocolStudents | filter: filterStudents(record.subgroup)"
-                ng-disabled="!student.canChangeGrade" ng-class-odd="'odd'" ng-class-even="'even'"
+                ng-disabled="!student.canBeEdited" ng-class-odd="'odd'" ng-class-even="'even'"
                 md-select="student.id" md-select-id="student.id">
               <ng-form name="higherProtocolStudentForm">
                 <td md-cell>{{$index + 1}}.</td>
@@ -157,7 +157,7 @@
                 </td>
                 <td md-cell>
                   <hois-grade-select class="protocolGradeSelect" aria-label="{{'higherProtocol.finalGrade' | translate}}" ng-model="student.grade" values="grades"
-                    ng-change="gradeChanged(student)" ng-disabled="!formState.canEditProtocol || !student.canChangeGrade"></hois-grade-select>
+                    ng-change="gradeChanged(student)" ng-disabled="!formState.canEditProtocol || !student.canBeEdited"></hois-grade-select>
                 </td>
                 <td md-cell ng-if="formState.canChangeConfirmedProtocolGrade">
                   <md-input-container ng-if="student.gradeHasChanged">

@@ -29,12 +29,12 @@ public class ModuleProtocolStudentDto {
     private List<ModuleProtocolJournalResultDto> journalResults = new ArrayList<>();
     private List<ModuleProtocolOutcomeResultDto> outcomeResults = new ArrayList<>();
     private List<ProtocolPracticeJournalResultDto> practiceJournalResults = new ArrayList<>();
-    
+
+    private Boolean canBeEdited;
     /**
      * This variable does not consider user rights, it is checked by ModuleProtocolDto.canBeEdited
      */
     private Boolean canBeDeleted;
-    private Boolean canChangeGrade;
 
     public static ModuleProtocolStudentDto of(ProtocolStudent protocolStudent) {
         ModuleProtocolStudentDto dto = EntityUtil.bindToDto(protocolStudent, new ModuleProtocolStudentDto(),
@@ -81,8 +81,8 @@ public class ModuleProtocolStudentDto {
                                     pj.getGradeInserted() != null ? pj.getGradeInserted() : pj.getInserted(),
                                     pj.getModuleSubjects())));
         }
+        dto.setCanBeEdited(Boolean.valueOf(ProtocolUtil.studentCanBeEdited(protocolStudent)));
         dto.setCanBeDeleted(Boolean.valueOf(ProtocolUtil.studentCanBeDeleted(protocolStudent)));
-        dto.setCanChangeGrade(Boolean.valueOf(ProtocolUtil.studentGradeCanBeChanged(protocolStudent)));
         return dto;
     }
 
@@ -166,20 +166,20 @@ public class ModuleProtocolStudentDto {
         this.addInfo = addInfo;
     }
 
+    public Boolean getCanBeEdited() {
+        return canBeEdited;
+    }
+
+    public void setCanBeEdited(Boolean canBeEdited) {
+        this.canBeEdited = canBeEdited;
+    }
+
     public Boolean getCanBeDeleted() {
         return canBeDeleted;
     }
 
     public void setCanBeDeleted(Boolean canBeDeleted) {
         this.canBeDeleted = canBeDeleted;
-    }
-
-    public Boolean getCanChangeGrade() {
-        return canChangeGrade;
-    }
-
-    public void setCanChangeGrade(Boolean canChangeGrade) {
-        this.canChangeGrade = canChangeGrade;
     }
 
     public String getStudentGroup() {

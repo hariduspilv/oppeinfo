@@ -1,0 +1,69 @@
+<div>
+  <hois-whiteframe-warning ng-show  ="formState.matchedResultsEditable && formState.resultsMatchingForm.$dirty" md-color="'accent'">
+    <span>{{'main.messages.formDataNotSaved' | translate}}</span>
+  </hois-whiteframe-warning>
+
+  <form name="formState.resultsMatchingForm" ng-submit="saveResultsMatching()" novalidate>
+    <md-table-container>
+      <table md-table class="secondary-table">
+        <thead md-head>
+          <tr md-row>
+            <th md-column colspan="2">{{'student.result.curriculumModuleTheme' | translate}}</th>
+            <th md-column colspan="7">{{'student.result.matchedModuleTheme' | translate}}</th>
+            <th md-column></th>
+          </tr>
+          <tr md-row>
+            <th md-column>{{'student.result.moduleTheme' | translate}}</th>
+            <th md-column>{{'student.result.credits' | translate}}</th>
+            <th md-column>{{'student.result.moduleTheme' | translate}}</th>
+            <th md-column>{{'student.result.credits' | translate}}</th>
+            <th md-column>{{'student.result.grade' | translate}}</th>
+            <th md-column>{{'student.result.resultDate' | translate}}</th>
+            <th md-column>{{(auth.higher ? 'student.result.teacherHigher' :'student.result.teacherVocational') | translate}}</th>
+            <th md-column>{{'student.result.matchingDate' | translate}}</th>
+            <th md-column>{{'student.result.matcher' | translate}}</th>
+            <th md-column ng-if="formState.matchedResultsEditable"></th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in matchedResults" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>
+              <hois-module-theme-select ng-if="formState.matchedResultsEditable && row.canEdit" class="hois-table-select"
+                ng-model="row.curriculumModuleOrTheme" values="modulesAndThemes"
+                aria-label="{{'student.result.moduleTheme' | translate}}" required></hois-module-theme-select>
+              <span ng-if="!formState.matchedResultsEditable || !row.canEdit">
+                <span>{{currentLanguageNameField(row.curriculumModuleOrTheme.module)}}<span ng-if="row.curriculumModuleOrTheme.theme">/{{currentLanguageNameField(row.curriculumModuleOrTheme.theme)}}</span></span>
+              </span>
+            </td>
+            <td md-cell>{{row.curriculumModuleOrTheme.credits}}</td>
+            <td md-cell>
+              <hois-module-theme-select ng-if="formState.matchedResultsEditable && row.canEdit" class="hois-table-select"
+                ng-model="row.extraCurriculumResult" values="extraCurriculumResults" related-model="row.curriculumModuleOrTheme"
+                required aria-label="{{'student.result.moduleTheme' | translate}}"></hois-module-theme-select>
+              <span ng-if="!formState.matchedResultsEditable || !row.canEdit">
+                <span>{{currentLanguageNameField(row.extraCurriculumResult.module)}}<span ng-if="row.extraCurriculumResult.theme">/{{currentLanguageNameField(row.extraCurriculumResult.theme)}}</span></span>
+              </span>
+            </td>
+            <td md-cell>{{row.extraCurriculumResult.credits}}</td>
+            <td md-cell>{{row.extraCurriculumResult.grade | hoisVocationalGrade}}</td>
+            <td md-cell>{{row.extraCurriculumResult.gradeDate | hoisDate}}</td>
+            <td md-cell>{{row.extraCurriculumResult.teachers}}</td>
+            <td md-cell>{{row.matchingDate | hoisDate}}</td>
+            <td md-cell>{{row.matcher}}</td>
+            <td md-cell ng-if="formState.matchedResultsEditable">
+              <a ng-click="removeMatchedResult(row)" class="remove">&times;</a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+
+    <div>&nbsp;</div>
+    <div layout="row">
+      <md-button ng-if="canChangeStudentModules && !formState.matchedResultsEditable" class="md-raised md-primary"
+        ng-click="editMatchedResults()">{{"main.button.edit" | translate}}</md-button>
+      <md-button ng-if="formState.matchedResultsEditable" class="md-raised md-primary" type="submit">{{"main.button.save" | translate}}</md-button>
+      <md-button ng-if="formState.matchedResultsEditable" class="md-raised" ng-click="addNewMatchedResult()">{{"main.button.addRow" | translate}}</md-button>
+    </div>
+  </form>
+</div>

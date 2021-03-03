@@ -96,8 +96,7 @@ public class SubjectStudyPeriodTeacherService {
             dto.setStudentGroupObjects(
                     StreamUtil.toMappedList(s -> AutocompleteResult.of(s.getStudentGroup()), ssp.getStudentGroups()));
             dto.setTeachers(ssp.getTeachers().stream()
-                    .filter(t -> EntityUtil.getId(t.getTeacher()).equals(container.getTeacher()))
-                    .map(t -> SubjectStudyPeriodTeacherDto.of(t, true))
+                    .map(t -> SubjectStudyPeriodTeacherDto.of(t, false))
                     .collect(Collectors.toList()));
             dto.setCapacities(StreamUtil.toMappedList(SubjectStudyPeriodCapacityDto::of, ssp.getCapacities()));
             dto.setGroupProportion(EntityUtil.getCode(ssp.getGroupProportion()));

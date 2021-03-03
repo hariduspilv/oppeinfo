@@ -30,7 +30,9 @@
         <td class="label">{{ "report.final.protocol.student.nr" | translate }}</td>
         <td class="label">{{ "report.final.protocol.student.name" | translate }}</td>
         <td class="label">{{ "report.final.protocol.student.grade" | translate }}</td>
-        <td class="label">{{ "report.final.protocol.student.givenCurriculumGrade" | translate }}</td>
+        {% if content.hasCurriculumGrades %}
+          <td class="label">{{ "report.final.protocol.student.givenCurriculumGrade" | translate }}</td>
+        {% endif %}
         {% if content.hasOccupations %}
           <td class="label">{{ "report.final.protocol.student.givenOccupation" | translate }}</td>
         {% endif %}
@@ -49,9 +51,15 @@
             ({{ student.gradeName }})
           {% endif %}
         </td>
-        <td>
-          {{ student.curriculumGrade }}
-        </td>
+        {% if content.hasCurriculumGrades %}
+          <td>
+            {% if student.canSetCurriculumGrade %}
+              {{ student.curriculumGrade }}
+            {% else %}
+              {{ "report.final.protocol.student.curriculumGradeNotSet" | translate }}
+            {% endif %}
+          </td>
+        {% endif %}
         {% if content.hasOccupations %}
           <td>
             {% for occupation in student.occupations %}

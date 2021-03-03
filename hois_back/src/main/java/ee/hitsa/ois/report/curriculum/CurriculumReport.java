@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -25,6 +26,7 @@ import ee.hitsa.ois.report.ReportUtil;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.TranslateUtil;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public class CurriculumReport {
     
@@ -57,6 +59,7 @@ public class CurriculumReport {
     private final String graduationRequirements;
     private final List<String> qualifications;
     private final List<String> partoccupations;
+    private final List<AutocompleteResult> studyFields;
     private final String structure;
     private final String optionalStudyDescription;
     private final String specialization;
@@ -121,6 +124,8 @@ public class CurriculumReport {
         if (partoccupations.isEmpty()) {
             partoccupations.add(TranslateUtil.translate(ReportUtil.KEY_MISSING, lang));
         }
+        studyFields = curriculum.getStudyFields().stream().map(AutocompleteResult::of)
+                .sorted(Comparator.comparing(AutocompleteResult::getNameEt)).collect(Collectors.toList());
         structure = curriculum.getStructure();
         optionalStudyDescription = curriculum.getOptionalStudyDescription();
         specialization = ReportUtil.valueOrMissing(curriculum.getSpecialization(), lang);
@@ -247,6 +252,10 @@ public class CurriculumReport {
 
     public String getVersionUrl() {
         return versionUrl;
+    }
+
+    public List<AutocompleteResult> getStudyFields() {
+        return studyFields;
     }
 
 }

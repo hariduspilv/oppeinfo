@@ -234,6 +234,15 @@
 					
 					<fo:table-row>
 						<fo:table-cell border-style="solid" number-columns-spanned="7" margin="0 3px">
+							<fo:block font-weight="bold">{{ "report.curriculum.studyFields" | translate }}</fo:block>
+							{% for studyField in content.general.studyFields %}
+							  <fo:block>{{ studyField | name }}</fo:block>
+							{% endfor %}
+						</fo:table-cell>	
+					</fo:table-row>
+					
+					<fo:table-row>
+						<fo:table-cell border-style="solid" number-columns-spanned="7" margin="0 3px">
 							<fo:block font-weight="bold">{{ "report.curriculum.specialization" | translate }}</fo:block>
 							<fo:block>{{ content.general.specialization }}</fo:block>
 						</fo:table-cell>

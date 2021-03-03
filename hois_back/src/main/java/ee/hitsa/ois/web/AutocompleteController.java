@@ -66,7 +66,7 @@ import ee.hitsa.ois.web.dto.SupervisorDto;
 import ee.hitsa.ois.web.dto.apelapplication.ApelSchoolResult;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumResult;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionHigherModuleResult;
-import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOModulesAndThemesResult;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionModuleOrThemeResult;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleResult;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleThemeResult;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
@@ -107,7 +107,7 @@ public class AutocompleteController {
         if(codes == null) {
             codes = Collections.singletonList(lookup.getMainClassCode());
         }
-        return autocompleteService.classifiers(codes);
+        return autocompleteService.classifiers(codes, lookup.getName(), lookup.getLang());
     }
     
     @GetMapping("/saisCurriculumClassifiers")
@@ -163,7 +163,7 @@ public class AutocompleteController {
     }
 
     @GetMapping("/curriculumversionomodulesandthemes")
-    public List<CurriculumVersionOModulesAndThemesResult> curriculumVersionOccupationModulesAndThemes(
+    public List<CurriculumVersionModuleOrThemeResult> curriculumVersionOccupationModulesAndThemes(
             HoisUserDetails user, @Valid CurriculumVersionOccupationModuleAutocompleteCommand lookup) {
         return autocompleteService.curriculumVersionOccupationModulesAndThemes(user, lookup);
     }
@@ -251,10 +251,23 @@ public class AutocompleteController {
     public List<PersonResult> teachersAsList(HoisUserDetails user, TeacherAutocompleteCommand lookup) {
         return autocompleteService.teachers(user.getSchoolId(), lookup, false);
     }
-    
-    @GetMapping("/highspecialities")
-    public Set<SpecialityAutocompleteResult> specialities(HoisUserDetails user, SpecialitiesAutocompleteCommand lookup) {
+
+    @GetMapping("/specialities")
+    public Set<SpecialityAutocompleteResult> specialities(
+            HoisUserDetails user, SpecialitiesAutocompleteCommand lookup) {
         return autocompleteService.specialities(user, lookup);
+    }
+    
+    @GetMapping("/higherspecialities")
+    public Set<SpecialityAutocompleteResult> higherSpecialities(
+            HoisUserDetails user, SpecialitiesAutocompleteCommand lookup) {
+        return autocompleteService.higherSpecialities(user, lookup);
+    }
+
+    @GetMapping("/vocationalspecialities")
+    public Set<SpecialityAutocompleteResult> vocationalSpecialities(
+            HoisUserDetails user, SpecialitiesAutocompleteCommand lookup) {
+        return autocompleteService.vocationalSpecialities(user, lookup);
     }
 
     @GetMapping("/students")

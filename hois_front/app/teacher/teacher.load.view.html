@@ -1,0 +1,321 @@
+<md-content class="md-padding" ng-controller="TeacherLoadController" ng-if="initLoad">
+  <div>&nbsp;</div>
+  <div layout="row" layout-xs="column" flex class="form-readonly">
+    <div layout="row" layout-sm="column" layout-xs="column" flex>
+      <md-input-container flex>
+        <label>{{auth.higher ? ('teacher.person.nameHigher' | translate) : ('teacher.person.nameVocational' | translate)}}</label>
+        <hois-value value="teacher.person.firstname + ' ' + teacher.person.lastname"></hois-value>
+      </md-input-container>
+      <md-input-container flex>
+        <label>{{auth.higher ? ('teacher.person.idcodeHigher' | translate) : ('teacher.person.idcodeVocational' | translate)}}</label>
+        <hois-value value="teacher.person.idcode"></hois-value>
+      </md-input-container>
+    </div>
+  </div>
+  <div layout="row" ng-if="record">
+    <md-button ng-if="showEdit() && teacher.canEdit && auth.isAdmin()" ng-href="{{getUrl()}}" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
+    <a ng-if="loadPdfUrl" href="{{loadPdfUrl + '?lang=' + currentLanguage().toUpperCase()}}" target="_blank" class="md-button md-raised">{{'teacher.load.pdf' | translate}}</a>
+    <md-button ng-click="customBack('#/teachers')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+  </div>
+  <div layout="column">
+    <md-input-container style="max-width: 240px;">
+      <label>{{'lessonplan.studyYear' | translate}}</label>
+      <hois-select ng-model="criteria.studyYear" type="studyyear" select-current-study-year></hois-select>
+    </md-input-container>
+    <div flex layout="column">
+      <div flex="50" layout="row" class="common-label" md-colors="{color: 'background-400'}">
+          <span ng-repeat="c in formState.capacityTypes">
+            <span ng-if="!$first">|</span>
+            {{::c.value.toUpperCase()}} - {{currentLanguageNameField(c)}}
+          </span>
+      </div>
+      <!-- Vocational loads -->
+      <md-table-container ng-if="record.journals.length > 0">
+        <table class="teacher-lessonplan">
+          <!-- table header -->
+          <thead>
+            <tr>
+              <th>{{'lessonplan.journals' | translate}}</th>
+              <th colspan="2" class="dividerBorder">{{'lessonplan.total' | translate}}</th>
+              <th colspan="{{::sp.weekNrs.length}}" class="dividerBorder" ng-repeat="sp in formState.studyPeriods">{{currentLanguageNameField(sp)}}</th>
+            </tr>
+            <tr>
+              <th colspan="3" class="dividerBorder">
+                <md-checkbox ng-model="formState.showWeeks">{{'lessonplan.showWeeks' | translate}}</md-checkbox>
+                <md-checkbox ng-model="formState.showCapacityTypes">{{'lessonplan.showCapacityTypes' | translate}}</md-checkbox>
+              </th>
+              <th ng-repeat="w in formState.weekNrs track by $index" class="center" ng-class="{dividerBorder: w.endOfPeriod}"
+                  ng-style="{background: 'white'}" title="{{formState.weekBeginningDates[$index] | hoisDate}}">{{w.nr}}</th>
+            </tr>
+          </thead>
+          <!-- journals -->
+          <tbody ng-repeat="journal in record.journals">
+            <tr>
+              <td colspan="{{::formState.weekNrs.length+3}}" class="dividerBorder">
+                <span class="bold">{{::journal.nameEt}}:</span>&nbsp;
+                <span ng-repeat="theme in getUniqueJournalThemes(journal.themes)">
+                <span ng-if="!$first">,&nbsp;</span>{{::theme.nameEt}}&nbsp;{{::theme.credits}}&nbsp;{{'lessonplan.credits' | translate}}
+                &nbsp;({{currentLanguageNameField(theme.module)}})
+                &nbsp;(<span ng-repeat="(hourCap, hourCount) in theme.hours">{{::getCapacityByCode(hourCap).value.toUpperCase()}}{{hourCount}}{{$last ? "" : "/"}}</span>)</span>
+                <div ng-if="!auth.isAdmin()" style="float: right;">
+                  <md-checkbox disabled ng-model="journal.isFiller">{{'lessonplan.isFiller' | translate}}</md-checkbox>
+                  <md-checkbox disabled ng-model="journal.isConfirmer">{{'lessonplan.isConfirmer' | translate}}</md-checkbox>
+                </div>
+              </td>
+            </tr>
+            <tr ng-repeat="ct in getCapacityTypes(journal.hours)" ng-if="formState.showCapacityTypes">
+              <td rowspan="{{::keys(journal.hours).length+1}}" ng-if="$first">
+                <div layout="column">
+                  <div layout="row" layout-align="space-around center">
+                  <span>
+                    <span ng-repeat="studentGroup in journal.studentGroups">
+                      <br ng-if="!$first"> {{studentGroup}}
+                      <br ng-if="$last">
+                    </span>
+                    <br>
+
+                    <span ng-repeat="teacher in journal.teachers">
+                      <br ng-if="!$first"> {{teacher.teacher.nameEt}}
+                    </span>
+                    <br>
+                    <div ng-if="journal.groupProportion !== 'PAEVIK_GRUPI_JAOTUS_1'" layout="row">
+                      <label>{{'lessonplan.journal.groupProportion' | translate}} &nbsp;</label>
+                      <hois-classifier-value ng-model="journal.groupProportion" main-classifier-code="PAEVIK_GRUPI_JAOTUS"></hois-classifier-value>
+                    </div>
+                  </span>
+                  </div>
+                </div>
+              </td>
+              <td class="center">{{ct.value.toUpperCase()}}</td>
+              <td class="center dividerBorder">{{formState.journalTotals[journal.id][ct.code]}}</td>
+              <td ng-if="formState.showWeeks" ng-repeat="h in journal.hours[ct.code] track by $index"
+                  ng-class="{dividerBorder: formState.weekNrs[$index].endOfPeriod}" class="center">{{journal.hours[ct.code][$index]}}</td>
+              <td ng-if="!formState.showWeeks" colspan="{{::sp.weekNrs.length}}" ng-repeat="sp in formState.studyPeriods track by $index"
+                  class="center dividerBorder">{{journal.spHours[ct.code][$index]}}</td>
+            </tr>
+            <tr>
+              <td ng-if="!formState.showCapacityTypes">
+                <div layout="column">
+                  <div layout="row" layout-align="space-around center">
+                  <span>
+                    <span ng-repeat="studentGroup in journal.studentGroups">
+                      <br ng-if="!$first"> {{studentGroup}}
+                      <br ng-if="$last">
+                    </span>
+                    <br>
+
+                    <span ng-repeat="teacher in journal.teachers">
+                      <br ng-if="!$first"> {{teacher.teacher.nameEt}}
+                    </span>
+                    <br>
+                    <div ng-if="journal.groupProportion !== 'PAEVIK_GRUPI_JAOTUS_1'">
+                      <label>{{'lessonplan.journal.groupProportion' | translate}}</label>
+                      <hois-classifier-value ng-model="journal.groupProportion" main-classifier-code="PAEVIK_GRUPI_JAOTUS"></hois-classifier-value>
+                    </div>
+                  </span>
+                  </div>
+                </div>
+              </td>
+              <td>{{'lessonplan.total' | translate}}</td>
+              <td class="center dividerBorder">{{formState.journalTotals[journal.id].__}}</td>
+              <td ng-if="formState.showWeeks" ng-repeat="w in formState.weekNrs track by $index"
+                  ng-class="{dividerBorder: formState.weekNrs[$index].endOfPeriod}" class="center">{{formState.journalTotals[journal.id]._[$index]}}</td>
+              <td ng-if="!formState.showWeeks" colspan="{{::sp.weekNrs.length}}" ng-repeat="sp in formState.studyPeriods track by $index"
+                  class="center dividerBorder">{{formState.journalTotals[journal.id]._spTotals[$index]}}</td>
+            </tr>
+          </tbody>
+          <!-- grand totals -->
+          <tbody md-colors="{background: 'background-200'}">
+            <tr ng-repeat="ct in getCapacityTypes(formState.grandTotals)" ng-if="formState.showCapacityTypes">
+              <td rowspan="{{keys(formState.grandTotals).length+2}}" ng-if="$first">
+                {{currentLanguageNameField(module)}}&nbsp;{{'lessonplan.grandTotal' | translate}}
+              </td>
+              <td class="center">{{ct.value.toUpperCase()}}</td>
+              <td class="center dividerBorder">{{formState.grandTotals._[ct.code]}}</td>
+              <td ng-if="formState.showWeeks" ng-repeat="h in formState.grandTotals[ct.code] track by $index"
+                  ng-class="{dividerBorder: formState.weekNrs[$index].endOfPeriod}" class="center">{{h | hoisNumber:1}}</td>
+              <td ng-if="!formState.showWeeks" ng-repeat="sp in formState.studyPeriods track by $index" colspan="{{::sp.weekNrs.length}}"
+                  class="center dividerBorder">{{formState.capGrandTotalsSp[ct.code][$index] | hoisNumber:1}}</td>
+            </tr>
+            <tr>
+              <td colspan="{{formState.showCapacityTypes ? 1 : 2}}">{{'lessonplan.total' | translate}}</td>
+              <td class="center dividerBorder">{{formState.grandTotals.__}}</td>
+              <td ng-if="formState.showWeeks" ng-repeat="h in formState.grandTotals._._ track by $index"
+                  ng-class="{dividerBorder: formState.weekNrs[$index].endOfPeriod}" class="center">{{h | hoisNumber:1}}</td>
+              <td ng-if="!formState.showWeeks" ng-repeat="sp in formState.studyPeriods track by $index" colspan="{{::sp.weekNrs.length}}"
+                  class="center dividerBorder">{{formState.grandTotalsSp[$index] | hoisNumber:1}}</td>
+            </tr>
+            <tr>
+              <td colspan="{{formState.showCapacityTypes ? 1 : 2}}">{{'lessonplan.credits' | translate}}</td>
+              <td class="center dividerBorder">{{formState.grandCreditTotals.__}}</td>
+              <td ng-if="formState.showWeeks" ng-repeat="h in formState.grandCreditTotals._._ track by $index"
+                  ng-class="{dividerBorder: formState.weekNrs[$index].endOfPeriod}" class="center">{{h | hoisNumber:2}}</td>
+              <td ng-if="!formState.showWeeks" ng-repeat="sp in formState.studyPeriods track by $index" colspan="{{::sp.weekNrs.length}}"
+                  class="center dividerBorder">{{formState.grandCreditTotalsSp[$index] | hoisNumber:2}}</td>
+            </tr>
+            <tr>
+              <td colspan="{{formState.showCapacityTypes ? 1 : 2}}">{{'lessonplan.contractPlannedHoursTotal' | translate}}</td>
+              <td class="center dividerBorder">{{formState.grandContactTotals.__}}</td>
+              <td ng-if="formState.showWeeks" ng-repeat="h in formState.grandContactTotals._._ track by $index"
+                  ng-class="{dividerBorder: formState.weekNrs[$index].endOfPeriod}" class="center">{{h | hoisNumber:1}}</td>
+              <td ng-if="!formState.showWeeks" ng-repeat="sp in formState.studyPeriods track by $index" colspan="{{::sp.weekNrs.length}}"
+                  class="center dividerBorder">{{formState.grandContactTotalsSp[$index] | hoisNumber:1}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </md-table-container>
+      <div ng-if="record.journals.length > 0 && record.subjects.length > 0">&nbsp;</div>
+      <!-- Higher loads -->
+      <md-table-container ng-if="record.subjects.length > 0">
+        <table class="subject-study-period">
+          <!-- Header -->
+          <thead>
+            <tr>
+              <th rowspan="2" class="dividerBorder"><span style="float: left;">{{'lessonplan.subjects' | translate}}</span></th>
+              <th colspan="{{formState.capacityTypes.length}}" ng-repeat="sp in formState.studyPeriods" class="dividerBorder">{{currentLanguageNameField(sp)}}</th>
+              <th rowspan="2">{{'subjectStudyPeriod.overallTeacher' | translate}}</th>
+              <th rowspan="2">{{'subjectStudyPeriod.eap' | translate}}</th>
+            </tr>
+            <tr>
+              <td ng-if="formState.subjectCapacityTypes.length" ng-repeat="sct in formState.subjectCapacityTypes track by $index" class="center"
+                  ng-class="{dividerBorder: sct.endOfPeriod}">{{sct.value.toUpperCase()}}</td>
+              <td ng-if="!formState.subjectCapacityTypes.length" ng-repeat="sp in formState.studyPeriods" class="center">-</td>
+            </tr>
+          </thead>
+          <!-- Subjects -->
+          <tbody ng-repeat="subject in record.subjects">
+            <tr class="bold-top-line">
+              <td class="bold dividerBorder">
+                <span>{{currentLanguageNameField(subject)}}</span>
+              </td>
+              <td ng-repeat="sct in formState.subjectCapacityTypes track by $index" ng-class="{dividerBorder: sct.endOfPeriod}">{{(subject.hours[sct.studyPeriod] || {})[sct.code]}}</td>
+              <td>{{sumSubjectHours(subject.hours)}}</td>
+              <td>{{hoursToCredits(sumSubjectHours(subject.hours), 2) | number: 2}}</td>
+            </tr>
+            <tr ng-repeat="studentGroup in subject.studentGroups">
+              <td class="dividerBorder">
+                <span>{{studentGroup.studentGroups.join(', ')}}</span>
+                <span ng-if="studentGroup.subgroups > 0">
+                      <span class="subject-study-period-proportion">{{'subjectStudyPeriod.subgroups.label' | translate | lowercase}}:
+                        {{studentGroup.subgroups}}
+                      </span>
+                    </span>
+              </td>
+              <td ng-repeat="sct in formState.subjectCapacityTypes track by $index" ng-class="{dividerBorder: sct.endOfPeriod}">
+                {{(studentGroup.hours[sct.studyPeriod] || {})[sct.code]}}
+              </td>
+              <td>{{sumSubjectHours(studentGroup.hours)}}</td>
+              <td>{{hoursToCredits(sumSubjectHours(studentGroup.hours), 2) | number: 2}}</td>
+            </tr>
+            <!-- Total -->
+            <tr class="bold">
+              <td class="dividerBorder">{{'subjectStudyPeriod.overallSubject' | translate}}</td>
+              <td ng-repeat="sct in formState.subjectCapacityTypes track by $index" ng-class="{dividerBorder: sct.endOfPeriod}">{{(subject.capacityTotals[sct.studyPeriod] || {})[sct.code] || 0}}</td>
+              <td>{{sumSubjectHours(subject.capacityTotals)}}</td>
+              <td></td>
+            </tr>
+            <tr class="bold">
+              <td class="dividerBorder">{{'subjectStudyPeriod.eap' | translate}}</td>
+              <td ng-repeat="sct in formState.subjectCapacityTypes track by $index" ng-class="{dividerBorder: sct.endOfPeriod}">{{hoursToCredits((subject.capacityTotals[sct.studyPeriod] || {})[sct.code] || 0, 2) | number: 2}}</td>
+              <td></td>
+              <td>{{hoursToCredits(sumSubjectHours(subject.capacityTotals), 2) | number: 2}}</td>
+            </tr>
+          </tbody>
+          <!-- Grand Total -->
+          <tr class="bold bold-top-line" md-colors="{background: 'background-200'}">
+            <td class="dividerBorder">{{'lessonplan.grandTotal' | translate | uppercase}}</td>
+            <td ng-repeat="sct in formState.subjectCapacityTypes track by $index" ng-class="{dividerBorder: sct.endOfPeriod}">{{(record.subjectTotals[sct.studyPeriod] || {})[sct.code] || 0}}</td>
+            <td>{{sumSubjectHours(record.subjectTotals)}}</td>
+            <td></td>
+          </tr>
+          <tr class="bold" md-colors="{background: 'background-200'}">
+            <td class="dividerBorder">{{'subjectStudyPeriod.eap' | translate}}</td>
+            <td ng-repeat="sct in formState.subjectCapacityTypes track by $index" ng-class="{dividerBorder: sct.endOfPeriod}">{{hoursToCredits((record.subjectTotals[sct.studyPeriod] || {})[sct.code] || 0, 2) | number: 2}}</td>
+            <td></td>
+            <td>{{hoursToCredits(sumSubjectHours(record.subjectTotals), 2) | number: 2}}</td>
+          </tr>
+          <tr class="bold" md-colors="{background: 'background-200'}">
+            <td class="dividerBorder">{{'subjectStudyPeriod.overallContact' | translate}}</td>
+            <td ng-repeat="sct in formState.subjectCapacityTypes track by $index" ng-class="{dividerBorder: sct.endOfPeriod}">{{(record.subjectContactTotals[sct.studyPeriod] || {})[sct.code] || 0}}</td>
+            <td>{{sumSubjectHours(record.subjectContactTotals)}}</td>
+            <td>{{hoursToCredits(sumSubjectHours(record.subjectContactTotals), 2) | number: 2}}</td>
+          </tr>
+        </table>
+      </md-table-container>
+    </div>
+    <div layout="row">
+      <md-button ng-if="formState.xlsUrl" ng-href="{{excel(formState.xlsUrl)}}" class="md-raised">{{'main.button.printXls' | translate}}</md-button>
+    </div>
+    <div ng-if="formState.xlsUrl">&nbsp;</div>
+
+    <!-- Other loads -->
+    <fieldset ng-if="criteria.studyYear && otherLoads.length > 0">
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'teacher.load.other.label' | translate}}</legend>
+      <div class="other-loads">
+        <form name="forms.otherLoadsForm" class="nomargin" novalidate>
+          <md-table-container>
+            <table md-table class="secondary-table">
+              <thead md-head>
+                <tr md-row>
+                  <th md-column style="width: 70%">{{'teacher.load.other.name' | translate}}</th>
+                  <th md-column style="width: 15%">{{'teacher.load.other.hours' | translate}}</th>
+                  <th md-column style="width: 15%">{{'teacher.load.other.percent' | translate}}</th>
+                </tr>
+              </thead>
+              <tbody md-body>
+                <tr md-row ng-repeat="otherLoad in otherLoads">
+                  <td md-cell>
+                    <hois-value value="otherLoad.nameEt"></hois-value>
+                  </td>
+                  <td md-cell>
+                    <hois-value value="otherLoad.hours"></hois-value>
+                  </td>
+                  <td md-cell>
+                    <hois-value value="otherLoad.percent"></hois-value>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </md-table-container>
+        </form>
+      </div>
+    </fieldset>
+    <div ng-if="criteria.studyYear && otherLoads.length > 0">&nbsp;</div>
+    <div layout="row" class="md-title-small" style="margin-left: 8px;">
+      {{'teacher.load.total' | translate}}: {{calculateLoad() | hoisNumber: 2}}
+    </div>
+    <div>&nbsp;</div>
+  </div>
+  <div layout="row">
+    <md-button ng-if="showEdit() && teacher.canEdit && auth.isAdmin()" ng-href="{{getUrl()}}" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
+    <a ng-if="loadPdfUrl" href="{{loadPdfUrl + '?lang=' + currentLanguage().toUpperCase()}}" target="_blank" class="md-button md-raised">{{'teacher.load.pdf' | translate}}</a>
+    <md-button ng-click="customBack('#/teachers')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+  </div>
+</md-content>
+
+<style>
+  .subject-study-period td {
+    min-width: 0 !important;
+    padding: 5px !important;
+  }
+  .subject-study-period th {
+    padding: 3px !important;
+  }
+  tr.bold-top-line,
+  tr.bold-top-line td {
+    border-top: #525252 2px solid !important;
+  }
+  .subject-study-period td,
+  .subject-study-period th {
+    border-bottom: none !important;
+  }
+
+  div.other-loads input, div.other-loads textarea {
+    padding-top: 2px;
+    height: 32px;
+  }
+
+  div.other-loads textarea {
+    min-height: 32px;
+  }
+</style>

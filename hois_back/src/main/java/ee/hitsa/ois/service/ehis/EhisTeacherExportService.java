@@ -1,36 +1,5 @@
 package ee.hitsa.ois.service.ehis;
 
-import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
-
-import java.lang.invoke.MethodHandles;
-import java.math.BigInteger;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Queue;
-import java.util.Set;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
-import javax.transaction.Transactional;
-
-import ee.hitsa.ois.domain.schoolcapacity.SchoolCapacityType;
-import ee.hitsa.ois.service.SchoolCapacityTypeService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
-
 import ee.hitsa.ois.concurrent.AsyncMemoryManager;
 import ee.hitsa.ois.concurrent.AsyncRequest;
 import ee.hitsa.ois.concurrent.WrapperCallable;
@@ -39,9 +8,12 @@ import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.WsEhisTeacherLog;
+import ee.hitsa.ois.domain.WsEhisTeacherMetaLog;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumStudyLanguage;
+import ee.hitsa.ois.domain.school.School;
+import ee.hitsa.ois.domain.schoolcapacity.SchoolCapacityType;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.domain.teacher.TeacherContinuingEducation;
@@ -53,6 +25,7 @@ import ee.hitsa.ois.domain.timetable.JournalTeacher;
 import ee.hitsa.ois.domain.timetable.JournalTeacherCapacity;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.StudyLanguage;
+import ee.hitsa.ois.service.SchoolCapacityTypeService;
 import ee.hitsa.ois.service.StudyYearService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
@@ -60,10 +33,13 @@ import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.ExceptionUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
+import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.util.TeacherUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.ehis.EhisTeacherExportForm;
 import ee.hitsa.ois.web.dto.EhisTeacherExportResultDto;
+import ee.hitsa.ois.web.dto.EhisTeacherMetaLogDto;
 import ee.hois.soap.LogContext;
 import ee.hois.xroad.ehis.generated.Oppeaine;
 import ee.hois.xroad.ehis.generated.Oppeasutus;
@@ -81,6 +57,38 @@ import ee.hois.xroad.ehis.generated.PedagoogTaiendkoolitus;
 import ee.hois.xroad.ehis.generated.PedagoogTasemekoolitus;
 import ee.hois.xroad.ehis.service.EhisResponse;
 import ee.hois.xroad.helpers.XRoadHeaderV4;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+
+import javax.transaction.Transactional;
+import java.lang.invoke.MethodHandles;
+import java.math.BigInteger;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Queue;
+import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDateTime;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 
 @Transactional
 @Service
@@ -136,13 +144,23 @@ public class EhisTeacherExportService extends EhisService {
         if (overlappedRequest.isPresent() && !overlappedRequest.get().isDone()) {
             overlappedRequest.get().cancel(hoisUser, true);
         }
+        WsEhisTeacherMetaLog metaLog = null;
+        if (!higher) {
+            metaLog = new WsEhisTeacherMetaLog();
+            metaLog.setSchool(em.getReference(School.class, hoisUser.getSchoolId()));
+            metaLog.setValidFrom(form.getChangeDateFrom());
+            metaLog.setValidThru(form.getChangeDateTo());
+            em.persist(metaLog);
+            em.refresh(metaLog);
+        }
+        Long metaLogId = metaLog != null ? metaLog.getId() : null;
         return new ExportTeacherRequest(new WrapperCallable<Queue<EhisTeacherExportResultDto>>() {
             
             private AtomicInteger max = new AtomicInteger();
             
             @Override
             public Queue<EhisTeacherExportResultDto> wrapperCall() {
-                return exportToEhis(hoisUser.getSchoolId(), higher, form, getWrapper(), max);
+                return exportToEhis(hoisUser.getSchoolId(), higher, form, getWrapper(), max, metaLogId);
             }
 
             @Override
@@ -166,12 +184,12 @@ public class EhisTeacherExportService extends EhisService {
      * @return
      */
     public Queue<EhisTeacherExportResultDto> exportToEhis(Long schoolId, boolean higher, EhisTeacherExportForm form,
-            AtomicReference<Queue<EhisTeacherExportResultDto>> wrapper, AtomicInteger max) {
+            AtomicReference<Queue<EhisTeacherExportResultDto>> wrapper, AtomicInteger max, Long metaLogId) {
         Set<Long> schoolTeachers = form.isAllDates() ? activeTeacherIds(schoolId, higher) : changedTeacherIds(schoolId, higher, form);
         List<RequestObject> requests = createRequests(schoolId, schoolTeachers, higher, form);
         max.set(requests.size());
         wrapper.set(new ConcurrentLinkedQueue<EhisTeacherExportResultDto>());
-        return sendRequests(requests, higher, wrapper.get());
+        return sendRequests(requests, higher, wrapper.get(), metaLogId);
     }
 
     /**
@@ -202,14 +220,19 @@ public class EhisTeacherExportService extends EhisService {
     }
 
     private Queue<? extends EhisTeacherExportResultDto> sendRequests(List<RequestObject> requests, boolean higher) {
-        return sendRequests(requests, higher, null);
+        return sendRequests(requests, higher, null, null);
     }
 
-    private Queue<EhisTeacherExportResultDto> sendRequests(List<RequestObject> requests, boolean higher, Queue<EhisTeacherExportResultDto> queue) {
+    private Queue<EhisTeacherExportResultDto> sendRequests(List<RequestObject> requests, boolean higher,
+                                                           Queue<EhisTeacherExportResultDto> queue,
+                                                           Long metaLogId) {
         Queue<EhisTeacherExportResultDto> resultList = queue != null ? queue : new ConcurrentLinkedQueue<>();
         for (RequestObject request : requests) {
             LogContext queryLog;
             WsEhisTeacherLog wsEhisTeacherLog = new WsEhisTeacherLog();
+            if (metaLogId != null) {
+                wsEhisTeacherLog.setMetaLog(em.getReference(WsEhisTeacherMetaLog.class, metaLogId));
+            }
             XRoadHeaderV4 xRoadHeader = getXroadHeader();
             boolean error = false;
             if(request.getError() == null) {
@@ -239,6 +262,14 @@ public class EhisTeacherExportService extends EhisService {
             wsEhisTeacherLog.setTeacher(request.getTeacher());
             wsEhisTeacherLog.setSchool(request.getTeacher().getSchool());
             ehisLogService.insert(queryLog, wsEhisTeacherLog);
+
+            if (!error) {
+                String ehisSentDt = higher ? "ehis_sent_hdt" : "ehis_sent_vdt";
+                em.createNativeQuery("update teacher set " + ehisSentDt + " = ?2 where id = ?1")
+                        .setParameter(1, request.getTeacher().getId())
+                        .setParameter(2, JpaQueryUtil.parameterAsTimestamp(LocalDateTime.now()))
+                        .executeUpdate();
+            }
 
             resultList.add(new EhisTeacherExportResultDto(request.getTeacher().getPerson().getFullname(), wsEhisTeacherLog.getLogTxt(), error));
         }
@@ -432,6 +463,10 @@ public class EhisTeacherExportService extends EhisService {
                 continue;
             }
 
+            if (!TeacherUtil.canSendTeacherPosition(position, teacher, false)) {
+                continue;
+            }
+
             PedagoogAmetikohtType ametikoht = new PedagoogAmetikohtType();
             ametikoht.setKlAmetikoht(ehisValue(position.getPosition()));
             ametikoht.setKlLepinguLiik(ehisValue(position.getContractType()));
@@ -516,6 +551,9 @@ public class EhisTeacherExportService extends EhisService {
 
         // pedagoogTaiendkoolitus
         for(TeacherContinuingEducation e : teacher.getTeacherContinuingEducation()) {
+            if (!TeacherUtil.canSendTeacherContinuingEducation(e, teacher, false)) {
+                continue;
+            }
             PedagoogTaiendkoolitus koolitus = new PedagoogTaiendkoolitus();
             koolitus.setTaiendOppeas(e.getSchool() != null ? e.getSchool().getNameEt() : e.getOtherSchool());
             koolitus.setKlTaiendDoc(ehisValue(e.getDiploma()));
@@ -532,6 +570,9 @@ public class EhisTeacherExportService extends EhisService {
         for(TeacherQualification q : teacher.getTeacherQualification()) {
             if (ClassifierUtil.isEstonia(q.getState()) && q.getEndDate() != null 
                     && q.getEndDate().isAfter(DONT_SEND_QUALIFICATION_AFTER)) {
+                continue;
+            }
+            if (!TeacherUtil.canSendTeacherQualification(q, teacher, false)) {
                 continue;
             }
             PedagoogTasemekoolitus koolitus = new PedagoogTasemekoolitus();
@@ -556,17 +597,24 @@ public class EhisTeacherExportService extends EhisService {
     }
 
     private Set<Long> changedTeacherIds(Long schoolId, boolean higher, EhisTeacherExportForm form) {
+        String ehisSentDt = higher ? "ehis_sent_hdt" : "ehis_sent_vdt";
         String from = "from teacher t left join teacher_position_ehis tpe on tpe.teacher_id = t.id and tpe.is_vocational = :is_vocational"
                     + " left join teacher_qualification tq on tq.teacher_id = t.id";
-        String changed = "t.changed between :dateFrom and :dateTo or tpe.changed between :dateFrom and :dateTo"
-                    + " or tq.changed between :dateFrom and :dateTo";
+        String changed = "(coalesce(t.changed, t.inserted) between :dateFrom and :dateTo " +
+                    "and (t." + ehisSentDt + " is null or t." + ehisSentDt + " < coalesce(t.changed, t.inserted))) " +
+                "or (coalesce(tpe.changed, tpe.inserted) between :dateFrom and :dateTo " +
+                    "and (t." + ehisSentDt + " is null or t." + ehisSentDt + " < coalesce(tpe.changed, tpe.inserted))) " +
+                "or (coalesce(tq.changed, tq.inserted) between :dateFrom and :dateTo " +
+                    "and (t." + ehisSentDt + " is null or t." + ehisSentDt + " < coalesce(tq.changed, tq.inserted))) ";
 
         if(higher) {
             from += " left outer join teacher_mobility tm on tm.teacher_id = t.id";
-            changed += " or tm.changed between :dateFrom and :dateTo";
+            changed += "or (coalesce(tm.changed, tm.inserted) between :dateFrom and :dateTo " +
+                    "and (t." + ehisSentDt + " is null or t." + ehisSentDt + " < coalesce(tm.changed, tm.inserted))) ";
         } else {
             from += " left outer join teacher_continuing_education tce on tce.teacher_id = t.id";
-            changed += " or tce.changed between :dateFrom and :dateTo";
+            changed += "or (tce.inserted between :dateFrom and :dateTo " +
+                    "and (t." + ehisSentDt + " is null or t." + ehisSentDt + " < tce.inserted)) ";
         }
 
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
@@ -638,6 +686,36 @@ public class EhisTeacherExportService extends EhisService {
         }
         
         return ExceptionUtil.getRootCause(cxt.getError()).toString();
+    }
+
+    public EhisTeacherMetaLogDto getLastSentHistory(Long schoolId) {
+        List<WsEhisTeacherMetaLog> metaLogs = em.createQuery(
+                "select ml from WsEhisTeacherMetaLog ml " +
+                        "where ml.school.id = :schoolId " +
+                        "order by ml.inserted desc, ml.id desc",
+                WsEhisTeacherMetaLog.class)
+                .setParameter("schoolId", schoolId)
+                .setMaxResults(1)
+                .getResultList();
+        if (metaLogs.isEmpty()) {
+            return null;
+        }
+        return EhisTeacherMetaLogDto.of(metaLogs.get(0));
+    }
+
+    public Page<EhisTeacherMetaLogDto> getSentHistory(Long schoolId, Pageable pageable) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from ws_ehis_teacher_meta_log ml")
+                .sort(pageable);
+
+        qb.requiredCriteria("ml.school_id = :schoolId", "schoolId", schoolId);
+
+        return JpaQueryUtil.pagingResult(qb, "ml.valid_from, ml.valid_thru, ml.inserted", em, pageable).map(r -> {
+            EhisTeacherMetaLogDto dto = new EhisTeacherMetaLogDto();
+            dto.setFrom(resultAsLocalDate(r, 0));
+            dto.setThru(resultAsLocalDate(r, 1));
+            dto.setInserted(resultAsLocalDateTime(r, 2));
+            return dto;
+        });
     }
 
     private static class TeacherSubject {

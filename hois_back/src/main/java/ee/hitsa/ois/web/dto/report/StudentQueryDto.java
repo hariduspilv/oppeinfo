@@ -38,6 +38,9 @@ public class StudentQueryDto extends SchoolQueryDto {
     private List<ClassifierResult> citizenship;
     private Boolean citizenshipShow;
     
+    private Boolean age;
+    private Boolean ageShow;
+    
     // Study data
     private Boolean guestStudent;
     private Boolean guestStudentShow;
@@ -66,6 +69,15 @@ public class StudentQueryDto extends SchoolQueryDto {
     private LocalDate directiveConfirmDateFrom;
     private Boolean directiveConfirmDateShow;
     private LocalDate directiveConfirmDateThru;
+    
+    private LocalDate akadDateFrom;
+    private LocalDate akadDateThru;
+    
+    private LocalDate valisDateFrom;
+    private LocalDate valisDateThru;
+    
+    private LocalDate guestDateFrom;
+    private LocalDate guestDateThru;
     
     private List<AutocompleteResult> studentGroups;
     private Boolean studentGroupsShow;
@@ -118,6 +130,14 @@ public class StudentQueryDto extends SchoolQueryDto {
     private List<String> foreignLanguage;
     private Boolean foreignLanguageShow;
     
+    private Boolean specialNeed;
+    private Boolean specialNeedShow;
+    
+    private List<String> specialNeedCode;
+    private Boolean specialNeedCodeShow;
+    
+    private String studyCompany;
+    private Boolean studyCompanyShow;
     
     // Contact data
     private String address;
@@ -131,6 +151,37 @@ public class StudentQueryDto extends SchoolQueryDto {
     
     private String personalEmail;
     private Boolean personalEmailShow;
+    
+    private String otherContact;
+    private Boolean otherContactShow;
+    
+    /**
+     * Representative data
+     */
+    
+    private String representativeName;
+    private Boolean representativeNameShow;
+    
+    private String representativeIdcode;
+    private Boolean representativeIdcodeShow;
+    
+    private List<String> representativeRelation;
+    private Boolean representativeRelationShow;
+    
+    private String representativePhone;
+    private Boolean representativePhoneShow;
+    
+    private String representativeEmail;
+    private Boolean representativeEmailShow;
+    
+    private String representativeOtherContact;
+    private Boolean representativeOtherContactShow;
+    
+    private Boolean representativeVisible;
+    private Boolean representativeVisibleShow;
+    
+    private Boolean onlyWithRepresentative;
+    
     // Statistics data
     private String eapSign;
     private Long eap;
@@ -195,6 +246,11 @@ public class StudentQueryDto extends SchoolQueryDto {
     private LocalDate declaredEapThru;
     private Long declaredEapPeriod;
     
+    private String apelEapSign;
+    private BigDecimal apelEap;
+    private Boolean apelEapShow;
+    
+    //Other info
     private List<AutocompleteResult> activeResult;
     private Boolean activeResultShow;
     private Boolean activeResultPositive;
@@ -1137,6 +1193,210 @@ public class StudentQueryDto extends SchoolQueryDto {
     }
     public void setDormitoryShow(Boolean dormitoryShow) {
         this.dormitoryShow = dormitoryShow;
+    }
+    public Boolean getAge() {
+        return age;
+    }
+    public void setAge(Boolean age) {
+        this.age = age;
+    }
+    public Boolean getAgeShow() {
+        return ageShow;
+    }
+    public void setAgeShow(Boolean ageShow) {
+        this.ageShow = ageShow;
+    }
+    public Boolean getSpecialNeed() {
+        return specialNeed;
+    }
+    public void setSpecialNeed(Boolean specialNeed) {
+        this.specialNeed = specialNeed;
+    }
+    public Boolean getSpecialNeedShow() {
+        return specialNeedShow;
+    }
+    public void setSpecialNeedShow(Boolean specialNeedShow) {
+        this.specialNeedShow = specialNeedShow;
+    }
+    public List<String> getSpecialNeedCode() {
+        return specialNeedCode;
+    }
+    public void setSpecialNeedCode(List<String> specialNeedCode) {
+        this.specialNeedCode = specialNeedCode;
+    }
+    public Boolean getSpecialNeedCodeShow() {
+        return specialNeedCodeShow;
+    }
+    public void setSpecialNeedCodeShow(Boolean specialNeedCodeShow) {
+        this.specialNeedCodeShow = specialNeedCodeShow;
+    }
+    public String getStudyCompany() {
+        return studyCompany;
+    }
+    public void setStudyCompany(String studyCompany) {
+        this.studyCompany = studyCompany;
+    }
+    public Boolean getStudyCompanyShow() {
+        return studyCompanyShow;
+    }
+    public void setStudyCompanyShow(Boolean studyCompanyShow) {
+        this.studyCompanyShow = studyCompanyShow;
+    }
+    public String getOtherContact() {
+        return otherContact;
+    }
+    public void setOtherContact(String otherContact) {
+        this.otherContact = otherContact;
+    }
+    public Boolean getOtherContactShow() {
+        return otherContactShow;
+    }
+    public void setOtherContactShow(Boolean otherContactShow) {
+        this.otherContactShow = otherContactShow;
+    }
+    public String getApelEapSign() {
+        return apelEapSign;
+    }
+    public void setApelEapSign(String apelEapSign) {
+        this.apelEapSign = apelEapSign;
+    }
+    public BigDecimal getApelEap() {
+        return apelEap;
+    }
+    public void setApelEap(BigDecimal apelEap) {
+        this.apelEap = apelEap;
+    }
+    public Boolean getApelEapShow() {
+        return apelEapShow;
+    }
+    public void setApelEapShow(Boolean apelEapShow) {
+        this.apelEapShow = apelEapShow;
+    }
+    public String getRepresentativeName() {
+        return representativeName;
+    }
+    public void setRepresentativeName(String representativeName) {
+        this.representativeName = representativeName;
+    }
+    public Boolean getRepresentativeNameShow() {
+        return representativeNameShow;
+    }
+    public void setRepresentativeNameShow(Boolean representativeNameShow) {
+        this.representativeNameShow = representativeNameShow;
+    }
+    public String getRepresentativeIdcode() {
+        return representativeIdcode;
+    }
+    public void setRepresentativeIdcode(String representativeIdcode) {
+        this.representativeIdcode = representativeIdcode;
+    }
+    public Boolean getRepresentativeIdcodeShow() {
+        return representativeIdcodeShow;
+    }
+    public void setRepresentativeIdcodeShow(Boolean representativeIdcodeShow) {
+        this.representativeIdcodeShow = representativeIdcodeShow;
+    }
+    public List<String> getRepresentativeRelation() {
+        return representativeRelation;
+    }
+    public void setRepresentativeRelation(List<String> representativeRelation) {
+        this.representativeRelation = representativeRelation;
+    }
+    public Boolean getRepresentativeRelationShow() {
+        return representativeRelationShow;
+    }
+    public void setRepresentativeRelationShow(Boolean representativeRelationShow) {
+        this.representativeRelationShow = representativeRelationShow;
+    }
+    public String getRepresentativePhone() {
+        return representativePhone;
+    }
+    public void setRepresentativePhone(String representativePhone) {
+        this.representativePhone = representativePhone;
+    }
+    public Boolean getRepresentativePhoneShow() {
+        return representativePhoneShow;
+    }
+    public void setRepresentativePhoneShow(Boolean representativePhoneShow) {
+        this.representativePhoneShow = representativePhoneShow;
+    }
+    public String getRepresentativeOtherContact() {
+        return representativeOtherContact;
+    }
+    public void setRepresentativeOtherContact(String representativeOtherContact) {
+        this.representativeOtherContact = representativeOtherContact;
+    }
+    public Boolean getRepresentativeOtherContactShow() {
+        return representativeOtherContactShow;
+    }
+    public void setRepresentativeOtherContactShow(Boolean representativeOtherContactShow) {
+        this.representativeOtherContactShow = representativeOtherContactShow;
+    }
+    public Boolean getRepresentativeVisible() {
+        return representativeVisible;
+    }
+    public void setRepresentativeVisible(Boolean representativeVisible) {
+        this.representativeVisible = representativeVisible;
+    }
+    public Boolean getRepresentativeVisibleShow() {
+        return representativeVisibleShow;
+    }
+    public void setRepresentativeVisibleShow(Boolean representativeVisibleShow) {
+        this.representativeVisibleShow = representativeVisibleShow;
+    }
+    public Boolean getOnlyWithRepresentative() {
+        return onlyWithRepresentative;
+    }
+    public void setOnlyWithRepresentative(Boolean onlyWithRepresentative) {
+        this.onlyWithRepresentative = onlyWithRepresentative;
+    }
+    public String getRepresentativeEmail() {
+        return representativeEmail;
+    }
+    public void setRepresentativeEmail(String representativeEmail) {
+        this.representativeEmail = representativeEmail;
+    }
+    public Boolean getRepresentativeEmailShow() {
+        return representativeEmailShow;
+    }
+    public void setRepresentativeEmailShow(Boolean representativeEmailShow) {
+        this.representativeEmailShow = representativeEmailShow;
+    }
+    public LocalDate getAkadDateFrom() {
+        return akadDateFrom;
+    }
+    public void setAkadDateFrom(LocalDate akadDateFrom) {
+        this.akadDateFrom = akadDateFrom;
+    }
+    public LocalDate getAkadDateThru() {
+        return akadDateThru;
+    }
+    public void setAkadDateThru(LocalDate akadDateThru) {
+        this.akadDateThru = akadDateThru;
+    }
+    public LocalDate getValisDateFrom() {
+        return valisDateFrom;
+    }
+    public void setValisDateFrom(LocalDate valisDateFrom) {
+        this.valisDateFrom = valisDateFrom;
+    }
+    public LocalDate getValisDateThru() {
+        return valisDateThru;
+    }
+    public void setValisDateThru(LocalDate valisDateThru) {
+        this.valisDateThru = valisDateThru;
+    }
+    public LocalDate getGuestDateFrom() {
+        return guestDateFrom;
+    }
+    public void setGuestDateFrom(LocalDate guestDateFrom) {
+        this.guestDateFrom = guestDateFrom;
+    }
+    public LocalDate getGuestDateThru() {
+        return guestDateThru;
+    }
+    public void setGuestDateThru(LocalDate guestDateThru) {
+        this.guestDateThru = guestDateThru;
     }
 
 }

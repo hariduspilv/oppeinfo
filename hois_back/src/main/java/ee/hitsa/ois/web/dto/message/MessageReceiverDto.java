@@ -12,6 +12,8 @@ public class MessageReceiverDto extends StudentSearchDto {
         MessageReceiverDto dto = new MessageReceiverDto();
         dto.setId(studentSearchDto.getId());
         dto.setFullname(studentSearchDto.getFullname());
+        dto.setFirstname(studentSearchDto.getFirstname());
+        dto.setLastname(studentSearchDto.getLastname());
         dto.setIdcode(studentSearchDto.getIdcode());
         dto.setPersonId(studentSearchDto.getPersonId());
         dto.setStudyForm(studentSearchDto.getStudyForm());
@@ -20,8 +22,8 @@ public class MessageReceiverDto extends StudentSearchDto {
         dto.setStudentGroup(studentSearchDto.getStudentGroup());
         dto.setCurriculumVersion(studentSearchDto.getCurriculumVersion());
         dto.setRole(Arrays.asList(Role.ROLL_T.name()));
-        dto.setJournal(studentSearchDto.getJournal());
-        dto.setSubject(studentSearchDto.getSubject());
+        dto.setJournals(studentSearchDto.getJournals());
+        dto.setSubjects(studentSearchDto.getSubjects());
         return dto;
     }
     

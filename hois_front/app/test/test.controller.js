@@ -26,7 +26,7 @@ angular.module('hitsaOis')
       console.log($scope.colorForm);
       console.log($scope.colorForm.$valid);
     };
-    
+
     $scope.myColor = "FFFFFF";
     $scope.option = {
       required: false,
@@ -66,6 +66,8 @@ angular.module('hitsaOis')
     $scope.testRows = [
       createRandRow(), createRandRow(), createRandRow(), createRandRow()
     ];
+
+    $scope.dummyModelClassifier = 'RIIK_FIN';
   })
 
 

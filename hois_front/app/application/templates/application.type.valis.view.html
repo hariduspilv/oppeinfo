@@ -85,7 +85,7 @@
             </td>
             <td md-cell>
               <div layout="column">
-                <span ng-repeat="equiv in plannedSubject.equivalents">
+                <span ng-repeat="equiv in plannedSubject.equivalents | orderBy: currentLanguageNameField()">
                   {{currentLanguageNameField(equiv)}}
                 </span>
               </div>
@@ -124,13 +124,8 @@
                 </md-select>
               </md-input-container>
               <md-input-container ng-if="student.curriculumVersion.isVocational" style="width:100%">
-                <md-select class="my-select" ng-model="plannedSubject.subjectsSelected" ng-change="moduleOrThemeChanged(plannedSubject)"
-                  ng-model-options="{trackBy: '$value.moduleId + $value.themeId'}" multiple aria-label="replaceable module or theme">
-                  <md-option ng-repeat="val in modulesAndThemes" ng-value="val" 
-                    ng-style="{'font-weight': val.isModule ? 600 : 400}" ng-disabled="val.disabled">
-                    {{currentLanguageNameField(val)}}
-                  </md-option>
-                </md-select>
+                <hois-module-theme-select class="my-select md-table-select" ng-model="plannedSubject.subjectsSelected" aria-label="replaceable module or theme"
+                  ng-change="moduleOrThemeChanged(plannedSubject)" values="modulesAndThemes" multiple></hois-module-theme-select>
               </md-input-container>
             </td>
             <td md-cell style="width:10%">

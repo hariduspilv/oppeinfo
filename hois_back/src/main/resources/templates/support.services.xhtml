@@ -77,11 +77,10 @@
 	<h2>{{"report.support.services.entries" | translate}}:</h2>
 	<table class="spacing">
 		<tr>
-			<th>{{"report.support.services.table.date" | translate}}</th>
+			<th style="width: 1%">{{"report.support.services.table.date" | translate}}</th>
 			<th style="width: 15%;">{{"report.support.services.table.title" | translate}}</th>
-			<th style="width: 30%;">{{"report.support.services.table.content" | translate}}</th>
-			<th>{{"report.support.services.table.validity" | translate}}</th>
-			<th>{{"report.support.services.table.public" | translate}}</th>
+			<th style="width: 35%;">{{"report.support.services.table.content" | translate}}</th>
+			<th style="width: 1%">{{"report.support.services.table.validity" | translate}}</th>
 			<th style="width: 10%;">{{"report.support.services.table.file" | translate}}</th>
 			<th style="width: 15%;">{{"report.support.services.table.submitter" | translate}}</th>
 		</tr>
@@ -101,7 +100,6 @@
 			{% endif %}
 			</td>
 			<td>{{entry.validity}}</td>
-			<td>{% if entry.isPublic == true %} {{"yes" | translate}} {% else %} {{"no" | translate }} {% endif %}</td>
 			<td>{% if entry.hasFile == true %} {{"report.support.services.table.addedFile" | translate}} {% endif %}</td>
 			<td class="break-long-words">{{entry.submitter}}</td>
 		</tr>

@@ -1,25 +1,26 @@
 package ee.hitsa.ois.web.dto;
 
+import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
+import ee.hitsa.ois.domain.subject.Subject;
+import ee.hitsa.ois.domain.subject.SubjectConnect;
+import ee.hitsa.ois.enums.CurriculumVersionStatus;
+import ee.hitsa.ois.enums.SubjectConnection;
+import ee.hitsa.ois.enums.SubjectProgramStatus;
+import ee.hitsa.ois.enums.SubjectStatus;
+import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.ClassifierUtil;
+import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.util.SubjectProgramValidation;
+import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
+import ee.hitsa.ois.web.commandobject.subject.SubjectForm;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
+
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
-import ee.hitsa.ois.domain.subject.Subject;
-import ee.hitsa.ois.domain.subject.SubjectConnect;
-import ee.hitsa.ois.domain.subject.subjectprogram.SubjectProgramTeacher;
-import ee.hitsa.ois.enums.CurriculumVersionStatus;
-import ee.hitsa.ois.enums.SubjectConnection;
-import ee.hitsa.ois.enums.SubjectProgramStatus;
-import ee.hitsa.ois.enums.SubjectStatus;
-import ee.hitsa.ois.util.ClassifierUtil;
-import ee.hitsa.ois.util.EntityUtil;
-import ee.hitsa.ois.util.StreamUtil;
-import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
-import ee.hitsa.ois.web.commandobject.subject.SubjectForm;
-import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
 
 public class SubjectDto extends SubjectForm {
 
@@ -51,9 +52,9 @@ public class SubjectDto extends SubjectForm {
     private Set<CurriculumVersionResult> curriculumVersions;
     
     private Set<AutocompleteResult> programs;
-    
-    public static SubjectDto forPublic(Subject subject, List<CurriculumVersion> curriculumVersions) {
-        return SubjectDto.of(subject, curriculumVersions, true);
+
+    public static SubjectDto forPublic(Subject subject, List<CurriculumVersion> curriculumVersions, HoisUserDetails user, SubjectProgramValidation validation) {
+        return SubjectDto.ofWithPrograms(subject, curriculumVersions, true, user, validation);
     }
     
     public static SubjectDto of(Subject subject, List<CurriculumVersion> curriculumVersions) {
@@ -97,17 +98,24 @@ public class SubjectDto extends SubjectForm {
         dto.setMandatoryPrerequisiteSubjects(mandatoryPrerequisiteSubjects);
         dto.setRecommendedPrerequisiteSubjects(recommendedPrerequisiteSubjects);
         dto.setSubstituteSubjects(substituteSubjects);
-        dto.setPrograms(StreamUtil.nullSafeSet(subject.getSubjectStudyPeriods()).stream()
-                .flatMap(peroid -> peroid.getTeachers().stream())
-                .flatMap(teacher -> teacher.getSubjectProgramTeachers().stream())
-                .map(SubjectProgramTeacher::getSubjectProgram)
-                .filter(p -> !isPublic
-                        // if public for all then completed and confirmed programs allowed
-                        || (Boolean.TRUE.equals(p.getPublicAll()) && ClassifierUtil.oneOf(p.getStatus(), SubjectProgramStatus.AINEPROGRAMM_STAATUS_K, SubjectProgramStatus.AINEPROGRAMM_STAATUS_V))
-                        // otherwise if confirmed
-                        || (ClassifierUtil.oneOf(p.getStatus(), SubjectProgramStatus.AINEPROGRAMM_STAATUS_K)))
-                .map(AutocompleteResult::of).collect(Collectors.toSet()));
+        return dto;
+    }
 
+    public static SubjectDto ofWithPrograms(Subject subject, List<CurriculumVersion> curriculumVersions, boolean isPublic, HoisUserDetails user, SubjectProgramValidation validation) {
+        SubjectDto dto = of(subject, curriculumVersions, isPublic);
+        dto.setPrograms(StreamUtil.nullSafeSet(subject.getSubjectStudyPeriods()).stream()
+                .flatMap(period -> period.getSubjectPrograms().stream())
+                .filter(p -> {
+                    if (validation != null) {
+                        return validation.canView(user, p);
+                    }
+                    return !isPublic
+                            // if public for all then completed and confirmed programs allowed
+                            || (Boolean.TRUE.equals(p.getPublicAll()) && ClassifierUtil.oneOf(p.getStatus(), SubjectProgramStatus.AINEPROGRAMM_STAATUS_K, SubjectProgramStatus.AINEPROGRAMM_STAATUS_V))
+                            // otherwise if confirmed
+                            || (ClassifierUtil.oneOf(p.getStatus(), SubjectProgramStatus.AINEPROGRAMM_STAATUS_K));
+                })
+                .map(AutocompleteResult::of).collect(Collectors.toSet()));
         return dto;
     }
 

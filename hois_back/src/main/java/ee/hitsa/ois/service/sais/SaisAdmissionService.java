@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -194,16 +195,13 @@ public class SaisAdmissionService {
                 continue;
             }
 
-            List<SaisAdmission> saisAdmissions = saisAdmissionRepository.findByCodeAndCurriculumVersionCurriculumSchoolId(admission.getCode(), schoolId);//.findByCode(admission.getCode());
-            Optional<SaisAdmission> saisAdmissionNotArchived = saisAdmissions.stream().filter(p-> Boolean.FALSE.equals(p.getArchived())).findFirst();
-            SaisAdmission saisAdmission = null;
-            if (saisAdmissionNotArchived.isPresent()) {
-            	saisAdmission = saisAdmissionNotArchived.get();
-            }
-            if(saisAdmission == null) {
-                saisAdmission = new SaisAdmission();
-                saisAdmission.setArchived(Boolean.FALSE);
-            }
+            List<SaisAdmission> saisAdmissions = saisAdmissionRepository
+                    .findFirstActiveSaisAdmissionByCodeAndSchoolId(admission.getCode(), schoolId, new PageRequest(0, 1));
+            SaisAdmission saisAdmission = saisAdmissions.stream().findFirst().orElseGet(() -> {
+                SaisAdmission newAdmission = new SaisAdmission();
+                newAdmission.setArchived(Boolean.FALSE);
+                return newAdmission;
+            });
             saisAdmission.setSaisId(admission.getId());
             saisAdmission.setCurriculumVersion(curriculumVersion);
             saisAdmission.setCode(admission.getCode());

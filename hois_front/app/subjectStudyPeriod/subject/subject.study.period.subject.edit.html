@@ -55,18 +55,15 @@
                                 </span>
                                 <i ng-if="ssp.capacityDiff || ssp.teachers.length > 1 || ssp.subgroups.length > 1" class="material-icons pointer" title="{{'subjectStudyPeriod.teacherSpecificLoads' | translate}}"
                                     ng-click="teacherCapacities(ssp)">*</i>
-                                <span ng-show="ssp.studentGroupObjects && ssp.studentGroupObjects.length > 0">
-                                    (
-                                    <span ng-repeat="sg in ssp.studentGroupObjects">
-                                        <span ng-if="$index > 0">, </span>
-                                        {{sg.nameEt}}
-                                    </span>
-                                    )
-                                </span>
                                 <span ng-if="ssp.subgroups.length > 0">
                                   <span class="subject-study-period-proportion">{{'subjectStudyPeriod.subgroups.label' | translate | lowercase}}:
                                     {{ssp.subgroups.length}}
                                   </span>
+                                </span>
+                                <span ng-repeat="group in ssp.studentGroupObjects | filter: {id: '!' + record.studentGroup}">
+                                  <br ng-if="$first"/>
+                                  <br ng-if="$first"/>
+                                  {{currentLanguageNameField(group)}}{{!$last ? ', ' : ''}}
                                 </span>
                                 <a ng-href="#/subjectStudyPeriod/{{ssp.id}}/edit?subjectId={{record.subject}}">{{'main.button.change' | translate}}</a>
                             </td>

@@ -1,0 +1,39 @@
+<md-dialog aria-label="sent history" flex="40" flex-sm="60" flex-xs="100">
+  <md-toolbar>
+    <div class="md-toolbar-tools">
+      <h2 flex>{{'ehis.teacher.previouslySent' | translate}}</h2>
+      <md-button class="md-icon-button" ng-click="cancel()">
+        <md-icon md-font-set="material-icons">close</md-icon>
+      </md-button>
+    </div>
+  </md-toolbar>
+
+  <md-dialog-content>
+    <div class="md-dialog-content">
+      <md-table-container>
+        <table md-table class="secondary-table" md-progress="tabledata.$promise">
+          <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+          <tr md-row>
+            <th md-column >{{'ehis.teacher.sentDt' | translate}}</th>
+            <th md-column >{{'ehis.teacher.sentPeriod' | translate}}</th>
+          </tr>
+          </thead>
+          <tbody md-body>
+          <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>{{row.inserted | hoisDateTime}}</td>
+            <td md-cell>{{row.from | hoisDate}} - {{row.thru | hoisDate}}</td>
+          </tr>
+          </tbody>
+        </table>
+      </md-table-container>
+      <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
+                           md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                           md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
+                           md-page-select></md-table-pagination>
+    </div>
+  </md-dialog-content>
+
+  <md-dialog-actions layout="row" layout-align="start center">
+    <md-button ng-click="cancel()" class="md-raised">{{'main.button.back' | translate}}</md-button>
+  </md-dialog-actions>
+</md-dialog>

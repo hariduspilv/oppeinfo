@@ -9,7 +9,11 @@ public class StudentDataCommand extends QuerySaveCommand {
     private Boolean nrShow;
     private String resultType;
     private Boolean withoutGuestStudents;
-    // Person data
+    
+    /**
+     *  Person data
+     */
+    
     private String firstname;
     private Boolean firstnameShow;
     
@@ -37,7 +41,14 @@ public class StudentDataCommand extends QuerySaveCommand {
     
     private List<String> citizenship;
     private Boolean citizenshipShow;
-    // Study data
+    
+    private Boolean age;
+    private Boolean ageShow;
+    
+    /**
+     *  Study data
+     */
+    
     private Boolean guestStudent;
     private Boolean guestStudentShow;
     
@@ -65,6 +76,15 @@ public class StudentDataCommand extends QuerySaveCommand {
     private LocalDate directiveConfirmDateFrom;
     private Boolean directiveConfirmDateShow;
     private LocalDate directiveConfirmDateThru;
+    
+    private LocalDate akadDateFrom;
+    private LocalDate akadDateThru;
+    
+    private LocalDate valisDateFrom;
+    private LocalDate valisDateThru;
+    
+    private LocalDate guestDateFrom;
+    private LocalDate guestDateThru;
     
     private List<Long> studentGroups;
     private Boolean studentGroupsShow;
@@ -116,7 +136,20 @@ public class StudentDataCommand extends QuerySaveCommand {
     private Boolean curriculumPercentageShow;
     private BigDecimal curriculumPercentageFrom;
     private BigDecimal curriculumPercentageThru;
-    // Contact data
+    
+    private Boolean specialNeed;
+    private Boolean specialNeedShow;
+    
+    private List<String> specialNeedCode;
+    private Boolean specialNeedCodeShow;
+    
+    private String studyCompany;
+    private Boolean studyCompanyShow;
+    
+    /**
+     * Contact data
+     */
+    
     private String address;
     private Boolean addressShow;
     
@@ -128,7 +161,41 @@ public class StudentDataCommand extends QuerySaveCommand {
     
     private String personalEmail;
     private Boolean personalEmailShow;
-    // Statistics data
+    
+    private String otherContact;
+    private Boolean otherContactShow;
+    
+    /**
+     * Representative data
+     */
+    
+    private String representativeName;
+    private Boolean representativeNameShow;
+    
+    private String representativeIdcode;
+    private Boolean representativeIdcodeShow;
+    
+    private List<String> representativeRelation;
+    private Boolean representativeRelationShow;
+    
+    private String representativePhone;
+    private Boolean representativePhoneShow;
+    
+    private String representativeEmail;
+    private Boolean representativeEmailShow;
+    
+    private String representativeOtherContact;
+    private Boolean representativeOtherContactShow;
+    
+    private Boolean representativeVisible;
+    private Boolean representativeVisibleShow;
+    
+    private Boolean onlyWithRepresentative;
+    
+    /**
+     * Statistics data
+     */
+    
     private String eapSign;
     private Long eap;
     private Boolean eapShow;
@@ -191,6 +258,14 @@ public class StudentDataCommand extends QuerySaveCommand {
     private LocalDate declaredEapFrom;
     private LocalDate declaredEapThru;
     private Long declaredEapPeriod;
+    
+    private String apelEapSign;
+    private BigDecimal apelEap;
+    private Boolean apelEapShow;
+    
+    /**
+     * Other data
+     */
     
     private List<Long> activeResult;
     private Boolean activeResultShow;
@@ -266,186 +341,241 @@ public class StudentDataCommand extends QuerySaveCommand {
         return citizenshipShow;
     }
     @Order(value=10)
+    public Boolean getAgeShow() {
+        return ageShow;
+    }
+    /**
+     * Study data
+     */
+    @Order(value=11)
     public Boolean getGuestStudentShow() {
         return guestStudentShow;
     }
-    @Order(value=11)
+    @Order(value=12)
     public Boolean getForeignStudentShow() {
         return foreignStudentShow;
     }
-    @Order(value=12)
+    @Order(value=13)
     public Boolean getCumLaudeShow() {
         return cumLaudeShow;
     }
-    @Order(value=13)
+    @Order(value=14)
     public Boolean getImmatDateShow() {
         return immatDateShow;
     }
-    @Order(value=14)
+    @Order(value=15)
     public Boolean getDirectiveConfirmDateShow() {
         return directiveConfirmDateShow;
     }
-    @Order(value=15)
+    @Order(value=16)
     public Boolean getFinishedDateShow() {
         return finishedDateShow;
     }
-    @Order(value=16)
+    @Order(value=17)
     public Boolean getDirectiveTypesShow() {
         return directiveTypesShow;
     }
-    @Order(value=17)
+    @Order(value=18)
     public Boolean getDirectiveReasonsShow() {
         return directiveReasonsShow;
     }
-    @Order(value=18)
+    @Order(value=19)
     public Boolean getStudentGroupsShow() {
         return studentGroupsShow;
     }
-    @Order(value=19)
+    @Order(value=20)
     public Boolean getStudentStatusesShow() {
         return studentStatusesShow;
     }
-    @Order(value=20)
+    @Order(value=21)
     public Boolean getRegNrShow() {
         return regNrShow;
     }
-    @Order(value=21)
+    @Order(value=22)
     public Boolean getNominalStudyEndShow() {
         return nominalStudyEndShow;
     }
-    @Order(value=22)
+    @Order(value=23)
     public Boolean getStudyFormShow() {
         return studyFormShow;
     }
-    @Order(value=23)
+    @Order(value=24)
     public Boolean getStudyLoadShow() {
         return studyLoadShow;
     }
-    @Order(value=24)
+    @Order(value=25)
     public Boolean getSchoolDepartmentShow() {
         return schoolDepartmentShow;
     }
-    @Order(value=25)
+    @Order(value=26)
     public Boolean getCurriculumShow() {
         return curriculumShow;
     }
-    @Order(value=26)
+    @Order(value=27)
     public Boolean getEhisCodeShow() {
         return ehisCodeShow;
     }
-    @Order(value=27)
+    @Order(value=28)
     public Boolean getStudyLevelShow() {
         return studyLevelShow;
     }
-    @Order(value=28)
+    @Order(value=29)
     public Boolean getSpecialityShow() {
         return specialityShow;
     }
-    @Order(value=29)
+    @Order(value=30)
     public Boolean getStudyYearNumberShow() {
         return studyYearNumberShow;
     }
-    @Order(value=30)
+    @Order(value=31)
     public Boolean getFinShow() {
         return finShow;
     }
-    @Order(value=31)
+    @Order(value=32)
     public Boolean getLanguageShow() {
         return languageShow;
     }
-    @Order(value=32)
+    @Order(value=33)
     public Boolean getCurriculumPercentageShow() {
         return curriculumPercentageShow;
     }
-    @Order(value=33)
+    @Order(value=34)
     public Boolean getForeignLanguageShow() {
         return foreignLanguageShow;
     }
-    @Order(value=34)
+    @Order(value=35)
+    public Boolean getSpecialNeedShow() {
+        return specialNeedShow;
+    }
+    @Order(value=36)
+    public Boolean getSpecialNeedCodeShow() {
+        return specialNeedCodeShow;
+    }
+    @Order(value=37)
+    public Boolean getStudyCompanyShow() {
+        return studyCompanyShow;
+    }
+    @Order(value=38)
     public Boolean getAddressShow() {
         return addressShow;
     }
-    @Order(value=35)
+    @Order(value=39)
     public Boolean getPhoneShow() {
         return phoneShow;
     }
-    @Order(value=36)
+    @Order(value=40)
     public Boolean getOfficialEmailShow() {
         return officialEmailShow;
     }
-    @Order(value=37)
+    @Order(value=41)
     public Boolean getPersonalEmailShow() {
         return personalEmailShow;
     }
-    @Order(value=38)
+    @Order(value=42)
+    public Boolean getOtherContactShow() {
+        return otherContactShow;
+    }
+    @Order(value=43)
+    public Boolean getRepresentativeNameShow() {
+        return representativeNameShow;
+    }
+    @Order(value=44)
+    public Boolean getRepresentativeIdcodeShow() {
+        return representativeIdcodeShow;
+    }
+    @Order(value=45)
+    public Boolean getRepresentativeRelationShow() {
+        return representativeRelationShow;
+    }
+    @Order(value=46)
+    public Boolean getRepresentativePhoneShow() {
+        return representativePhoneShow;
+    }
+    @Order(value=47)
+    public Boolean getRepresentativeEmailShow() {
+        return representativeEmailShow;
+    }
+    @Order(value=48)
+    public Boolean getRepresentativeOtherContactShow() {
+        return representativeOtherContactShow;
+    }
+    @Order(value=49)
+    public Boolean getRepresentativeVisibleShow() {
+        return representativeVisibleShow;
+    }
+    @Order(value=50)
     public Boolean getEapShow() {
         return eapShow;
     }
-    @Order(value=39)
+    @Order(value=51)
     public Boolean getEapSumShow() {
         return eapSumShow;
     }
-    @Order(value=40)
+    @Order(value=52)
     public Boolean getWeightedAverageSumShow() {
         return weightedAverageSumShow;
     }
-    @Order(value=41)
+    @Order(value=53)
     public Boolean getWeightedAverageShow() {
         return weightedAverageShow;
     }
-    @Order(value=42)
+    @Order(value=54)
     public Boolean getAverageSumShow() {
         return averageSumShow;
     }
-    @Order(value=43)
+    @Order(value=55)
     public Boolean getAverageShow() {
         return averageShow;
     }
-    @Order(value=44)
+    @Order(value=56)
     public Boolean getDebtSumShow() {
         return debtSumShow;
     }
-    @Order(value=45)
+    @Order(value=57)
     public Boolean getDebtShow() {
         return debtShow;
     }
-    @Order(value=46)
+    @Order(value=58)
     public Boolean getDebtPointsSumShow() {
         return debtPointsSumShow;
     }
-    @Order(value=47)
+    @Order(value=59)
     public Boolean getDebtPointsShow() {
         return debtPointsShow;
     }
-    @Order(value=48)
+    @Order(value=60)
     public Boolean getDeclaredEapShow() {
         return declaredEapShow;
     }
-    @Order(value=49)
+    @Order(value=61)
+    public Boolean getApelEapShow() {
+        return apelEapShow;
+    }
+    @Order(value=62)
     public Boolean getActiveResultShow() {
         return activeResultShow;
     }
-    @Order(value=50)
+    @Order(value=63)
     public Boolean getDeclaredSubjectShow() {
         return declaredSubjectShow;
     }
-    @Order(value=51)
+    @Order(value=64)
     public Boolean getDeclarationConfirmationShow() {
         return declarationConfirmationShow;
     }
-    @Order(value=52)
+    @Order(value=65)
     public Boolean getPreviousSchoolNameShow() {
         return previousSchoolNameShow;
     }
-    @Order(value=53)
+    @Order(value=66)
     public Boolean getCompletedSchoolYearShow() {
         return completedSchoolYearShow;
     }
-    @Order(value=54)
+    @Order(value=67)
     public Boolean getPreviousStudyLevelShow() {
         return previousStudyLevelShow;
     }
-    @Order(value=55)
+    @Order(value=68)
     public Boolean getDormitoryShow() {
         return dormitoryShow;
     }
@@ -1247,6 +1377,171 @@ public class StudentDataCommand extends QuerySaveCommand {
     }
     public void setDormitoryShow(Boolean dormitoryShow) {
         this.dormitoryShow = dormitoryShow;
+    }
+    public String getOtherContact() {
+        return otherContact;
+    }
+    public void setOtherContact(String otherContact) {
+        this.otherContact = otherContact;
+    }
+    public void setOtherContactShow(Boolean otherContactShow) {
+        this.otherContactShow = otherContactShow;
+    }
+    public Boolean getSpecialNeed() {
+        return specialNeed;
+    }
+    public void setSpecialNeed(Boolean specialNeed) {
+        this.specialNeed = specialNeed;
+    }
+    public void setSpecialNeedShow(Boolean specialNeedShow) {
+        this.specialNeedShow = specialNeedShow;
+    }
+    public List<String> getSpecialNeedCode() {
+        return specialNeedCode;
+    }
+    public void setSpecialNeedCode(List<String> specialNeedCode) {
+        this.specialNeedCode = specialNeedCode;
+    }
+    public void setSpecialNeedCodeShow(Boolean specialNeedCodeShow) {
+        this.specialNeedCodeShow = specialNeedCodeShow;
+    }
+    public String getRepresentativeName() {
+        return representativeName;
+    }
+    public void setRepresentativeName(String representativeName) {
+        this.representativeName = representativeName;
+    }
+    public void setRepresentativeNameShow(Boolean representativeNameShow) {
+        this.representativeNameShow = representativeNameShow;
+    }
+    public String getRepresentativeIdcode() {
+        return representativeIdcode;
+    }
+    public void setRepresentativeIdcode(String representativeIdcode) {
+        this.representativeIdcode = representativeIdcode;
+    }
+    public void setRepresentativeIdcodeShow(Boolean representativeIdcodeShow) {
+        this.representativeIdcodeShow = representativeIdcodeShow;
+    }
+    public void setRepresentativeRelationShow(Boolean representativeRelationShow) {
+        this.representativeRelationShow = representativeRelationShow;
+    }
+    public String getRepresentativePhone() {
+        return representativePhone;
+    }
+    public void setRepresentativePhone(String representativePhone) {
+        this.representativePhone = representativePhone;
+    }
+    public void setRepresentativePhoneShow(Boolean representativePhoneShow) {
+        this.representativePhoneShow = representativePhoneShow;
+    }
+    public String getRepresentativeOtherContact() {
+        return representativeOtherContact;
+    }
+    public void setRepresentativeOtherContact(String representativeOtherContact) {
+        this.representativeOtherContact = representativeOtherContact;
+    }
+    public void setRepresentativeOtherContactShow(Boolean representativeOtherContactShow) {
+        this.representativeOtherContactShow = representativeOtherContactShow;
+    }
+    public Boolean getRepresentativeVisible() {
+        return representativeVisible;
+    }
+    public void setRepresentativeVisible(Boolean representativeVisible) {
+        this.representativeVisible = representativeVisible;
+    }
+    public void setRepresentativeVisibleShow(Boolean representativeVisibleShow) {
+        this.representativeVisibleShow = representativeVisibleShow;
+    }
+    public List<String> getRepresentativeRelation() {
+        return representativeRelation;
+    }
+    public void setRepresentativeRelation(List<String> representativeRelation) {
+        this.representativeRelation = representativeRelation;
+    }
+    public String getApelEapSign() {
+        return apelEapSign;
+    }
+    public void setApelEapSign(String apelEapSign) {
+        this.apelEapSign = apelEapSign;
+    }
+    public BigDecimal getApelEap() {
+        return apelEap;
+    }
+    public void setApelEap(BigDecimal apelEap) {
+        this.apelEap = apelEap;
+    }
+    public void setApelEapShow(Boolean apelEapShow) {
+        this.apelEapShow = apelEapShow;
+    }
+    public Boolean getAge() {
+        return age;
+    }
+    public void setAge(Boolean age) {
+        this.age = age;
+    }
+    public void setAgeShow(Boolean ageShow) {
+        this.ageShow = ageShow;
+    }
+    public String getStudyCompany() {
+        return studyCompany;
+    }
+    public void setStudyCompany(String studyCompany) {
+        this.studyCompany = studyCompany;
+    }
+    public void setStudyCompanyShow(Boolean studyCompanyShow) {
+        this.studyCompanyShow = studyCompanyShow;
+    }
+    public Boolean getOnlyWithRepresentative() {
+        return onlyWithRepresentative;
+    }
+    public void setOnlyWithRepresentative(Boolean onlyWithRepresentative) {
+        this.onlyWithRepresentative = onlyWithRepresentative;
+    }
+    public LocalDate getAkadDateFrom() {
+        return akadDateFrom;
+    }
+    public void setAkadDateFrom(LocalDate akadDateFrom) {
+        this.akadDateFrom = akadDateFrom;
+    }
+    public LocalDate getAkadDateThru() {
+        return akadDateThru;
+    }
+    public void setAkadDateThru(LocalDate akadDateThru) {
+        this.akadDateThru = akadDateThru;
+    }
+    public LocalDate getValisDateFrom() {
+        return valisDateFrom;
+    }
+    public void setValisDateFrom(LocalDate valisDateFrom) {
+        this.valisDateFrom = valisDateFrom;
+    }
+    public LocalDate getValisDateThru() {
+        return valisDateThru;
+    }
+    public void setValisDateThru(LocalDate valisDateThru) {
+        this.valisDateThru = valisDateThru;
+    }
+    public LocalDate getGuestDateFrom() {
+        return guestDateFrom;
+    }
+    public void setGuestDateFrom(LocalDate guestDateFrom) {
+        this.guestDateFrom = guestDateFrom;
+    }
+    public LocalDate getGuestDateThru() {
+        return guestDateThru;
+    }
+    public void setGuestDateThru(LocalDate guestDateThru) {
+        this.guestDateThru = guestDateThru;
+    }
+    public String getRepresentativeEmail() {
+        return representativeEmail;
+    }
+    public void setRepresentativeEmail(String representativeEmail) {
+        this.representativeEmail = representativeEmail;
+    }
+    public void setRepresentativeEmailShow(Boolean representativeEmailShow) {
+        this.representativeEmailShow = representativeEmailShow;
     }
 
 }

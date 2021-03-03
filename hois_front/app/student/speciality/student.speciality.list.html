@@ -4,9 +4,9 @@
         <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
         <form name="searchForm" ng-submit="loadData()" novalidate>
             <div layout="column">
-              <hois-autocomplete flex="100" ng-model="criteria.curriculum" ha-attribute="id" ha-controller="autocompletes"
-                method="curriculumsauto" no-paging="true" label="student.curriculum" 
-                additional-query-params="{higher: true, closed: false, minSpecialities:2, userId: auth.isLeadingTeacher() ? auth.user : null}" required></hois-autocomplete>
+              <hois-autocomplete flex="100" ng-model="hiddenCriteria.curriculum" ha-controller="autocompletes"
+                method="curriculumsauto" no-paging="true" label="student.curriculum"
+                additional-query-params="{closed: false, minSpecialities: true, higherOrVocational: true, userId: auth.isLeadingTeacher() ? auth.user : null}" required></hois-autocomplete>
               <md-input-container flex="100" ng-show="filteredVersions.length > 0">
                 <label>{{'student.curriculumVersion' | translate}}</label>
                 <md-select ng-model="criteria.curriculumVersion" required>
@@ -40,7 +40,7 @@
               <th md-column>{{'student.name' | translate}}</th>
               <th md-column>{{'student.idcode' | translate}}</th>
               <th md-column>{{'student.studentGroup' | translate}}</th>
-              <th md-column>{{'student.curriculumSpeciality' | translate}}</th>
+              <th md-column>{{'studentGroup.speciality' | translate}}</th>
             </tr>
           </thead>
           <tbody md-body>
@@ -49,10 +49,16 @@
               <td md-cell>{{row.idcode}}</td>
               <td md-cell>{{currentLanguageNameField(row.group)}}</td>
               <td md-cell>
-                <md-input-container style="width: 100%;">
+                <md-input-container style="width: 100%;" ng-if="hiddenCriteria.curriculum.higher">
                   <md-select ng-model="row.speciality.id">
                     <md-option md-option-empty></md-option>
-                    <md-option ng-value="spec.id" ng-repeat="spec in availableSpecialities">{{currentLanguageNameField(spec)}}</md-option>
+                    <md-option ng-value="spec.id" ng-repeat="spec in availableSpecialities | orderBy: currentLanguageNameField">{{currentLanguageNameField(spec)}}</md-option>
+                  </md-select>
+                </md-input-container>
+                <md-input-container style="width: 100%;" ng-if="!hiddenCriteria.curriculum.higher">
+                  <md-select ng-model="row.occupationSpeciality.code">
+                    <md-option md-option-empty></md-option>
+                    <md-option ng-value="spec.code" ng-repeat="spec in availableSpecialities | orderBy: currentLanguageNameField">{{currentLanguageNameField(spec)}}</md-option>
                   </md-select>
                 </md-input-container>
               </td>
@@ -68,4 +74,3 @@
       <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
     </div>
   </div>
-  

@@ -1,7 +1,7 @@
 'use strict';
 
-angular.module('hitsaOis').factory('FormUtils', ['$location', 'dialogService', 'message',
-  function ($location, dialogService, message) {
+angular.module('hitsaOis').factory('FormUtils', ['$location', 'dialogService', 'message', 'QueryUtils',
+  function ($location, dialogService, message, QueryUtils) {
 
     function withValidForm(form, callback) {
       form.$setSubmitted();
@@ -10,6 +10,26 @@ angular.module('hitsaOis').factory('FormUtils', ['$location', 'dialogService', '
         return;
       }
       return callback();
+    }
+
+    /**
+     *
+     * @param {Scope} loadingOptions.scope
+     */
+    function turnOnLoadingWheelIfNeeds(loadingOptions) {
+      if (!!loadingOptions) {
+        QueryUtils.loadingWheel(loadingOptions.scope, true);
+      }
+    }
+
+    /**
+     *
+     * @param {Scope} loadingOptions.scope
+     */
+    function turnOffLoadingWheelIfNeeds(loadingOptions) {
+      if (!!loadingOptions) {
+        QueryUtils.loadingWheel(loadingOptions.scope, false);
+      }
     }
 
     return {
@@ -26,12 +46,24 @@ angular.module('hitsaOis').factory('FormUtils', ['$location', 'dialogService', '
           }
         });
       },
-      deleteRecord: function(record, backUrl, dialogOptions) {
+      /**
+       *
+       * @param record
+       * @param {string} backUrl
+       * @param {Object} dialogOptions
+       * @param {Object} loadingOptions
+       * @param {Scope} loadingOptions.scope
+       */
+      deleteRecord: function(record, backUrl, dialogOptions, loadingOptions) {
         dialogService.confirmDialog(dialogOptions, function() {
+          turnOnLoadingWheelIfNeeds(loadingOptions);
           record.$delete().then(function() {
             message.info('main.messages.delete.success');
+            turnOffLoadingWheelIfNeeds(loadingOptions);
             $location.url(backUrl);
-          }).catch(angular.noop);
+          }).catch(function () {
+            turnOffLoadingWheelIfNeeds(loadingOptions);
+          });
         });
       }
     };

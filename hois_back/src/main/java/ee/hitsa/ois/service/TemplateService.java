@@ -5,6 +5,7 @@ import java.io.StringWriter;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -14,10 +15,12 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.coverity.security.Escape;
 import com.mitchellbosecke.pebble.PebbleEngine;
+import com.mitchellbosecke.pebble.PebbleEngine.Builder;
 import com.mitchellbosecke.pebble.error.PebbleException;
 import com.mitchellbosecke.pebble.extension.AbstractExtension;
 import com.mitchellbosecke.pebble.extension.Filter;
@@ -27,22 +30,29 @@ import com.mitchellbosecke.pebble.loader.Loader;
 import com.mitchellbosecke.pebble.template.EvaluationContext;
 import com.mitchellbosecke.pebble.template.PebbleTemplate;
 
+import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.enums.Language;
+import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.exception.HoisException;
-import ee.hitsa.ois.util.DateUtils;
+import ee.hitsa.ois.service.XlsService.HoisFunctions;
+import ee.hitsa.ois.util.ClassifierUtil;
+import ee.hitsa.ois.util.ClassifierUtil.ClassifierCache;
 import ee.hitsa.ois.util.Translatable;
 import ee.hitsa.ois.util.TranslateUtil;
 
 @Service
 public class TemplateService {
+    
+    @Autowired
+    private ClassifierService classifierService;
 
     private static final Logger log = LoggerFactory.getLogger(TemplateService.class);
     private static final String TEMPLATE_PATH = "templates/";
 
-    private final PebbleEngine pebble = new PebbleEngine.Builder()
-            .strictVariables(true).loader(templateLoader()).extension(new HoisExtension())
+    private final Builder pebble = new PebbleEngine.Builder()
+            .strictVariables(true).loader(templateLoader())
             .addEscapingStrategy("text", new TextEscapingStrategy())
-            .defaultEscapingStrategy("text").build();
+            .defaultEscapingStrategy("text");
 
     static Loader<String> templateLoader() {
         ClasspathLoader loader = new ClasspathLoader(TemplateService.class.getClassLoader());
@@ -60,7 +70,7 @@ public class TemplateService {
      */
     public String evaluateTemplate(String templateName, Map<String, Object> data) {
         try {
-            PebbleTemplate template = pebble.getTemplate(Objects.requireNonNull(templateName));
+            PebbleTemplate template = pebble.extension(new HoisExtension(classifierService)).build().getTemplate(Objects.requireNonNull(templateName));
             StringWriter w = new StringWriter();
             template.evaluate(w, data);
             return w.toString();
@@ -71,7 +81,15 @@ public class TemplateService {
     }
 
     static class HoisExtension extends AbstractExtension {
+        
+        // TODO parametrized language
+        private final Language lang = Language.ET;
+        private final ClassifierUtil.ClassifierCache classifierCache;
 
+        public HoisExtension(ClassifierService classifierService) {
+            classifierCache = new ClassifierUtil.ClassifierCache(classifierService);
+        }
+        
         @Override
         public Map<String, Filter> getFilters() {
             Map<String, Filter> filters = new HashMap<>();
@@ -80,7 +98,34 @@ public class TemplateService {
             filters.put("hoisShortDate", new ShortDateFilter());
             filters.put("hoisDateTime", new DateTimeFilter());
             filters.put("name", new NameFilter());
+            filters.put("hoisNotNull", new NotNullFilter());
+            filters.put("classifierName", new ClassifierFilter(classifierCache));
             return filters;
+        }
+    }
+    
+    static class ClassifierFilter implements Filter {
+        
+        private final ClassifierUtil.ClassifierCache classifierCache;
+
+        public ClassifierFilter(ClassifierCache classifierCache) {
+            this.classifierCache = classifierCache;
+        }
+
+        @Override
+        public List<String> getArgumentNames() {
+            List<String> names = new ArrayList<>();
+            names.add("mainClassCode");
+            return names;
+        }
+
+        @Override
+        public Object apply(Object input, Map<String, Object> args) {
+            if (input == null) {
+                return "";
+            }
+            Classifier c = classifierCache.getByCode((String)input, MainClassCode.valueOf((String)args.get("mainClassCode")));
+            return c != null ?  new NameFilter().apply(c, args) : "? - " + input;
         }
     }
 
@@ -180,6 +225,22 @@ public class TemplateService {
                 return null;
             }
             return ((LocalDateTime)input).format(format);
+        }
+    }
+
+    static class NotNullFilter implements Filter {
+
+        @Override
+        public List<String> getArgumentNames() {
+            return null;
+        }
+
+        @Override
+        public Object apply(Object input, Map<String, Object> args) {
+            if (!(input instanceof List)) {
+                return null;
+            }
+            return ((List<?>)input).stream().filter(Objects::nonNull).collect(Collectors.toList());
         }
     }
 

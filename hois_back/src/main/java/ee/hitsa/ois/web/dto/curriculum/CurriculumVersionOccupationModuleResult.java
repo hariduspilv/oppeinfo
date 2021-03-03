@@ -18,9 +18,10 @@ public class CurriculumVersionOccupationModuleResult extends AutocompleteResult 
         super(id, nameEt, nameEn != null ? nameEn : nameEt);
     }
 
-    public CurriculumVersionOccupationModuleResult(Long id, String nameEt, String nameEn, BigDecimal credits, String assessment,
-            String gradeCode, LocalDate gradeDate, String teachers) {
+    public CurriculumVersionOccupationModuleResult(Long id, String nameEt, String nameEn, Long curriculumModuleId,
+            BigDecimal credits, String assessment, String gradeCode, LocalDate gradeDate, String teachers) {
         super(id, nameEt, nameEn != null ? nameEn : nameEt);
+        this.curriculumModuleId = curriculumModuleId;
         this.credits = credits;
         this.assessment = assessment;
         this.gradeCode = gradeCode;
@@ -75,5 +76,5 @@ public class CurriculumVersionOccupationModuleResult extends AutocompleteResult 
     public void setTeachers(String teachers) {
         this.teachers = teachers;
     }
-    
+
 }

@@ -30,6 +30,8 @@ public class StudentSupportService extends BaseEntityWithId {
     private OisFile oisFile;
     @Column(name = "is_ehis")
     private Boolean ehis;
+    @Column(name = "is_visible")
+    private Boolean visible;
 
     public LocalDate getEntryDate() {
         return entryDate;
@@ -93,5 +95,13 @@ public class StudentSupportService extends BaseEntityWithId {
 
     public void setEhis(Boolean ehis) {
         this.ehis = ehis;
+    }
+
+    public Boolean getVisible() {
+        return visible;
+    }
+
+    public void setVisible(Boolean visible) {
+        this.visible = visible;
     }
 }

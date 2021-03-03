@@ -19,6 +19,7 @@ import ee.hitsa.ois.domain.Classifier;
 @Entity
 public class StateCurriculumModule extends BaseEntityWithId {
 	
+    // secondary EHIS_AINE, connected to syllabus(AINEVALDKOND) via classifier_connect
 	@ManyToOne(optional = false, fetch = FetchType.LAZY)
 	private Classifier module;	
 	private String nameEt;
@@ -28,11 +29,19 @@ public class StateCurriculumModule extends BaseEntityWithId {
 	private String objectivesEn;
 	private String assessmentsEt;
 	private String assessmentsEn;
+	// secondary is required
 	private Boolean isAdditional;
+	private Long coursesOrWeeks;
+	// secondary syllabus url
+	private String riigiteatajaUrl;
 
 	@OneToMany(cascade=CascadeType.ALL, orphanRemoval=true)
 	@JoinColumn(name = "state_curriculum_module_id", nullable=false, updatable = false)
 	private Set<StateCurriculumModuleOccupation> moduleOccupations = new HashSet<>();
+	
+	@JsonManagedReference
+    @OneToMany(mappedBy = "module", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<StateCurriculumModuleCompetence> moduleCompetences = new HashSet<>();
 
 	@JsonManagedReference
     @OneToMany(mappedBy = "module", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -140,5 +149,29 @@ public class StateCurriculumModule extends BaseEntityWithId {
 
     public void setIsAdditional(Boolean isAdditional) {
         this.isAdditional = isAdditional;
+    }
+
+    public Set<StateCurriculumModuleCompetence> getModuleCompetences() {
+        return moduleCompetences;
+    }
+
+    public void setModuleCompetences(Set<StateCurriculumModuleCompetence> moduleCompetences) {
+        this.moduleCompetences = moduleCompetences;
+    }
+
+    public Long getCoursesOrWeeks() {
+        return coursesOrWeeks;
+    }
+
+    public void setCoursesOrWeeks(Long coursesOrWeeks) {
+        this.coursesOrWeeks = coursesOrWeeks;
+    }
+
+    public String getRiigiteatajaUrl() {
+        return riigiteatajaUrl;
+    }
+
+    public void setRiigiteatajaUrl(String riigiteatajaUrl) {
+        this.riigiteatajaUrl = riigiteatajaUrl;
     }
 }

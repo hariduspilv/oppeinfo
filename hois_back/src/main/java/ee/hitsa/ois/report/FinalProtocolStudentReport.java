@@ -14,6 +14,7 @@ import ee.hitsa.ois.enums.HigherAssessment;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EnumUtil;
+import ee.hitsa.ois.util.FinalProtocolUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 
@@ -26,6 +27,7 @@ public class FinalProtocolStudentReport {
     private final List<String> occupations;
     private final List<String> partOccupations;
     private final String curriculumGrade;
+    private final Boolean canSetCurriculumGrade;
 
     public FinalProtocolStudentReport(ProtocolStudent student, Boolean isVocational, Boolean letterGrades,
             Language lang) {
@@ -77,9 +79,11 @@ public class FinalProtocolStudentReport {
                     .filter(pso -> pso.getPartOccupation() != null)
                     .map(pso -> ClassifierUtil.getNullableNameEt(pso.getPartOccupation())).collect(Collectors.toList());
             curriculumGrade = null;
+            canSetCurriculumGrade = Boolean.FALSE;
         } else {
             partOccupations = null;
             curriculumGrade = student.getCurriculumGrade() != null ? name(student.getCurriculumGrade(), lang) : null;
+            canSetCurriculumGrade = FinalProtocolUtil.studentCanSetCurriculumGrade(student);
         }
     }
 
@@ -111,4 +115,7 @@ public class FinalProtocolStudentReport {
         return curriculumGrade;
     }
 
+    public Boolean getCanSetCurriculumGrade() {
+        return canSetCurriculumGrade;
+    }
 }

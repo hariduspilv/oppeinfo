@@ -8,6 +8,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
 import ee.hitsa.ois.auth.LoginMethod;
+import ee.hitsa.ois.enums.SupportServiceAccess;
 import org.springframework.security.access.AccessDeniedException;
 
 import ee.hitsa.ois.domain.Person;
@@ -167,19 +168,8 @@ public abstract class UserUtil {
     }
     
     public static boolean canViewStudentSupportService(HoisUserDetails user, Student student, StudentSupportService service) {
-        if (!student.equals(service.getStudent())) {
-            return false;
-        }
-        if (isStudent(user, student) || isActiveStudentRepresentative(user, student)) {
-            return true;
-        }
-        if (isTeacher(user, student.getSchool()) && (Boolean.TRUE.equals(service.getIsPublic()) || isStudentGroupTeacher(user, student))) {
-            return true;
-        }
-        if (isSchoolAdmin(user, student.getSchool()) && (Boolean.TRUE.equals(service.getIsPublic()) || hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_TUGITEENUS))) {
-            return true;
-        }
-        return false;
+        return SupportServiceAccess.getSupportServiceAccessLevel(service).hasAccess(
+                SupportServiceAccess.getSupportServiceAccessForUser(user, student));
     }
 
     public static boolean canEditStudentSupportService(HoisUserDetails user, Student student, StudentSupportService service) {

@@ -10,6 +10,7 @@ import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.FinalProtocolUtil;
 import ee.hitsa.ois.util.PersonUtil;
+import ee.hitsa.ois.util.ProtocolUtil;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.web.dto.GradeDto;
 import ee.hitsa.ois.web.dto.HigherProtocolStudentDto;
@@ -24,7 +25,9 @@ public class FinalHigherProtocolStudentDto extends HigherProtocolStudentDto {
     private CurriculumGradeDto curriculumGrade;
     private Long finalThesisCurriculumGrade;
     private List<FinalProtocolStudentOccupationDto> curriculumOccupations = new ArrayList<>();
-    
+
+    private Boolean canSetCurriculumGrade;
+
     public static FinalHigherProtocolStudentDto of(ProtocolStudent protocolStudent) {
         FinalHigherProtocolStudentDto dto = EntityUtil.bindToDto(protocolStudent, new FinalHigherProtocolStudentDto(),
                 "grade");
@@ -52,7 +55,9 @@ public class FinalHigherProtocolStudentDto extends HigherProtocolStudentDto {
                                 null));
             });
         }
-        
+
+        dto.setCanSetCurriculumGrade(Boolean.valueOf(FinalProtocolUtil.studentCanSetCurriculumGrade(protocolStudent)));
+        dto.setCanBeEdited(Boolean.valueOf(ProtocolUtil.studentCanBeEdited(protocolStudent)));
         dto.setCanBeDeleted(Boolean.valueOf(FinalProtocolUtil.studentCanBeDeleted(protocolStudent)));
 
         return dto;
@@ -105,5 +110,12 @@ public class FinalHigherProtocolStudentDto extends HigherProtocolStudentDto {
     public void setCurriculumOccupations(List<FinalProtocolStudentOccupationDto> curriculumOccupations) {
         this.curriculumOccupations = curriculumOccupations;
     }
-    
+
+    public Boolean getCanSetCurriculumGrade() {
+        return canSetCurriculumGrade;
+    }
+
+    public void setCanSetCurriculumGrade(Boolean canSetCurriculumGrade) {
+        this.canSetCurriculumGrade = canSetCurriculumGrade;
+    }
 }

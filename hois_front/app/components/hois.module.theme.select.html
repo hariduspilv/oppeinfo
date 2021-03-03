@@ -1,0 +1,5 @@
+<md-select ng-model-options="{trackBy: '$value.moduleId.toString() + $value.themeId.toString()'}">
+  <md-option ng-repeat="val in filteredOptions" ng-value="val" ng-disabled="val.disabled" ng-class="{bold: val.isModule}">
+    {{$root.currentLanguageNameField(val.module) + (val.theme ? '/' + $root.currentLanguageNameField(val.theme) : '')}}
+  </md-option>
+</md-select>

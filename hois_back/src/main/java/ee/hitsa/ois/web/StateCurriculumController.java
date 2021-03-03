@@ -63,7 +63,15 @@ public class StateCurriculumController {
     @GetMapping("/print/{id:\\d+}/stateCurriculum.pdf")
     public void print(HoisUserDetails user, @WithEntity StateCurriculum stateCurriculum, HttpServletResponse response) throws IOException {
         StateCurriculumValidationService.assertCanView(user, stateCurriculum);
-        HttpUtil.pdf(response, EntityUtil.getId(stateCurriculum) + ".pdf", pdfService.generate(StateCurriculumReport.TEMPLATE_NAME, new StateCurriculumReport(stateCurriculum)));
+        HttpUtil.pdf(response, EntityUtil.getId(stateCurriculum) + ".pdf", 
+                pdfService.generate(StateCurriculumReport.TEMPLATE_NAME, new StateCurriculumReport(stateCurriculum)));
+    }
+    
+    @GetMapping("/print/{id:\\d+}/secondaryStateCurriculum.pdf")
+    public void printSecondary(HoisUserDetails user, @WithEntity StateCurriculum stateCurriculum, HttpServletResponse response) throws IOException {
+        StateCurriculumValidationService.assertCanView(user, stateCurriculum);
+        HttpUtil.pdf(response, EntityUtil.getId(stateCurriculum) + ".pdf", 
+                pdfService.generate(StateCurriculumReport.SECONDARY_TEMPLATE_NAME, new StateCurriculumReport(stateCurriculum)));
     }
     
     @GetMapping("/{id:\\d+}")
@@ -161,7 +169,11 @@ public class StateCurriculumController {
             @NotNull @Valid @RequestBody StateCurriculumForm form) {
        StateCurriculumValidationService.assertCanChange(user, stateCurriculum);
        StateCurriculumValidationService.assertCanConfirm(user, stateCurriculum);
-       stateCurriculumValidationService.validateStateCurriculumForm(form);
+       if (Boolean.TRUE.equals(form.getIsVocational())) {
+           stateCurriculumValidationService.validateStateCurriculumFormConfirmVocational(form);
+       } else {
+           stateCurriculumValidationService.validateStateCurriculumFormConfirmSecondary(form);
+       }
        stateCurriculumValidationService.assertNameIsUnique(stateCurriculum, form);
        return get(user, stateCurriculumService.setStatusAndSave(user, stateCurriculum, form, CurriculumStatus.OPPEKAVA_STAATUS_K));
     }

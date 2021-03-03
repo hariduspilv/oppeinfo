@@ -10,15 +10,28 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.domain.BaseEntityWithId;
+import ee.hitsa.ois.domain.StudyYear;
+import ee.hitsa.ois.domain.teacher.TeacherOtherLoad;
+import ee.hitsa.ois.enums.Language;
+import ee.hitsa.ois.report.TeacherLoadReport;
+import ee.hitsa.ois.repository.LessonPlanRepository;
+import ee.hitsa.ois.repository.model.ITeacherLoadReportResult;
+import ee.hitsa.ois.web.commandobject.teacher.TeacherOtherLoadForm;
+import ee.hitsa.ois.web.dto.TeacherOtherLoadDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -78,6 +91,14 @@ public class TeacherService {
     private TeacherOccupationRepository teacherOccupationRepository;
     @Autowired
     private UserService userService;
+    @Autowired
+    private PdfService pdfService;
+    @Autowired
+    private LessonPlanService lessonPlanService;
+    @Autowired
+    private LessonPlanRepository lessonPlanRepository;
+    @Autowired
+    private SchoolService schoolService;
 
     /**
      * Create new teacher
@@ -479,14 +500,65 @@ public class TeacherService {
 
         TeacherDto dto = TeacherDto.of(teacher);
         dto.setCanEdit(Boolean.valueOf(TeacherUserRights.canEdit(user, teacher) || TeacherUserRights.canEditAsTeacher(user, teacher)));
-        
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from ws_ehis_teacher_log ehis").sort(Sort.Direction.DESC, "inserted").limit(1);
-        qb.requiredCriteria("ehis.teacher_id = :teacherId and not(ehis.has_xtee_errors or ehis.has_other_errors) ", "teacherId", teacher.getId());
-        List<?> result = qb.select("ehis.inserted", em).getResultList();
-        if (result.size() > 0) {
-            dto.setEhisLastSuccessfulDate(resultAsLocalDateTime(result.get(0), 0));
-        }
-        
         return dto;
+    }
+
+    public List<TeacherOtherLoadDto> getOtherLoads(Teacher teacher, StudyYear studyYear) {
+        return teacher.getLoads().stream()
+                .filter(tol -> EntityUtil.getId(tol.getStudyYear()).equals(EntityUtil.getId(studyYear)))
+                .map(TeacherOtherLoadDto::of)
+                .sorted(Comparator.comparing(TeacherOtherLoadForm::getNameEt))
+                .collect(Collectors.toList());
+    }
+
+    public Teacher saveOtherLoads(HoisUserDetails user, Teacher teacher, StudyYear studyYear,
+                                  List<TeacherOtherLoadForm> form) {
+        EntityUtil.setUsername(user.getUsername(), em);
+        Map<Long, TeacherOtherLoad> loadsById = teacher.getLoads().stream()
+                .filter(tol -> EntityUtil.getId(tol.getStudyYear()).equals(EntityUtil.getId(studyYear)))
+                .collect(Collectors.toMap(BaseEntityWithId::getId, Function.identity()));
+        List<TeacherOtherLoad> loads = form.stream()
+                .map(otherLoadForm -> {
+                    TeacherOtherLoad load;
+                    if (otherLoadForm.getId() != null) {
+                        // exists
+                        if (!loadsById.containsKey(otherLoadForm.getId())) {
+                            // has no corresponding value
+                            return null;
+                        }
+                        load = loadsById.get(otherLoadForm.getId());
+                    } else {
+                        load = new TeacherOtherLoad();
+                        load.setTeacher(teacher);
+                        teacher.getLoads().add(load);
+                        load.setStudyYear(studyYear);
+                    }
+                    load.setNameEt(otherLoadForm.getNameEt());
+                    load.setHours(otherLoadForm.getHours());
+                    load.setPercent(otherLoadForm.getPercent());
+                    return load;
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        if (loadsById.values().removeAll(loads)) {
+            teacher.getLoads().removeAll(loadsById.values());
+        }
+
+        return EntityUtil.save(teacher, em);
+    }
+
+    public byte[] teacherLoads(HoisUserDetails user, Teacher teacher, StudyYear studyYear, Language lang) {
+        List<ITeacherLoadReportResult> higherResults = lessonPlanRepository
+                .teacherLoadReportResultHigher(teacher.getId(), studyYear.getId());
+        List<ITeacherLoadReportResult> vocationalResults = lessonPlanRepository
+                .teacherLoadReportResultVocational(teacher.getId(), studyYear.getId(), !user.isTeacher());
+        SchoolService.SchoolType schoolType = schoolService.schoolType(EntityUtil.getId(teacher.getSchool()));
+        return pdfService.generate("teacher.load.xhtml",
+                new TeacherLoadReport(teacher, studyYear, schoolType, higherResults, vocationalResults,
+                studyYear.getStudyPeriods().stream()
+                        .collect(Collectors.toMap(BaseEntityWithId::getId, Function.identity())),
+                        lang),
+                lang);
     }
 }

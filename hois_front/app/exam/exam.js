@@ -238,7 +238,7 @@ angular.module('hitsaOis').controller('ExamSearchController', ['$q', '$route', '
       return DataUtils.filterArrayByText($scope.formState.subjectStudyPeriods, text, function (obj, regex) {
           return regex.test(obj.display.toUpperCase());
       }).sort(function (a, b) {
-        return a.display.localeCompare(b.display);
+        return a.display.hoisLocaleCompare(b.display);
       });
     };
 

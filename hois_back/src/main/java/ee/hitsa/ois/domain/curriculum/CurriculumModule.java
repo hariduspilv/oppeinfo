@@ -48,6 +48,7 @@ public class CurriculumModule extends BaseEntityWithId implements Translatable {
 	@ManyToOne(fetch = FetchType.LAZY)
 	private BaseModule baseModule;
 	private Short orderNr;
+	private Long coursesOrWeeks;
 
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
 	@JoinColumn(name = "curriculum_module_id", nullable = false, updatable = false)
@@ -64,6 +65,10 @@ public class CurriculumModule extends BaseEntityWithId implements Translatable {
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "curriculum_module_id", nullable = false, updatable = false, insertable = false)
     private Set<CurriculumVersionOccupationModule> curriculumVersionOccupationModules = new HashSet<>();
+	
+	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "curriculum_module_id", nullable = false, updatable = false)
+    private Set<CurriculumModuleStudyField> studyFields = new HashSet<>();
 
 
     public Curriculum getCurriculum() {
@@ -206,5 +211,21 @@ public class CurriculumModule extends BaseEntityWithId implements Translatable {
 
     public void setOrderNr(Short orderNr) {
         this.orderNr = orderNr;
+    }
+
+    public Long getCoursesOrWeeks() {
+        return coursesOrWeeks;
+    }
+
+    public void setCoursesOrWeeks(Long coursesOrWeeks) {
+        this.coursesOrWeeks = coursesOrWeeks;
+    }
+
+    public Set<CurriculumModuleStudyField> getStudyFields() {
+        return studyFields;
+    }
+
+    public void setStudyFields(Set<CurriculumModuleStudyField> studyFields) {
+        this.studyFields = studyFields;
     }
 }

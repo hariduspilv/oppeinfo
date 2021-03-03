@@ -190,6 +190,8 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
         mapForeign(result);
         checkHasForeignStudent();
       }
+      $scope.$broadcast('refreshFixedColumns');
+      $scope.$broadcast('refreshFixedTableHeight');
     }
 
     function mapForeign(result) {
@@ -290,6 +292,9 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
         });
       }
     }
+    $scope.removeLoadingWheel = function () {
+      QueryUtils.loadingWheel($scope, false);
+    }
 
     /**
      *
@@ -319,8 +324,15 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
     if(id) {
       $scope.formState.curriculumVersions.$promise.then(function() {
         $scope.record = Endpoint.get({id: id});
-        $scope.record.$promise.then(afterLoad).then(loadFormData).catch(function () {
+        QueryUtils.loadingWheel($scope, true);
+        $scope.record.$promise.then(afterLoad).then(loadFormData).then(function () {
+          if ($scope.record.type === 'KASKKIRI_TYHIST' || !($scope.record.students || []).length) {
+            // edit form has ng-init $last loadingWheel false, but TYHIST directive uses a view form from each type.
+            QueryUtils.loadingWheel($scope, false);
+          }
+        }).catch(function () {
           $scope.back("#/");
+          QueryUtils.loadingWheel($scope, false);
         });
       });
     } else {
@@ -343,6 +355,10 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       $timeout(function () {
         resourceErrorHandler.responseError(response, $scope.directiveForm).catch(angular.noop);
       });
+      if ($scope.record.type === 'KASKKIRI_TYHIST' || !($scope.record.students || []).length) {
+        // edit form has ng-init $last loadingWheel false, but TYHIST directive uses a view form from each type.
+        QueryUtils.loadingWheel($scope, false);
+      }
     }
 
     function beforeSave() {
@@ -390,8 +406,13 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       FormUtils.withValidForm($scope.directiveForm, function() {
         beforeSave();
         if($scope.record.id) {
+          QueryUtils.loadingWheel($scope, true);
           $scope.record.$update2().then(function(record) {
             afterLoad(record);
+            if ($scope.record.type === 'KASKKIRI_TYHIST' || !($scope.record.students || []).length) {
+              // edit form has ng-init $last loadingWheel false, but TYHIST directive uses a view form from each type.
+              QueryUtils.loadingWheel($scope, false);
+            }
             $scope.directiveForm.$setPristine();
             message.updateSuccess();
           }).catch(displayFormErrors);
@@ -405,7 +426,7 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
     };
 
     $scope.delete = function() {
-      FormUtils.deleteRecord($scope.record, baseUrl + '?_noback', {prompt: 'directive.deleteconfirm'});
+      FormUtils.deleteRecord($scope.record, baseUrl + '?_noback', {prompt: 'directive.deleteconfirm'}, {scope: $scope});
     };
 
     $scope.directiveTypeChanged = function(doNotUpdateSpecificData) {
@@ -498,6 +519,8 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
             setScholarshipEditable();
           }
         }
+        $scope.$broadcast('refreshFixedColumns');
+        $scope.$broadcast('refreshFixedTableHeight');
       });
       loadFormData();
     };
@@ -515,6 +538,8 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
           }
           $scope.record.students.push(studentConverter(result.students[i]));
         }
+        $scope.$broadcast('refreshFixedColumns');
+        $scope.$broadcast('refreshFixedTableHeight');
       });
     }
 
@@ -576,6 +601,8 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       var students = $scope.record.students;
       if(directiveType === 'KASKKIRI_IMMAT' || directiveType === 'KASKKIRI_KYLALIS' || directiveType === 'KASKKIRI_EKSTERN') {
         students.push({startDate: null});
+        $scope.$broadcast('refreshFixedColumns');
+        $scope.$broadcast('refreshFixedTableHeight');
         return;
       }
       var data = {type: directiveType, directive: id};
@@ -958,8 +985,8 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       $scope.formState.scholarshipTypes = ScholarshipUtils.getScholarshipSchoolTypes();
     }
   }
-]).controller('DirectiveViewController', ['$location', '$route', '$scope', '$q', 'dialogService', 'message', 'Classifier', 'QueryUtils', 'FormUtils', 'Session', 'ScholarshipUtils', 'AuthService',
-  function ($location, $route, $scope, $q, dialogService, message, Classifier, QueryUtils, FormUtils, Session, ScholarshipUtils, AuthService) {
+]).controller('DirectiveViewController', ['$location', '$route', '$scope', '$q', 'dialogService', 'message', 'Classifier', 'QueryUtils', 'FormUtils', 'Session', 'ScholarshipUtils', 'AuthService', '$timeout',
+  function ($location, $route, $scope, $q, dialogService, message, Classifier, QueryUtils, FormUtils, Session, ScholarshipUtils, AuthService, $timeout) {
     var id = $route.current.params.id;
     var baseUrl = '/directives';
     $scope.auth = $route.current.locals.auth;
@@ -1004,6 +1031,10 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
             mapStudentSpecialities(it);
           });
         }
+      });
+      $timeout(function () {
+        $scope.$broadcast('refreshFixedColumns');
+        $scope.$broadcast('refreshFixedTableHeight');
       });
     });
 
@@ -1098,7 +1129,6 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
     $scope.formState = {excludedTypes: [], school: Session.school || {}};
     if(!$scope.formState.school.higher) {
       $scope.formState.excludedTypes.push('KASKKIRI_OKOORM');
-      $scope.formState.excludedTypes.push('KASKKIRI_OVORM');
     }
     if(!$scope.formState.school.vocational) {
       $scope.formState.excludedTypes.push('KASKKIRI_INDOK');

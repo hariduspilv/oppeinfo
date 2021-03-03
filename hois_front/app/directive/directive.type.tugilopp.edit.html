@@ -1,5 +1,5 @@
-<md-table-container>
-  <table md-table class="secondary-table">
+<md-table-container fixed-column-table fixed-columns="3" resize-table search-criteria-height="250">
+  <table md-table class="secondary-table directive fixed3">
     <thead md-head>
       <tr md-row>
         <th md-column>{{'directive.student.order' | translate}}</th>
@@ -12,7 +12,7 @@
       </tr>
     </thead>
     <tbody md-body>
-      <tr md-row hois-table-row ng-repeat="row in record.students" ng-class-odd="'odd'" ng-class-even="'even'">
+      <tr md-row hois-table-row ng-repeat="row in record.students" ng-init="$last && removeLoadingWheel()" ng-class-odd="'odd'" ng-class-even="'even'">
         <td md-cell>{{$index + 1}}.</td>
         <td md-cell>{{::row.fullname}}</td>
         <td md-cell>{{::row.idcode}}</td>
@@ -28,14 +28,14 @@
             <div class="invalid" ng-messages="directiveForm['students['+$index+'].startDate'].$error">
               <p ng-message="required">{{'main.required' | translate}}</p>
               <p ng-message="serverside">
-                <span ng-repeat="err in directiveForm['students['+$index+'].startDate'].$serverError">{{err.code | translate}}</span>  
+                <span ng-repeat="err in directiveForm['students['+$index+'].startDate'].$serverError">{{err.code | translate}}</span>
               </p>
             </div>
           </hois-table-data-detail>
         </td>
         <td md-cell hois-table-data>
           <hois-table-data-master>
-            <md-input-container style="width: 250px">
+            <md-input-container class="hois-table-select">
               <md-select ng-model="row.directiveStudent" name="students[{{$index}}].directiveStudent" ng-change="mapStudentDirective(row)"
                 ng-disabled="row.directiveStudent && row.existingDirectiveStudents.length === 1">
                 <md-option ng-value="existingDirective.id" ng-repeat="existingDirective in row.existingDirectiveStudents">
